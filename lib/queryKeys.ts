@@ -1,0 +1,23 @@
+/**
+ * Canonical React Query keys for cache invalidation (Metsamdti-style).
+ * Extend as hooks migrate from fleetflow-frontend.
+ */
+export const queryKeys = {
+  auth: {
+    currentUser: () => ["currentUser"] as const,
+    company: () => ["company"] as const,
+  },
+  billing: {
+    config: () => ["billing", "config"] as const,
+    status: () => ["billing", "status"] as const,
+    root: () => ["billing"] as const,
+  },
+  fleet: {
+    trips: () => ["trips"] as const,
+    vehicles: () => ["vehicles"] as const,
+    companyUsers: () => ["companyUsers"] as const,
+    companyDrivers: () => ["companyDrivers"] as const,
+    dashboard: () => ["dashboard"] as const,
+    finance: () => ["finance"] as const,
+  },
+} as const;
