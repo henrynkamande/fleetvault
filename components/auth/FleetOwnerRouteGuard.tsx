@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useBillingStatus } from "@/hooks/queries/useBilling";
 import { useCurrentUser } from "@/hooks/queries/useUsers";
-import { DRIVER_APP_ENABLED } from "@/lib/constants";
+import { DRIVER_APP_ENABLED, SKIP_BILLING } from "@/lib/constants";
 import { fleetDashboardSignInUrl } from "@/lib/fleetEntry";
 import { getAccessToken } from "@/lib/tokenStorage";
 import { AppRoutesPaths } from "@/route/paths";
@@ -85,6 +85,7 @@ export default function FleetOwnerRouteGuard({
       return;
     }
     if (
+      !SKIP_BILLING &&
       role === "FLEET_OWNER" &&
       !billingExempt &&
       billingQuery.data?.requires_checkout &&
@@ -112,6 +113,7 @@ export default function FleetOwnerRouteGuard({
   if (isPlatformAdmin && isFleetOnlyPath(pathname)) return <LoadingScreen />;
   if (role === "FLEET_OWNER" && isAdminDashboardPath(pathname)) return <LoadingScreen />;
   if (
+    !SKIP_BILLING &&
     role === "FLEET_OWNER" &&
     !billingExempt &&
     billingQuery.data?.requires_checkout &&

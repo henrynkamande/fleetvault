@@ -10,3 +10,7 @@ export const DRIVER_LIVE_API =
 
 export const ACCESS_TOKEN_KEY = "token_fleetflow";
 export const REFRESH_TOKEN_KEY = "refresh_token_fleetflow";
+
+/** When true, skip Stripe checkout and grant dashboard access immediately after signup. */
+export const SKIP_BILLING =
+  process.env.NEXT_PUBLIC_SKIP_BILLING === "true";

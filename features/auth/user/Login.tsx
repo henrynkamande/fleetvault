@@ -12,8 +12,8 @@ import { flattenFieldErrors, getErrorDetail, getResponseErrorData } from '@/lib/
 import { toastApiError } from '@/lib/toastApiError'
 import type { LoginPayload } from '@/types/auth'
 import { APP_NAME } from '@/lib/constants'
-
-const fleetImage = '/fleet-hero.png'
+import Image from 'next/image'
+import fleetImage from '@/assets/6.png'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -58,7 +58,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#D2D2D2] to-[#F9F9F9] p-4 md:p-6">
       <div className="mx-auto grid min-h-[90vh] w-full max-w-7xl overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.12)] md:grid-cols-[1fr_1.05fr]">
         <aside className="relative hidden md:block">
-          <img src={fleetImage} alt={`${APP_NAME} vehicles`} className="h-full w-full object-cover" />
+          <Image src={fleetImage} alt={`${APP_NAME} vehicles`} className="h-full w-full object-cover" fill />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/70 via-[#0f172a]/25 to-transparent" />
           <div className="absolute bottom-10 left-10 right-10 text-white">
             <p className="inline-flex rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold uppercase tracking-wide">Welcome back</p>

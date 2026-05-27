@@ -2,10 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image'
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { toast } from 'react-toastify'
 import { AppRoutesPaths } from '@/route/paths'
-const fleetImage = '/fleet-hero.png'
+import fleetImage from '@/assets/6.png'
 import { HiArrowLeft, HiEye, HiEyeSlash } from 'react-icons/hi2'
 import OtpModal from './OtpModal'
 import {
@@ -63,7 +64,7 @@ export default function SignupPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#D2D2D2] to-[#F9F9F9] p-4 md:p-6">
       <div className="mx-auto grid min-h-[90vh] w-full max-w-7xl overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.12)] md:grid-cols-[1fr_1.05fr]">
         <aside className="relative hidden md:block">
-          <img src={fleetImage} alt={`${APP_NAME} vehicles`} className="h-full w-full object-cover" />
+          <Image src={fleetImage} alt={`${APP_NAME} vehicles`} className="h-full w-full object-cover" fill />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/70 via-[#0f172a]/25 to-transparent" />
           <div className="absolute bottom-10 left-10 right-10 text-white">
             <p className="inline-flex rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold uppercase tracking-wide">{APP_NAME}</p>
