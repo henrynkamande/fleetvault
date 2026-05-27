@@ -1,95 +1,99 @@
+import Image from 'next/image'
+import Link from 'next/link'
 import { FaArrowDown } from 'react-icons/fa6'
+import { FiArrowRight } from 'react-icons/fi'
 import Navbar from '@/components/ui/Navbar'
 import { APP_NAME } from '@/lib/constants'
+import { marketingImages } from '@/lib/marketingAssets'
+import { AppRoutesPaths } from '@/route/paths'
+import { MARKETING_CONTAINER } from '@/lib/marketingLayout'
 
-const fleetImage = '/fleet-hero.png'
+const stats = [
+  { value: '24/7', label: 'Ops visibility' },
+  { value: 'GPS-Free', label: 'Privacy-first' },
+  { value: 'Real-time', label: 'Trip records' },
+] as const
 
 export default function Hero() {
   return (
-    <section id="hero" className="w-full bg-gradient-to-b from-[#D2D2D2] to-[#F9F9F9] pb-[4vw]">
+    <section id="hero" className="relative w-full overflow-hidden bg-gradient-to-b from-slate-100 via-[#F9F9F9] to-[#F9F9F9] pb-12">
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(47,90,171,0.12),transparent)]"
+        aria-hidden
+      />
       <Navbar />
 
-      <div className="mx-auto mb-[6vw] mt-[15vw] flex w-[92vw] max-w-[1280px] flex-col sm:mt-[6vw] md:mt-[3.8vw]">
-        <div className="flex flex-col items-center gap-[6vw] text-center sm:gap-[1.15vw] md:gap-[1.15vw]">
-          <h1
-            className="max-w-[90vw] break-words pl-[3vw] font-title text-left text-[17vw] font-bold leading-[100%] tracking-[-0.02em] text-gray-900 sm:max-w-none sm:text-[10.7vw] md:max-w-[64.5vw] md:text-[5.67vw]"
-          >
-            Full fleet control. Zero driver surveillance.
-          </h1>
-          <p className="max-w-[86vw] font-title text-left text-[4.8vw] font-normal leading-[100%] tracking-[0.015em] text-gray-900 sm:max-w-[70.5vw] sm:text-[2.9vw] md:max-w-[55.6vw] md:text-[1.2vw]">
-            {APP_NAME} is the all-in-one GPS-free platform to manage drivers, vehicles, trips, and fleet finances with total operational control.
+      <div
+        className={`relative mt-6 flex flex-col gap-8 sm:mt-8 lg:mt-10 lg:flex-row lg:items-stretch lg:justify-center lg:gap-8 ${MARKETING_CONTAINER}`}
+      >
+        <div className="flex flex-1 flex-col justify-center text-left lg:max-w-[50%] lg:px-6 lg:py-4">
+          <p className="inline-flex w-fit items-center rounded-full border border-[#2f5aab]/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#2f5aab] shadow-sm">
+            GPS-free fleet management
           </p>
-        </div>
-
-        <div className="mt-[10vw] flex flex-col gap-[10vw] md:mt-[4vw] md:flex-row md:justify-center md:gap-[1vw]">
-          <div className="flex w-full flex-col gap-[3vw] rounded-[5vw] border border-white/70 bg-white/75 p-[5vw] shadow-[1.94vw_1.94vw_3.47vw_0px_rgba(0,0,0,0.06)] backdrop-blur-[5.2vw] sm:rounded-[3vw] md:w-[39.3vw] md:rounded-[2.78vw] md:p-[3vw]">
-            <div>
-              <h2 className="text-[6vw] font-semibold text-gray-900 sm:text-[3vw] md:text-[1.8vw]">Get started as</h2>
-              <p className="mt-1 text-[3.5vw] text-gray-600 sm:text-[1.9vw] md:text-[0.95vw]">
-                Pick your operating profile and launch in minutes.
-              </p>
-            </div>
-
-            <div className="rounded-[1.56vw] border border-[#E5E7EB] bg-white p-[4vw] md:p-[1.2vw]">
-              <div className="flex items-start gap-[1vw]">
-                <span className="mt-1 h-[1.4vw] w-[1.4vw] rounded-full bg-[#2f5aab]" />
-                <div>
-                  <h3 className="font-title text-[5vw] font-semibold leading-[110%] tracking-[0.015em] text-gray-900 sm:text-[2.5vw] md:text-[1.4vw]">
-                    Fleet Owner
-                  </h3>
-                  <p className="mt-1 font-title text-[3.8vw] font-normal leading-[120%] tracking-[0.012em] text-gray-700 sm:text-[1.9vw] md:text-[0.95vw]">
-                    I own vehicles and need operations visibility, utilization insights, and profitability tracking.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-[1.56vw] border border-[#E5E7EB] bg-white p-[4vw] md:p-[1.2vw]">
-              <div className="flex items-start gap-[1vw]">
-                <span className="mt-1 h-[1.4vw] w-[1.4vw] rounded-full bg-[#fbbd26]" />
-                <div>
-                  <h3 className="font-title text-[5vw] font-semibold leading-[110%] tracking-[0.015em] text-gray-900 sm:text-[2.5vw] md:text-[1.4vw]">
-                    Fleet Manager
-                  </h3>
-                  <p className="mt-1 font-title text-[3.8vw] font-normal leading-[120%] tracking-[0.012em] text-gray-700 sm:text-[1.9vw] md:text-[0.95vw]">
-                    I coordinate drivers, monitor trip logs, and keep compliance and operational workflows on track.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-[2vw] rounded-[1.56vw] bg-[#0f172a] p-[3vw] text-white md:gap-[0.8vw] md:p-[1vw]">
-              <div>
-                <p className="text-[4.2vw] font-semibold sm:text-[2.2vw] md:text-[1.1vw]">24/7</p>
-                <p className="text-[2.9vw] text-slate-300 sm:text-[1.5vw] md:text-[0.75vw]">Ops visibility</p>
-              </div>
-              <div>
-                <p className="text-[4.2vw] font-semibold sm:text-[2.2vw] md:text-[1.1vw]">GPS-Free</p>
-                <p className="text-[2.9vw] text-slate-300 sm:text-[1.5vw] md:text-[0.75vw]">Privacy-first</p>
-              </div>
-              <div>
-                <p className="text-[4.2vw] font-semibold sm:text-[2.2vw] md:text-[1.1vw]">Real-time</p>
-                <p className="text-[2.9vw] text-slate-300 sm:text-[1.5vw] md:text-[0.75vw]">Trip records</p>
-              </div>
-            </div>
+          <h1 className="mt-4 font-title text-[clamp(1.75rem,4vw,2.75rem)] font-bold leading-[1.1] tracking-[-0.03em] text-[#0f172a]">
+            Full fleet control.
+            <span className="block text-[#2f5aab]">Zero driver surveillance.</span>
+          </h1>
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
+            {APP_NAME} is the all-in-one GPS-free platform to manage drivers, vehicles, trips, and fleet finances
+            with total operational control.
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Link
+              href={AppRoutesPaths.auth.signup}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#fbbd26] px-6 py-3 text-sm font-semibold text-[#111827] shadow-md transition hover:bg-[#f4b20a] sm:text-base"
+            >
+              Start free trial <FiArrowRight />
+            </Link>
+            <Link
+              href={AppRoutesPaths.dashboard.root}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-[#111827] transition hover:border-slate-400 hover:bg-slate-50 sm:text-base"
+            >
+              Fleet dashboard
+            </Link>
           </div>
 
-          <div
-            className="relative box-border flex h-[460px] w-full items-end justify-start overflow-hidden rounded-[5vw] bg-cover bg-center p-[4vw] shadow-[1.94vw_1.94vw_3.47vw_0px_rgba(0,0,0,0.1)] sm:h-[62vw] sm:w-[82vw] sm:rounded-[3vw] md:h-[44.3vw] md:w-[38.4vw] md:rounded-[2.78vw] md:p-[2.4vw]"
-            style={{ backgroundImage: `url(${fleetImage})` }}
-          >
-            <h2 className="h-[168px] w-[385px] text-[44px] font-semibold leading-[100%] tracking-[-0.01em] text-white sm:h-auto sm:max-w-[27.7vw] sm:text-[4.4vw] md:max-w-[26.7vw] md:text-[3.33vw]">
-              One platform. Endless ways to move.
-            </h2>
+          <div className="mt-6 grid grid-cols-3 gap-2 rounded-xl bg-[#0f172a] p-3 text-white sm:max-w-md sm:p-4">
+            {stats.map((item) => (
+              <div key={item.value}>
+                <p className="text-xs font-bold sm:text-sm">{item.value}</p>
+                <p className="mt-0.5 text-[9px] font-medium uppercase tracking-wide text-slate-400 sm:text-[10px]">
+                  {item.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-1 flex-col lg:max-w-[50%] lg:justify-center lg:px-6 lg:py-4">
+          <div className="relative min-h-[220px] flex-1 overflow-hidden rounded-2xl shadow-[0_20px_50px_rgba(15,23,42,0.12)] sm:min-h-[260px] lg:min-h-0">
+            <Image
+              src={marketingImages.hero}
+              alt={`${APP_NAME} fleet operations`}
+              fill
+              priority
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 480px"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/75 via-transparent to-transparent lg:bg-gradient-to-l lg:from-[#0f172a]/60 lg:via-transparent lg:to-transparent" />
+            <div className="relative flex h-full min-h-[220px] flex-col justify-end p-5 sm:min-h-[260px] lg:min-h-full lg:p-6">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-white/70 sm:text-xs">{APP_NAME}</p>
+              <p className="mt-1 max-w-xs font-title text-lg font-semibold leading-snug text-white sm:text-xl">
+                One platform. Endless ways to move.
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="mt-[6vw] flex flex-col items-center gap-[5vw] text-gray-700 sm:gap-[3vw] md:mt-[5vw]">
-        <p className="font-title text-[6.8vw] font-light leading-[100%] text-black sm:text-[3.2vw] md:text-[0.94vw]">
-          Learn more
-        </p>
-        <FaArrowDown className="h-[6.4vw] w-[6.4vw] text-gray-900 sm:h-[2.5vw] sm:w-[2.5vw] md:h-[1.25vw] md:w-[1.25vw]" />
+      <div className={`mt-8 ${MARKETING_CONTAINER}`}>
+        <a
+          href="#explore"
+          className="flex flex-col items-center gap-2 text-slate-500 transition hover:text-[#0f172a]"
+        >
+          <span className="text-xs font-medium uppercase tracking-widest">Learn more</span>
+          <FaArrowDown className="h-4 w-4 animate-bounce" />
+        </a>
       </div>
     </section>
   )

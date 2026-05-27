@@ -1,67 +1,67 @@
+import Image from 'next/image'
+import Link from 'next/link'
 import { FaArrowRight } from 'react-icons/fa'
-const fleetImage = '/fleet-hero.png'
+import MarketingSection from '@/components/marketing/MarketingSection'
 import { APP_NAME } from '@/lib/constants'
+import { marketingImages } from '@/lib/marketingAssets'
+import { AppRoutesPaths } from '@/route/paths'
 
 export default function Explore() {
   return (
-    <section id="explore" className="flex w-full items-center justify-center bg-[#F9F9F9] py-[5vw]">
-      <div className="relative h-[980px] w-[92vw] overflow-hidden rounded-[30px] bg-[#2f5aab] sm:h-[700px] sm:w-[88vw] md:h-[52vw] md:w-[79.72vw] md:rounded-[2.78vw]">
-        <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#0d2f6eb8] via-[#0d2f6e7e] to-[#0d2f6e1a]" />
-        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+    <MarketingSection id="explore" className="bg-[#F9F9F9] py-12 md:py-16">
+      <div className="relative min-h-[620px] w-full overflow-hidden rounded-3xl bg-[#2f5aab] sm:min-h-[660px] md:min-h-[700px] lg:min-h-[740px]">
+        <Image
+          src={marketingImages.explore}
+          alt={`${APP_NAME} explore section`}
+          fill
+          className="object-cover object-center"
+          sizes="(max-width: 1120px) 100vw, 1120px"
+        />
+        <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#0d2f6e]/90 via-[#0d2f6e]/55 to-[#0d2f6e]/15" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-        <div className="absolute left-[16px] top-[24px] z-30 flex max-w-[92%] flex-col gap-4 sm:left-[6vw] sm:top-[6vw] sm:max-w-[48%] sm:gap-[1.2rem] md:left-[5vw] md:top-[5vw] md:max-w-[36vw] md:gap-6">
-          <h1 className="mt-[10vw] font-title text-[48px] font-bold leading-[105%] tracking-[-0.02em] text-[#FDFCFA] sm:mt-[5vw] sm:text-[4.2vw] md:mt-0 md:text-[4.44vw]">
+        <div className="absolute left-4 top-6 z-30 flex max-w-[92%] flex-col gap-4 pb-8 sm:left-8 sm:top-10 sm:max-w-[48%] sm:gap-5 sm:pb-10 md:gap-6 md:pb-12">
+          <h2 className="font-title text-3xl font-bold leading-tight tracking-tight text-[#FDFCFA] sm:text-4xl md:text-5xl">
             One platform. Endless fleet possibilities.
-          </h1>
+          </h2>
 
-          <p className="max-w-[100%] font-title text-[18px] font-normal leading-[135%] tracking-[0.01em] text-[#FDFCFA] sm:max-w-[80%] sm:text-[1.3vw] md:max-w-[30vw] md:text-[1.04vw]">
-            {APP_NAME} brings driver management, vehicles, trip logs, and finances together so your team can operate from a single source of truth.
+          <p className="max-w-lg text-base leading-relaxed text-[#FDFCFA]/95 sm:text-lg">
+            {APP_NAME} brings driver management, vehicles, trip logs, and finances together so your team can operate
+            from a single source of truth.
           </p>
 
-          <div className="z-20 mt-6 grid grid-cols-1 gap-y-4 sm:mt-[3vw] sm:grid-cols-2 sm:gap-x-[4vw] sm:gap-y-[2vw] md:mt-[2vw] md:grid-rows-2 md:gap-x-[1vw] md:gap-y-[0.8vw]">
-            <div className="flex h-[180px] w-full flex-col justify-center rounded-[20px] border border-white/25 bg-white/12 p-[16px] backdrop-blur-md sm:h-[15vw] sm:w-[28vw] sm:rounded-[1.8vw] sm:p-[2vw] md:h-auto md:w-[17vw] md:rounded-[1.5vw] md:p-[1.2vw]">
-              <h2 className="mb-[0.8vw] font-title text-[22px] font-semibold leading-[115%] text-[#FDFCFA] sm:text-[2.2vw] md:text-[1.25vw]">
-                Run Your Fleet
-              </h2>
-              <p className="font-title text-[18px] font-normal leading-[145%] text-[#FDFCFA]/90 sm:text-[1.35vw] md:text-[1.04vw]">
+          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+            <div className="flex flex-col justify-center rounded-2xl border border-white/25 bg-white/12 p-4 backdrop-blur-md">
+              <h3 className="font-title text-lg font-semibold text-[#FDFCFA]">Run Your Fleet</h3>
+              <p className="mt-1 text-sm leading-relaxed text-[#FDFCFA]/90">
                 Manage assignments, compliance, and utilization from one dashboard.
               </p>
             </div>
 
-            <div className="flex h-[180px] w-full flex-col justify-center rounded-[20px] border border-white/25 bg-white/12 p-[16px] backdrop-blur-md sm:h-[15vw] sm:w-[28vw] sm:rounded-[1.8vw] sm:p-[2vw] md:h-auto md:w-[17vw] md:rounded-[1.5vw] md:p-[1.2vw]">
-              <h2 className="mb-[0.8vw] font-title text-[22px] font-semibold leading-[115%] text-[#FDFCFA] sm:text-[2.2vw] md:text-[1.25vw]">
-                Log Trips Without GPS
-              </h2>
-              <p className="font-title text-[18px] font-normal leading-[145%] text-[#FDFCFA]/90 sm:text-[1.35vw] md:text-[1.04vw]">
+            <div className="flex flex-col justify-center rounded-2xl border border-white/25 bg-white/12 p-4 backdrop-blur-md">
+              <h3 className="font-title text-lg font-semibold text-[#FDFCFA]">Log Trips Without GPS</h3>
+              <p className="mt-1 text-sm leading-relaxed text-[#FDFCFA]/90">
                 Capture trip and odometer records while keeping driver privacy intact.
               </p>
             </div>
 
-            <div className="flex h-[180px] w-full flex-col justify-center rounded-[20px] border border-white/25 bg-white/12 p-[16px] backdrop-blur-md sm:h-[15vw] sm:w-[28vw] sm:rounded-[1.8vw] sm:p-[2vw] md:h-auto md:w-[17vw] md:rounded-[1.5vw] md:p-[1.2vw]">
-              <h2 className="mb-[0.8vw] font-title text-[22px] font-semibold leading-[115%] text-[#FDFCFA] sm:text-[2.2vw] md:text-[1.25vw]">
-                Track Profitability
-              </h2>
-              <p className="font-title text-[18px] font-normal leading-[145%] text-[#FDFCFA]/90 sm:text-[1.35vw] md:text-[1.04vw]">
+            <div className="flex flex-col justify-center rounded-2xl border border-white/25 bg-white/12 p-4 backdrop-blur-md sm:col-span-2 sm:max-w-md">
+              <h3 className="font-title text-lg font-semibold text-[#FDFCFA]">Track Profitability</h3>
+              <p className="mt-1 text-sm leading-relaxed text-[#FDFCFA]/90">
                 Understand revenue, expenses, and margins per route, driver, and vehicle.
               </p>
             </div>
 
-            <button
-              className="mt-6 flex h-[56px] w-[262px] items-center justify-center gap-[10px] rounded-[40px] bg-white text-[18px] font-medium text-[#2f5aab] transition-all duration-200 hover:bg-[#f1f5ff] sm:ml-[2vw] sm:mt-[4vw] sm:h-[6vw] sm:w-[20vw] sm:text-[1.1vw] md:ml-[3vw] md:mt-[2vw] md:h-[3.3vw] md:w-[14vw] md:gap-[1vw] md:rounded-[2vw] md:text-[0.95vw]"
-              type="button"
+            <Link
+              href={AppRoutesPaths.dashboard.root}
+              className="inline-flex h-12 w-fit items-center justify-center gap-2 rounded-full bg-white px-6 text-base font-medium text-[#2f5aab] transition hover:bg-[#f1f5ff] sm:col-span-2"
             >
               <span>Explore the platform</span>
               <FaArrowRight />
-            </button>
+            </Link>
           </div>
         </div>
-
-        <img
-          src={fleetImage}
-          alt={`${APP_NAME} explore section visual`}
-          className="absolute inset-0 z-0 h-full w-full object-cover object-top"
-        />
       </div>
-    </section>
+    </MarketingSection>
   )
 }

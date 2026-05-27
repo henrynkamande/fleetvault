@@ -1,5 +1,8 @@
+import Link from 'next/link'
 import { FaFacebookF, FaXTwitter, FaLinkedinIn, FaInstagram } from 'react-icons/fa6'
 import { APP_MARKETING_URL, APP_NAME } from '@/lib/constants'
+import { AppRoutesPaths } from '@/route/paths'
+import { MARKETING_CONTAINER } from '@/lib/marketingLayout'
 
 function FleetVaultMark() {
   return (
@@ -15,7 +18,7 @@ function FleetVaultMark() {
 export default function Footer() {
   return (
     <footer className="bg-white py-16 text-gray-700" id="docs">
-      <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-10 px-4 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
+      <div className={`grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 ${MARKETING_CONTAINER}`}>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <FleetVaultMark />
@@ -48,22 +51,22 @@ export default function Footer() {
           <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#111827]">Company</h4>
           <ul className="space-y-2 text-sm">
             <li>
-              <a href="#about" className="hover:text-[#111827]">
+              <Link href={AppRoutesPaths.marketing.about} className="hover:text-[#111827]">
                 About
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#pricing" className="hover:text-[#111827]">
+              <Link href={AppRoutesPaths.marketing.pricing} className="hover:text-[#111827]">
                 Pricing
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#explore" className="hover:text-[#111827]">
-                Features
-              </a>
+              <Link href={AppRoutesPaths.dashboard.root} className="hover:text-[#111827]">
+                Fleet dashboard
+              </Link>
             </li>
             <li>
-              <a href="#how-it-works" className="hover:text-[#111827]">
+              <a href="/#how-it-works" className="hover:text-[#111827]">
                 How It Works
               </a>
             </li>
@@ -84,14 +87,14 @@ export default function Footer() {
               </a>
             </li>
             <li>
-              <a href="#signin" className="hover:text-[#111827]">
+              <Link href={AppRoutesPaths.auth.signin} className="hover:text-[#111827]">
                 Sign In
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#get-started" className="hover:text-[#111827]">
+              <Link href={AppRoutesPaths.auth.signup} className="hover:text-[#111827]">
                 Get {APP_NAME}
-              </a>
+              </Link>
             </li>
           </ul>
         </div>

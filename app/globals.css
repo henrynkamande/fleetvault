@@ -1,4 +1,14 @@
 @import "tailwindcss";
+
+/* Scan migrated Vite `src/` trees (features, components, route, etc.). */
+@source "../features/**/*.{js,ts,jsx,tsx,mdx}";
+@source "../components/**/*.{js,ts,jsx,tsx,mdx}";
+@source "../app/**/*.{js,ts,jsx,tsx,mdx}";
+@source "../route/**/*.{js,ts,jsx,tsx,mdx}";
+@source "../context/**/*.{js,ts,jsx,tsx,mdx}";
+@source "../hooks/**/*.{js,ts,jsx,tsx,mdx}";
+@source "../lib/**/*.{js,ts,jsx,tsx,mdx}";
+
 @import "../app/styles/dashboard-theme.css";
 
 @theme inline {
@@ -9,10 +19,6 @@
 
 .font-title {
   font-family: var(--font-title), ui-sans-serif, system-ui, sans-serif;
-}
-
-html {
-  scroll-behavior: smooth;
 }
 
 body {

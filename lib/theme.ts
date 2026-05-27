@@ -44,3 +44,6 @@ export function applyResolvedTheme(resolved: ResolvedTheme): void {
 export function readThemePreferenceForBootstrap(): ThemePreference {
   return getStoredThemePreference()
 }
+
+/** Runs before React hydrates — keeps first paint aligned with stored theme. */
+export const THEME_BOOTSTRAP_SCRIPT = `(function(){try{var k='${THEME_STORAGE_KEY}';var p=localStorage.getItem(k);var pref=(p==='dark'||p==='light'||p==='system')?p:'system';var dark=pref==='dark'||(pref==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;r.classList.toggle('dark',dark);r.style.colorScheme=dark?'dark':'light';}catch(e){}})();`

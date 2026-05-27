@@ -21,6 +21,7 @@ import type { User } from '@/types/user'
 import type { AppPage } from '@/types/dashboard'
 import {
   HiOutlineArrowRightOnRectangle,
+  HiOutlineBuildingOffice2,
   HiOutlineChartBar,
   HiOutlineChevronDoubleLeft,
   HiOutlineChevronDoubleRight,
@@ -28,9 +29,12 @@ import {
   HiOutlineCog6Tooth,
   HiOutlineCurrencyDollar,
   HiOutlineDocumentChartBar,
+  HiOutlineDocumentText,
+  HiOutlineHome,
   HiOutlineReceiptPercent,
   HiOutlineTruck,
   HiOutlineUserGroup,
+  HiOutlineUsers,
   HiOutlineMap,
 } from 'react-icons/hi2'
 
@@ -189,7 +193,11 @@ function NavUserMenu({ user, onNavigate }: NavUserMenuProps) {
   function doLogout() {
     setOpen(false)
     void logoutMutation.mutateAsync().finally(() => {
-      router.replace(AppRoutesPaths.landing)
+      router.replace(
+        user.role === 'PLATFORM_ADMIN'
+          ? AppRoutesPaths.authSuperAdmin.signin
+          : AppRoutesPaths.landing,
+      )
     })
   }
 
@@ -367,7 +375,9 @@ export default function DashboardLayout({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
-  const resolvedActiveItem = activeItem ?? resolveActiveAppPage(pathname)
+  const isPlatformAdmin = user?.role === 'PLATFORM_ADMIN'
+  const resolvedActiveItem =
+    activeItem ?? resolveActiveAppPage(pathname, user?.role)
 
   const handleNavigate = (page: AppPage) => {
     const path = appPageToPath(page)
@@ -382,41 +392,99 @@ export default function DashboardLayout({
     setIsMobileSidebarOpen(false)
   }, [pathname])
 
-  const navGroups: SidebarSectionProps[] = [
-    {
-      items: [
+  const navGroups: SidebarSectionProps[] = isPlatformAdmin
+    ? [
         {
-          label: 'Dashboard',
-          page: 'dashboard',
-          icon: HiOutlineChartBar,
-          active: resolvedActiveItem === 'dashboard',
-          onNavigate: handleNavigate,
+          items: [
+            {
+              label: 'Platform pulse',
+              page: 'admin-overview',
+              icon: HiOutlineHome,
+              active: resolvedActiveItem === 'admin-overview',
+              onNavigate: handleNavigate,
+            },
+          ],
         },
-      ],
-    },
-    {
-      title: 'Management',
-      items: [
-        { label: 'Vehicles', page: 'vehicles', icon: HiOutlineTruck, active: resolvedActiveItem === 'vehicles', onNavigate: handleNavigate },
-        { label: 'Drivers', page: 'drivers', icon: HiOutlineUserGroup, active: resolvedActiveItem === 'drivers', onNavigate: handleNavigate },
-        { label: 'Trips (GPS-Free)', page: 'trips', icon: HiOutlineMap, active: resolvedActiveItem === 'trips', onNavigate: handleNavigate },
-      ],
-    },
-    {
-      title: 'Financials',
-      items: [
-        { label: 'Income', page: 'income', icon: HiOutlineCurrencyDollar, active: resolvedActiveItem === 'income', onNavigate: handleNavigate },
-        { label: 'Expenses', page: 'expenses', icon: HiOutlineReceiptPercent, active: resolvedActiveItem === 'expenses', onNavigate: handleNavigate },
-        { label: 'P&L Reports', page: 'reports', icon: HiOutlineDocumentChartBar, active: resolvedActiveItem === 'reports', onNavigate: handleNavigate },
-      ],
-    },
-    {
-      title: 'System',
-      items: [
-        { label: 'Settings', page: 'settings', icon: HiOutlineCog6Tooth, active: resolvedActiveItem === 'settings', onNavigate: handleNavigate },
-      ],
-    },
-  ]
+        {
+          title: 'Platform',
+          items: [
+            {
+              label: 'Companies',
+              page: 'admin-companies',
+              icon: HiOutlineBuildingOffice2,
+              active: resolvedActiveItem === 'admin-companies',
+              onNavigate: handleNavigate,
+            },
+            {
+              label: 'Users',
+              page: 'admin-users',
+              icon: HiOutlineUsers,
+              active: resolvedActiveItem === 'admin-users',
+              onNavigate: handleNavigate,
+            },
+            {
+              label: 'Billing',
+              page: 'admin-billing',
+              icon: HiOutlineCurrencyDollar,
+              active: resolvedActiveItem === 'admin-billing',
+              onNavigate: handleNavigate,
+            },
+            {
+              label: 'Blog',
+              page: 'admin-blog',
+              icon: HiOutlineDocumentText,
+              active: resolvedActiveItem === 'admin-blog',
+              onNavigate: handleNavigate,
+            },
+          ],
+        },
+      ]
+    : [
+        {
+          items: [
+            {
+              label: 'Dashboard',
+              page: 'dashboard',
+              icon: HiOutlineChartBar,
+              active: resolvedActiveItem === 'dashboard',
+              onNavigate: handleNavigate,
+            },
+          ],
+        },
+        {
+          title: 'Management',
+          items: [
+            { label: 'Vehicles', page: 'vehicles', icon: HiOutlineTruck, active: resolvedActiveItem === 'vehicles', onNavigate: handleNavigate },
+            { label: 'Drivers', page: 'drivers', icon: HiOutlineUserGroup, active: resolvedActiveItem === 'drivers', onNavigate: handleNavigate },
+            { label: 'Trips (GPS-Free)', page: 'trips', icon: HiOutlineMap, active: resolvedActiveItem === 'trips', onNavigate: handleNavigate },
+          ],
+        },
+        {
+          title: 'Financials',
+          items: [
+            { label: 'Income', page: 'income', icon: HiOutlineCurrencyDollar, active: resolvedActiveItem === 'income', onNavigate: handleNavigate },
+            { label: 'Expenses', page: 'expenses', icon: HiOutlineReceiptPercent, active: resolvedActiveItem === 'expenses', onNavigate: handleNavigate },
+            { label: 'P&L Reports', page: 'reports', icon: HiOutlineDocumentChartBar, active: resolvedActiveItem === 'reports', onNavigate: handleNavigate },
+          ],
+        },
+        {
+          title: 'System',
+          items: [
+            { label: 'Settings', page: 'settings', icon: HiOutlineCog6Tooth, active: resolvedActiveItem === 'settings', onNavigate: handleNavigate },
+          ],
+        },
+      ]
+
+  const sidebarFooter = isPlatformAdmin ? (
+    <div className="rounded-2xl border border-amber-200/80 bg-amber-50/80 p-4 dark:border-amber-900/50 dark:bg-amber-950/30">
+      <p className="ff-heading text-sm font-semibold">Platform admin</p>
+      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+        Cross-tenant operations for {APP_NAME}.
+      </p>
+    </div>
+  ) : (
+    <SidebarFooter />
+  )
 
   return (
     <div className="ff-dashboard-shell">
@@ -492,7 +560,7 @@ export default function DashboardLayout({
             ))}
           </div>
 
-          {!isSidebarCollapsed ? <SidebarFooter /> : null}
+          {!isSidebarCollapsed ? sidebarFooter : null}
         </aside>
 
         <main className="flex min-w-0 w-full flex-1 flex-col">
@@ -507,7 +575,7 @@ export default function DashboardLayout({
           <div className="w-full max-w-none flex-1 p-4 md:p-6">{children}</div>
         </main>
       </div>
-      {!isSidebarCollapsed ? <FAB /> : null}
+      {!isSidebarCollapsed && !isPlatformAdmin ? <FAB /> : null}
     </div>
   )
 }

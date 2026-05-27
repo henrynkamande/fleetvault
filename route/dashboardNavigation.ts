@@ -19,12 +19,46 @@ export function appPageToPath(page: AppPage): string {
       return AppRoutesPaths.dashboard.reports;
     case "settings":
       return AppRoutesPaths.dashboard.settings;
+    case "admin-overview":
+      return AppRoutesPaths.dashboard.root;
+    case "admin-companies":
+      return AppRoutesPaths.dashboard.admin.companies;
+    case "admin-users":
+      return AppRoutesPaths.dashboard.admin.users;
+    case "admin-billing":
+      return AppRoutesPaths.dashboard.admin.billing;
+    case "admin-blog":
+      return AppRoutesPaths.dashboard.admin.blog;
   }
 }
 
-/** Map current URL to sidebar section (supports nested profile routes). */
-export function resolveActiveAppPage(pathname: string): AppPage {
+const ADMIN_PREFIX = "/dashboard/admin";
+
+export function isAdminDashboardPath(pathname: string): boolean {
   const path = pathname.replace(/\/+$/, "") || "/";
+  return path === AppRoutesPaths.dashboard.root
+    ? false
+    : path.startsWith(ADMIN_PREFIX);
+}
+
+/** Map current URL to sidebar section (supports nested profile routes). */
+export function resolveActiveAppPage(
+  pathname: string,
+  role?: string | null,
+): AppPage {
+  const path = pathname.replace(/\/+$/, "") || "/";
+
+  if (role === "PLATFORM_ADMIN" && path === AppRoutesPaths.dashboard.root) {
+    return "admin-overview";
+  }
+
+  if (path.startsWith(`${AppRoutesPaths.dashboard.admin.companies}/`)) {
+    return "admin-companies";
+  }
+  if (path === AppRoutesPaths.dashboard.admin.companies) return "admin-companies";
+  if (path === AppRoutesPaths.dashboard.admin.users) return "admin-users";
+  if (path === AppRoutesPaths.dashboard.admin.billing) return "admin-billing";
+  if (path === AppRoutesPaths.dashboard.admin.blog) return "admin-blog";
 
   if (path === AppRoutesPaths.dashboard.root) return "dashboard";
   if (

@@ -4,13 +4,15 @@ import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { DashboardPeriodProvider } from "@/context/DashboardPeriodContext";
 import DashboardLayout from "@/features/dashboard/DashboardLayout";
+import { useCurrentUser } from "@/hooks/queries/useUsers";
 import { appPageToPath, resolveActiveAppPage } from "@/route/dashboardNavigation";
 import { getDashboardPageMeta } from "@/route/dashboardPageMeta";
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
-  const activePage = resolveActiveAppPage(pathname);
+  const userQuery = useCurrentUser();
+  const activePage = resolveActiveAppPage(pathname, userQuery.data?.role);
   const meta = getDashboardPageMeta(pathname, activePage);
 
   return (

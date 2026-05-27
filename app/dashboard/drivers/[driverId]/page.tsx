@@ -1,4 +1,4 @@
-import DriverProfilePage from "@/features/dashboard/DriverProfilePage";
+import DriverProfilePage from "@/features/dashboard/user/DriverProfilePage";
 
 export default function DriverProfileRoute() {
   return <DriverProfilePage />;

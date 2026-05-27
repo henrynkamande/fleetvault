@@ -3,7 +3,6 @@ import Explore from './Explore'
 import Hero from './Hero'
 import HowItWorks from './HowItWorks'
 import Join from './Join'
-import Price from './Prices'
 import { APP_MARKETING_URL, APP_NAME } from '@/lib/constants'
 
 const homepageMeta = {
@@ -17,10 +16,8 @@ export default function Homepage() {
   return (
     <main className="min-h-screen bg-[#F9F9F9]">
       <Hero />
-      <Price />
       <Explore />
       <HowItWorks />
-
       <Join />
       <Footer />
 

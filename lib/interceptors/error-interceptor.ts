@@ -33,12 +33,9 @@ const ErrorInterceptor = (httpClient: AxiosInstance) => {
 
       switch (status) {
         case 400:
-          return Promise.reject({
-            message: errorMessage || "Invalid request",
-            code: "BAD_REQUEST",
-            status,
-            data,
-          });
+        case 422:
+          // Keep AxiosError so Login and forms can read DRF `non_field_errors` / field keys.
+          return Promise.reject(error);
         case 401:
           return Promise.reject({
             message: errorMessage || "Unauthorized. Please log in again.",
@@ -56,13 +53,6 @@ const ErrorInterceptor = (httpClient: AxiosInstance) => {
             message: "Resource not found",
             code: "NOT_FOUND",
             status,
-          });
-        case 422:
-          return Promise.reject({
-            message: errorMessage || "Validation error",
-            code: "VALIDATION_ERROR",
-            status,
-            data,
           });
         case 429:
           return Promise.reject({

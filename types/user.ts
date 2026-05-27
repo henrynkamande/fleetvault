@@ -1,4 +1,4 @@
-export type UserRole = 'FLEET_OWNER' | 'DRIVER'
+export type UserRole = 'FLEET_OWNER' | 'DRIVER' | 'PLATFORM_ADMIN'
 
 /** Mirrors `UserSerializer` from the Django oauth app. */
 export interface User {

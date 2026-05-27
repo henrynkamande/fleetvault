@@ -21,6 +21,42 @@ const nextConfig: NextConfig = {
       { source: "/expenses", destination: AppRoutesPaths.dashboard.expenses, permanent: true },
       { source: "/reports", destination: AppRoutesPaths.dashboard.reports, permanent: true },
       { source: "/settings", destination: AppRoutesPaths.dashboard.settings, permanent: true },
+      {
+        source: "/platform/auth/signin",
+        destination: AppRoutesPaths.authSuperAdmin.signin,
+        permanent: false,
+      },
+      {
+        source: "/platform/auth/signup",
+        destination: AppRoutesPaths.authSuperAdmin.signup,
+        permanent: false,
+      },
+      {
+        source: "/platform/companies/:id",
+        destination: "/dashboard/admin/companies/:id",
+        permanent: false,
+      },
+      {
+        source: "/platform/companies",
+        destination: AppRoutesPaths.dashboard.admin.companies,
+        permanent: false,
+      },
+      {
+        source: "/platform/users",
+        destination: AppRoutesPaths.dashboard.admin.users,
+        permanent: false,
+      },
+      {
+        source: "/platform/billing",
+        destination: AppRoutesPaths.dashboard.admin.billing,
+        permanent: false,
+      },
+      {
+        source: "/platform/blog",
+        destination: AppRoutesPaths.dashboard.admin.blog,
+        permanent: false,
+      },
+      { source: "/platform", destination: AppRoutesPaths.dashboard.root, permanent: false },
     ];
   },
 };

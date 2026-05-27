@@ -1,11 +1,15 @@
 import type { AppPage } from "@/types/dashboard";
+import { isAdminAppPage } from "@/types/dashboard";
 
 export type DashboardPageMeta = {
   pageTitle: string;
   showPeriodFilter: boolean;
 };
 
-const DEFAULT_META: Record<AppPage, DashboardPageMeta> = {
+const FLEET_META: Record<
+  Extract<AppPage, "dashboard" | "vehicles" | "drivers" | "trips" | "income" | "expenses" | "reports" | "settings">,
+  DashboardPageMeta
+> = {
   dashboard: { pageTitle: "Dashboard Overview", showPeriodFilter: true },
   vehicles: { pageTitle: "Vehicle Management", showPeriodFilter: false },
   drivers: { pageTitle: "Driver Management", showPeriodFilter: false },
@@ -14,6 +18,17 @@ const DEFAULT_META: Record<AppPage, DashboardPageMeta> = {
   expenses: { pageTitle: "Expense Management", showPeriodFilter: true },
   reports: { pageTitle: "P&L Reports", showPeriodFilter: true },
   settings: { pageTitle: "System Settings", showPeriodFilter: false },
+};
+
+const ADMIN_META: Record<
+  Extract<AppPage, "admin-overview" | "admin-companies" | "admin-users" | "admin-billing" | "admin-blog">,
+  DashboardPageMeta
+> = {
+  "admin-overview": { pageTitle: "Platform pulse", showPeriodFilter: true },
+  "admin-companies": { pageTitle: "Companies", showPeriodFilter: false },
+  "admin-users": { pageTitle: "Users", showPeriodFilter: false },
+  "admin-billing": { pageTitle: "Billing", showPeriodFilter: false },
+  "admin-blog": { pageTitle: "Blog", showPeriodFilter: false },
 };
 
 export function getDashboardPageMeta(
@@ -32,5 +47,11 @@ export function getDashboardPageMeta(
   if (path.startsWith(`${tripsBase}/`) && path !== tripsBase) {
     return { pageTitle: "Trip details", showPeriodFilter: false };
   }
-  return DEFAULT_META[page];
+  if (path.startsWith(`${"/dashboard/admin/companies"}/`) && path !== "/dashboard/admin/companies") {
+    return { pageTitle: "Company", showPeriodFilter: true };
+  }
+  if (isAdminAppPage(page)) {
+    return ADMIN_META[page];
+  }
+  return FLEET_META[page as keyof typeof FLEET_META];
 }

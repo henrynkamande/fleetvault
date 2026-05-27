@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { toast } from 'react-toastify'
@@ -17,6 +17,10 @@ const fleetImage = '/fleet-hero.png'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nextPath = searchParams.get('next')
+  const wantsDashboard =
+    nextPath === AppRoutesPaths.dashboard.root || (nextPath?.startsWith('/dashboard') ?? false)
   const loginMutation = useLoginMutation()
   const [formData, setFormData] = useState<LoginPayload>({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
@@ -76,7 +80,17 @@ export default function LoginPage() {
           </button>
 
           <h1 className="text-4xl font-bold text-[#111827] md:text-5xl">Sign in to {APP_NAME}</h1>
-          <p className="mt-3 text-base text-gray-700 md:text-xl">Access trip, driver, and fleet financial operations.</p>
+          {wantsDashboard ? (
+            <p className="mt-3 rounded-xl border border-[#e7ecf4] bg-[#f7f9fd] px-4 py-3 text-base text-gray-800 md:text-lg">
+              Sign in to open your fleet owner dashboard, or{' '}
+              <Link className="font-semibold text-[#2f5aab] underline" href={AppRoutesPaths.auth.signup}>
+                create an account
+              </Link>{' '}
+              to get started.
+            </p>
+          ) : (
+            <p className="mt-3 text-base text-gray-700 md:text-xl">Access trip, driver, and fleet financial operations.</p>
+          )}
 
           {generalError ? (
             <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">

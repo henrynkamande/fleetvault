@@ -1,5 +1,10 @@
 export const AppRoutesPaths = {
   landing: "/",
+  marketing: {
+    pricing: "/pricing",
+    about: "/about",
+    blog: "/blog",
+  },
   auth: {
     signin: "/auth/signin",
     signup: "/auth/signup",
@@ -12,6 +17,14 @@ export const AppRoutesPaths = {
   },
   dashboard: {
     root: "/dashboard",
+    admin: {
+      companies: "/dashboard/admin/companies",
+      companyDetail: (companyId: string) =>
+        `/dashboard/admin/companies/${encodeURIComponent(companyId)}`,
+      users: "/dashboard/admin/users",
+      billing: "/dashboard/admin/billing",
+      blog: "/dashboard/admin/blog",
+    },
     vehicles: "/dashboard/vehicles",
     vehicleProfile: (vehicleId: string) =>
       `/dashboard/vehicles/profile/${encodeURIComponent(vehicleId)}`,
@@ -25,6 +38,14 @@ export const AppRoutesPaths = {
     expenses: "/dashboard/expenses",
     reports: "/dashboard/reports",
     settings: "/dashboard/settings",
+  },
+  authSuperAdmin: {
+    signin: "/auth/platform/signin",
+    signup: "/auth/platform/signup",
+  },
+  blog: {
+    index: "/blog",
+    post: (slug: string) => `/blog/${encodeURIComponent(slug)}`,
   },
   driverAppUnavailable: "/driver-app-unavailable",
   driver: {
