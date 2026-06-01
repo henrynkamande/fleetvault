@@ -6,6 +6,7 @@ import { useCompanyUserQuery } from '@/hooks/queries/useCompanyUser'
 import { useDriverCompletedTripsQuery } from '@/hooks/queries/useDriverCompletedTrips'
 import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
 import type { TripPeriodFilter } from '@/lib/tripDateRange'
+import { LoadingSpinner, LoadingState } from '@/components/ui/LoadingSpinner'
 import type { TripListDto } from '@/types/trip'
 
 type DriverProfileTripsModalProps = {
@@ -74,9 +75,9 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Driver profile</p>
               {userQuery.isLoading ? (
-                <h2 id="driver-profile-title" className="mt-1 text-xl font-semibold text-[#111827]">
-                  Loading…
-                </h2>
+                <div className="mt-2 flex justify-start">
+                  <LoadingSpinner size="sm" />
+                </div>
               ) : userQuery.isError || !user ? (
                 <h2 id="driver-profile-title" className="mt-1 text-xl font-semibold text-[#111827]">
                   Driver not found
@@ -138,7 +139,9 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
                   <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Assigned vehicle</h3>
                   <p className="mt-2 text-sm font-medium text-[#111827]">{assignedVehicleLabel}</p>
                   {vehiclesQuery.isLoading ? (
-                    <p className="mt-1 text-xs text-gray-500">Loading fleet…</p>
+                    <div className="mt-2">
+                      <LoadingSpinner size="sm" />
+                    </div>
                   ) : null}
                 </section>
               </div>
@@ -170,7 +173,7 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
             </div>
 
             {tripsQuery.isLoading ? (
-              <p className="py-8 text-center text-sm text-gray-600">Loading trips…</p>
+              <LoadingState />
             ) : tripsQuery.isError ? (
               <p className="rounded-lg border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-800">
                 Could not load trips for this driver.

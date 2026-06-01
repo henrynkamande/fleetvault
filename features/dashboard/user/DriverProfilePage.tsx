@@ -12,6 +12,7 @@ import type { TripPeriodFilter } from '@/lib/tripDateRange'
 import { formatDriverEmailForDisplay } from '@/lib/userDisplay'
 import type { TripListDto } from '@/types/trip'
 import type { User } from '@/types/user'
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 function parseDecimal(value: string | null | undefined): number {
   if (value === null || value === undefined || value === '') return 0
@@ -108,9 +109,7 @@ export default function DriverProfilePage() {
 
   if (userQuery.isLoading) {
     return (
-      <p className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-600 shadow-sm">
-        Loading driver…
-      </p>
+      <LoadingCard />
     )
   }
 
@@ -160,9 +159,7 @@ export default function DriverProfilePage() {
       </div>
 
       {tripsQuery.isLoading ? (
-        <p className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-gray-600 shadow-sm">
-          Loading trips…
-        </p>
+        <LoadingCard />
       ) : tripsQuery.isError ? (
         <p className="rounded-2xl border border-rose-100 bg-rose-50 p-6 text-center text-rose-800 shadow-sm">
           Could not load trips for this driver.

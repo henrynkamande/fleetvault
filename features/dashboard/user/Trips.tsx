@@ -10,6 +10,7 @@ import { getErrorDetail } from '@/lib/apiErrors'
 import { getAccessToken } from '@/lib/tokenStorage'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { TripListDto } from '@/types/trip'
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 type TripStatusUi = 'Ongoing' | 'Completed' | 'Flagged' | 'Planned' | 'Cancelled' | 'Delayed'
 
@@ -329,7 +330,7 @@ export default function Trips() {
         ) : null}
 
         {token && tripsQuery.isLoading ? (
-          <p className="text-sm text-gray-600">Loading trips…</p>
+          <LoadingCard className="border-0 bg-transparent shadow-none" />
         ) : null}
 
         {token && tripsQuery.isError ? (

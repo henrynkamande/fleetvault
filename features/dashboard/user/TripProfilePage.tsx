@@ -12,6 +12,7 @@ import { useCurrentUser } from '@/hooks/queries/useUsers'
 import { getErrorDetail } from '@/lib/apiErrors'
 import { formatActualTripTime, formatTripDistanceKm } from '@/lib/tripDisplay'
 import TripProfileEditForm from './TripProfileEditForm'
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 function formatWhen(iso: string | null | undefined): string {
   if (!iso) return '—'
@@ -84,9 +85,7 @@ export default function TripProfilePage() {
 
   if (tripQuery.isLoading) {
     return (
-      <p className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-600 shadow-sm">
-        Loading trip…
-      </p>
+      <LoadingCard />
     )
   }
 

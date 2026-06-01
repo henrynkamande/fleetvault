@@ -9,6 +9,7 @@ import { useDriversListQuery } from '@/hooks/queries/useDriversList'
 import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
 import { getErrorDetail } from '@/lib/apiErrors'
 import { getAccessToken } from '@/lib/tokenStorage'
+import { LoadingCard } from '@/components/ui/LoadingSpinner'
 import { OptionalCompanyBanner } from '@/components/onboarding/OptionalCompanyBanner'
 import { AppRoutesPaths } from '@/route/paths'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -173,9 +174,7 @@ export default function Drivers() {
         </div>
 
         {!authReady ? (
-          <p className="rounded-2xl border border-gray-200 bg-white py-12 text-center text-sm text-gray-600 shadow-sm">
-            Loading…
-          </p>
+          <LoadingCard />
         ) : !hasToken ? (
           <p className="rounded-2xl border border-gray-200 bg-white py-12 text-center text-sm text-gray-600 shadow-sm">
             Sign in as a fleet owner to load drivers.{' '}
@@ -184,9 +183,7 @@ export default function Drivers() {
             </Link>
           </p>
         ) : driversQuery.isPending ? (
-          <p className="rounded-2xl border border-gray-200 bg-white py-12 text-center text-sm text-gray-600 shadow-sm">
-            Loading drivers…
-          </p>
+          <LoadingCard />
         ) : driversQuery.isError ? (
           <p className="rounded-2xl border border-rose-100 bg-rose-50 py-12 text-center text-sm text-rose-800 shadow-sm">
             {getErrorDetail(driversQuery.error)}

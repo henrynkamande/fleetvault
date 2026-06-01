@@ -6,6 +6,7 @@ import {
   usePlatformVehicles,
 } from "@/hooks/queries/usePlatformVehicles";
 import { getErrorDetail } from "@/lib/apiErrors";
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 function StatCard({ title, value }: { title: string; value: number }) {
   return (
@@ -68,7 +69,7 @@ export default function AdminVehicles() {
       </div>
 
       {isLoading ? (
-        <p className="ff-muted">Loading vehicles…</p>
+        <LoadingState />
       ) : isError ? (
         <p className="text-rose-600">{getErrorDetail(error)}</p>
       ) : (

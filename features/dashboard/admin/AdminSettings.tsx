@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useCurrentUser } from "@/hooks/queries/useUsers";
 import { useUpdateProfileMutation } from "@/hooks/queries/useProfileMutations";
 import { getErrorDetail } from "@/lib/apiErrors";
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 type Tab = "profile" | "security" | "preferences";
 
@@ -60,7 +61,7 @@ export default function AdminSettings() {
   };
 
   if (userQuery.isLoading && !user) {
-    return <p className="ff-muted">Loading settings…</p>;
+    return <LoadingState />;
   }
 
   return (

@@ -14,6 +14,7 @@ import {
 import { OptionalCompanyBanner } from '@/components/onboarding/OptionalCompanyBanner'
 import { getErrorDetail } from '@/lib/apiErrors'
 import { AppRoutesPaths } from '@/route/paths'
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 type UiStatusFilter = 'All' | 'Active' | 'Maintenance' | 'Inactive' | 'Out of service'
 
@@ -182,7 +183,7 @@ export default function Vehicles() {
         </div>
 
         {vehiclesQuery.isPending ? (
-          <p className="text-sm text-gray-600">Loading vehicles…</p>
+          <LoadingCard className="border-0 bg-transparent shadow-none" />
         ) : vehiclesQuery.isError ? (
           <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">
             {getErrorDetail(vehiclesQuery.error) || 'Could not load vehicles. Check that you are signed in and the API is running.'}

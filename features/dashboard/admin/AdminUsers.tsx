@@ -8,6 +8,7 @@ import {
 import { getErrorDetail } from "@/lib/apiErrors";
 import { formatPlatformRole } from "@/types/platform";
 import type { PlatformUserListItem } from "@/types/platform";
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 function StatusBadge({ active }: { active: boolean }) {
   return (
@@ -84,7 +85,7 @@ export default function AdminUsers() {
       </div>
 
       {isLoading ? (
-        <p className="ff-muted">Loading users…</p>
+        <LoadingState />
       ) : isError ? (
         <p className="text-rose-600">{getErrorDetail(error)}</p>
       ) : (

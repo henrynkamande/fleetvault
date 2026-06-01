@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePlatformSubscriptions } from "@/hooks/queries/usePlatformSubscriptions";
 import { getErrorDetail } from "@/lib/apiErrors";
 import { formatBillingStatus } from "@/types/platform";
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 function StatCard({ title, value }: { title: string; value: string | number }) {
   return (
@@ -82,7 +83,7 @@ export default function AdminSubscriptions() {
       </div>
 
       {isLoading ? (
-        <p className="ff-muted">Loading subscriptions…</p>
+        <LoadingState />
       ) : isError ? (
         <p className="text-rose-600">{getErrorDetail(error)}</p>
       ) : (

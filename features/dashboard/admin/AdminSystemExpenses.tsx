@@ -8,6 +8,7 @@ import {
 } from "@/hooks/queries/usePlatformSystemExpenses";
 import { getErrorDetail } from "@/lib/apiErrors";
 import {
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
   PLATFORM_EXPENSE_CATEGORIES,
   type PlatformSystemExpense,
 } from "@/types/platform";
@@ -152,7 +153,7 @@ export default function AdminSystemExpenses() {
       </div>
 
       {isLoading ? (
-        <p className="ff-muted">Loading expenses…</p>
+        <LoadingState />
       ) : isError ? (
         <p className="text-rose-600">{getErrorDetail(error)}</p>
       ) : (

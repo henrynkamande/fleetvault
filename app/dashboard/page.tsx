@@ -3,13 +3,14 @@
 import Dashboard from "@/features/dashboard/user/Dashboard";
 import AdminOverview from "@/features/dashboard/admin/AdminOverview";
 import { useCurrentUser } from "@/hooks/queries/useUsers";
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 export default function DashboardPage() {
   const { data: user, isLoading } = useCurrentUser();
 
   if (isLoading && !user) {
     return (
-      <p className="text-slate-600 dark:text-slate-400">Loading dashboard…</p>
+      <LoadingState />
     );
   }
 

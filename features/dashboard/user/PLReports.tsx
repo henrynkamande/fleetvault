@@ -6,6 +6,7 @@ import { formatDeltaPct, formatUsd } from './finance/financeFormat'
 import { usePlReportQuery } from '@/hooks/queries/useFinanceReports'
 import type { FinanceGranularity } from '@/types/finance'
 import { getErrorDetail } from '@/lib/apiErrors'
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 type TimeMode = 'Monthly' | 'Quarterly' | 'Yearly'
 
@@ -267,7 +268,7 @@ export default function PLReports() {
   return (
     <section className="space-y-4 rounded-2xl  p-4">
         <FinanceFiltersBar value={filters} onChange={setFilters} />
-        {reportQuery.isLoading ? <p className="text-sm text-gray-600">Loading profit &amp; loss…</p> : null}
+        {reportQuery.isLoading ? <LoadingState /> : null}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {kpis.map((kpi) => (
             <KpiCard key={kpi.label} {...kpi} />

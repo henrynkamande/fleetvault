@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { platformApi } from "@/lib/platformApi";
 import { getErrorDetail } from "@/lib/apiErrors";
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 export default function AdminCompanyDetailPage() {
   const params = useParams();
@@ -32,7 +33,7 @@ export default function AdminCompanyDetailPage() {
   return (
     <div className="space-y-6">
       {isLoading ? (
-        <p className="text-slate-600">Loading…</p>
+        <LoadingState />
       ) : isError ? (
         <p className="text-rose-600">{getErrorDetail(error)}</p>
       ) : data ? (

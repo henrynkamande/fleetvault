@@ -6,6 +6,7 @@ import { formatDeltaPct, formatUsd } from './finance/financeFormat'
 import { useExpensesReportQuery } from '@/hooks/queries/useFinanceReports'
 import type { FinanceGranularity } from '@/types/finance'
 import { getErrorDetail } from '@/lib/apiErrors'
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 type ExpenseStatus = 'paid' | 'pending' | 'overdue'
 type Aggregation = 'Monthly' | 'Quarterly'
@@ -499,7 +500,7 @@ export default function Expenses() {
   return (
     <section className="space-y-4 rounded-2xl  p-4">
         <FinanceFiltersBar value={filters} onChange={(next) => { setFilters(next); setPage(1) }} />
-        {reportQuery.isLoading ? <p className="text-sm text-gray-600">Loading trip expenses…</p> : null}
+        {reportQuery.isLoading ? <LoadingState /> : null}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <QuickActions />
           <select

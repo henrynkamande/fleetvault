@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { usePathname, useRouter } from "next/navigation";
 import { useBillingStatus } from "@/hooks/queries/useBilling";
 import { useCurrentUser } from "@/hooks/queries/useUsers";
@@ -34,8 +35,9 @@ function isFleetOnlyPath(pathname: string): boolean {
 
 function LoadingScreen() {
   return (
-    <div className="grid min-h-screen place-items-center bg-slate-100 text-slate-600 dark:bg-slate-950 dark:text-slate-300">
-      Loading…
+    <div className="grid min-h-screen place-items-center bg-slate-100 dark:bg-slate-950" role="status">
+      <LoadingSpinner size="lg" />
+      <span className="sr-only">Loading</span>
     </div>
   );
 }

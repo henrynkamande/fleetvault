@@ -7,6 +7,7 @@ import { getErrorDetail } from "@/lib/apiErrors";
 import { AppRoutesPaths } from "@/route/paths";
 import type { FinancePeriodPreset } from "@/types/finance";
 import { formatBillingStatus } from "@/types/platform";
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 const periodOptions: { label: string; value: FinancePeriodPreset }[] = [
   { label: "7 days", value: "7d" },
@@ -41,7 +42,7 @@ export default function AdminOverview() {
   const { data, isLoading, isError, error } = usePlatformOverview(period);
 
   if (isLoading) {
-    return <p className="ff-muted">Loading dashboard…</p>;
+    return <LoadingState />;
   }
   if (isError || !data) {
     return (

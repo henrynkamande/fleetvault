@@ -15,6 +15,7 @@ import {
   vehicleTypeLabel,
 } from '@/lib/vehicleDisplay'
 import type { VehicleApiStatus } from '@/types/vehicle'
+import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
 
 type TripFilterStatus = 'All' | TripListDto['status']
 
@@ -151,7 +152,7 @@ export default function VehicleProfilePage() {
 
   if (vehicleQuery.isLoading) {
     return (
-      <p className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-600 shadow-sm">Loading vehicle…</p>
+      <LoadingCard />
 )
   }
 
@@ -295,7 +296,7 @@ export default function VehicleProfilePage() {
           </div>
 
           {tripsQuery.isLoading ? (
-            <p className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-gray-600 shadow-sm">Loading trips…</p>
+            <LoadingCard />
           ) : tripsQuery.isError ? (
             <p className="rounded-2xl border border-rose-100 bg-rose-50 p-6 text-center text-rose-800 shadow-sm">
               Could not load trips for this vehicle.
