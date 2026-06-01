@@ -1,5 +1,5 @@
-import Expenses from "@/features/dashboard/user/Expenses";
+import { LazyExpenses } from "@/lib/lazyDashboardPage";
 
 export default function ExpensesPage() {
-  return <Expenses />;
+  return <LazyExpenses />;
 }

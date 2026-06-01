@@ -1,5 +1,14 @@
 "use client";
 
+/**
+ * Next.js fleet + platform admin shell (`frontend/` → `/dashboard/*`).
+ *
+ * Production will NOT pick up edits here if your live site is built from
+ * `fleetflow-frontend/` (Vite SPA — see `src/features/dashboard/DashboardLayout.tsx`).
+ *
+ * Vercel: set Root Directory to `frontend`, then redeploy after changes (not just save locally).
+ */
+
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios'
@@ -58,7 +67,6 @@ type DashboardLayoutProps = {
   pageTitle?: string
   activeItem?: AppPage
   showPeriodFilter?: boolean
-  onNavigate?: (page: AppPage) => void
 }
 
 function MenuIcon() {
@@ -87,28 +95,20 @@ function TruckIcon() {
 
 function NavItem({ label, page, icon: Icon, collapsed = false, active = false, onNavigate }: NavItemProps) {
   const pathname = usePathname()
-  const router = useRouter()
   const path = appPageToPath(page)
   const isActive = active || resolveActiveAppPage(pathname) === page
-
-  const go = () => {
-    onNavigate?.(page)
-    if (pathname !== path) {
-      router.push(path)
-    } else {
-      document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
 
   return (
     <Link
       href={path}
-     
+      prefetch
       onMouseEnter={() => preloadDashboardPage(page)}
       onFocus={() => preloadDashboardPage(page)}
-      onClick={(event) => {
-        event.preventDefault()
-        go()
+      onClick={() => {
+        onNavigate?.(page)
+        if (pathname === path) {
+          document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })
+        }
       }}
       title={collapsed ? label : undefined}
       className={`ff-nav-item ${isActive ? 'ff-nav-item-active' : ''} ${collapsed ? 'justify-center gap-0' : ''}`}
@@ -157,10 +157,9 @@ function FAB() {
 
 type NavUserMenuProps = {
   user: User
-  onNavigate?: (page: AppPage) => void
 }
 
-function NavUserMenu({ user, onNavigate }: NavUserMenuProps) {
+function NavUserMenu({ user }: NavUserMenuProps) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -186,8 +185,7 @@ function NavUserMenu({ user, onNavigate }: NavUserMenuProps) {
 
   function goSettings() {
     setOpen(false)
-    if (onNavigate) onNavigate('settings')
-    else router.push(AppRoutesPaths.dashboard.settings)
+    router.push(AppRoutesPaths.dashboard.settings)
   }
 
   function doLogout() {
@@ -263,7 +261,6 @@ type DashboardNavProps = {
   pageTitle: string
   showPeriodFilter: boolean
   onOpenSidebar?: () => void
-  onNavigate?: (page: AppPage) => void
   user: User | undefined
   userLoading: boolean
 }
@@ -278,7 +275,6 @@ function DashboardNav({
   pageTitle,
   showPeriodFilter,
   onOpenSidebar,
-  onNavigate,
   user,
   userLoading,
 }: DashboardNavProps) {
@@ -330,7 +326,7 @@ function DashboardNav({
               </div>
             </div>
           ) : user ? (
-            <NavUserMenu user={user} onNavigate={onNavigate} />
+            <NavUserMenu user={user} />
           ) : (
             <div className="ff-dashboard-user-chip">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
@@ -353,7 +349,6 @@ export default function DashboardLayout({
   pageTitle = 'Dashboard Overview',
   activeItem = 'dashboard',
   showPeriodFilter = true,
-  onNavigate,
 }: DashboardLayoutProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -379,13 +374,10 @@ export default function DashboardLayout({
   const resolvedActiveItem =
     activeItem ?? resolveActiveAppPage(pathname, user?.role)
 
-  const handleNavigate = (page: AppPage) => {
-    const path = appPageToPath(page)
+  /** Sidebar uses <Link>; this only closes the mobile drawer. */
+  const handleSidebarNav = (_page?: AppPage) => {
+    void _page
     setIsMobileSidebarOpen(false)
-    onNavigate?.(page)
-    if (pathname !== path) {
-      router.push(path)
-    }
   }
 
   useEffect(() => {
@@ -401,42 +393,42 @@ export default function DashboardLayout({
               page: 'admin-overview',
               icon: HiOutlineChartBar,
               active: resolvedActiveItem === 'admin-overview',
-              onNavigate: handleNavigate,
+              onNavigate: handleSidebarNav,
             },
             {
               label: 'Users',
               page: 'admin-users',
               icon: HiOutlineUsers,
               active: resolvedActiveItem === 'admin-users',
-              onNavigate: handleNavigate,
+              onNavigate: handleSidebarNav,
             },
             {
               label: 'Vehicles',
               page: 'admin-vehicles',
               icon: HiOutlineTruck,
               active: resolvedActiveItem === 'admin-vehicles',
-              onNavigate: handleNavigate,
+              onNavigate: handleSidebarNav,
             },
             {
               label: 'Subscriptions & Payments',
               page: 'admin-subscriptions',
               icon: HiOutlineCurrencyDollar,
               active: resolvedActiveItem === 'admin-subscriptions',
-              onNavigate: handleNavigate,
+              onNavigate: handleSidebarNav,
             },
             {
               label: 'System Expenses',
               page: 'admin-system-expenses',
               icon: HiOutlineReceiptPercent,
               active: resolvedActiveItem === 'admin-system-expenses',
-              onNavigate: handleNavigate,
+              onNavigate: handleSidebarNav,
             },
             {
               label: 'Settings',
               page: 'admin-settings',
               icon: HiOutlineCog6Tooth,
               active: resolvedActiveItem === 'admin-settings',
-              onNavigate: handleNavigate,
+              onNavigate: handleSidebarNav,
             },
           ],
         },
@@ -449,30 +441,30 @@ export default function DashboardLayout({
               page: 'dashboard',
               icon: HiOutlineChartBar,
               active: resolvedActiveItem === 'dashboard',
-              onNavigate: handleNavigate,
+              onNavigate: handleSidebarNav,
             },
           ],
         },
         {
           title: 'Management',
           items: [
-            { label: 'Vehicles', page: 'vehicles', icon: HiOutlineTruck, active: resolvedActiveItem === 'vehicles', onNavigate: handleNavigate },
-            { label: 'Drivers', page: 'drivers', icon: HiOutlineUserGroup, active: resolvedActiveItem === 'drivers', onNavigate: handleNavigate },
-            { label: 'Trips (GPS-Free)', page: 'trips', icon: HiOutlineMap, active: resolvedActiveItem === 'trips', onNavigate: handleNavigate },
+            { label: 'Vehicles', page: 'vehicles', icon: HiOutlineTruck, active: resolvedActiveItem === 'vehicles', onNavigate: handleSidebarNav },
+            { label: 'Drivers', page: 'drivers', icon: HiOutlineUserGroup, active: resolvedActiveItem === 'drivers', onNavigate: handleSidebarNav },
+            { label: 'Trips (GPS-Free)', page: 'trips', icon: HiOutlineMap, active: resolvedActiveItem === 'trips', onNavigate: handleSidebarNav },
           ],
         },
         {
           title: 'Financials',
           items: [
-            { label: 'Income', page: 'income', icon: HiOutlineCurrencyDollar, active: resolvedActiveItem === 'income', onNavigate: handleNavigate },
-            { label: 'Expenses', page: 'expenses', icon: HiOutlineReceiptPercent, active: resolvedActiveItem === 'expenses', onNavigate: handleNavigate },
-            { label: 'P&L Reports', page: 'reports', icon: HiOutlineDocumentChartBar, active: resolvedActiveItem === 'reports', onNavigate: handleNavigate },
+            { label: 'Income', page: 'income', icon: HiOutlineCurrencyDollar, active: resolvedActiveItem === 'income', onNavigate: handleSidebarNav },
+            { label: 'Expenses', page: 'expenses', icon: HiOutlineReceiptPercent, active: resolvedActiveItem === 'expenses', onNavigate: handleSidebarNav },
+            { label: 'P&L Reports', page: 'reports', icon: HiOutlineDocumentChartBar, active: resolvedActiveItem === 'reports', onNavigate: handleSidebarNav },
           ],
         },
         {
           title: 'System',
           items: [
-            { label: 'Settings', page: 'settings', icon: HiOutlineCog6Tooth, active: resolvedActiveItem === 'settings', onNavigate: handleNavigate },
+            { label: 'Settings', page: 'settings', icon: HiOutlineCog6Tooth, active: resolvedActiveItem === 'settings', onNavigate: handleSidebarNav },
           ],
         },
       ]
@@ -503,7 +495,7 @@ export default function DashboardLayout({
               <div className="mb-6 flex items-start justify-between">
                 <Link
                   href={AppRoutesPaths.dashboard.root}
-                  onClick={() => handleNavigate('dashboard')}
+                  onClick={() => handleSidebarNav()}
                   className="flex items-center gap-2 rounded-xl px-2 py-1 ff-heading"
                 >
                   <span className="grid h-8 w-8 place-items-center rounded-lg bg-indigo-600 text-white">
@@ -537,7 +529,7 @@ export default function DashboardLayout({
           <div className="mb-6 flex items-start justify-between">
             <Link
               href={AppRoutesPaths.dashboard.root}
-              onClick={() => handleNavigate('dashboard')}
+              onClick={() => handleSidebarNav('dashboard')}
               className="flex items-center gap-2 rounded-xl px-2 py-1 ff-heading"
             >
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-indigo-600 text-white">
@@ -570,7 +562,6 @@ export default function DashboardLayout({
             pageTitle={pageTitle}
             showPeriodFilter={showPeriodFilter}
             onOpenSidebar={() => setIsMobileSidebarOpen(true)}
-            onNavigate={onNavigate}
             user={user}
             userLoading={userLoading}
           />

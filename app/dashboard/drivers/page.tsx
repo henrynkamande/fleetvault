@@ -1,5 +1,5 @@
-import Drivers from "@/features/dashboard/user/Drivers";
+import { LazyDrivers } from "@/lib/lazyDashboardPage";
 
 export default function DriversPage() {
-  return <Drivers />;
+  return <LazyDrivers />;
 }

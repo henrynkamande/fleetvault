@@ -1,5 +1,5 @@
-import Income from "@/features/dashboard/user/Income";
+import { LazyIncome } from "@/lib/lazyDashboardPage";
 
 export default function IncomePage() {
-  return <Income />;
+  return <LazyIncome />;
 }

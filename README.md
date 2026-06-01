@@ -1,5 +1,16 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Monorepo: which app is production?
+
+| Folder | Stack | Dashboard layout file |
+|--------|--------|------------------------|
+| **`frontend/`** (this app) | Next.js 16, `/dashboard/*` | `features/dashboard/DashboardLayout.tsx` |
+| **`fleetflow-frontend/`** | Vite SPA, static `dist/` | `src/features/dashboard/DashboardLayout.tsx` |
+
+If production still shows old UI after you edit `frontend/features/dashboard/DashboardLayout.tsx`, your Vercel/host project is almost certainly building **`fleetflow-frontend`** (it has the repo’s only `vercel.json` SPA rewrite). Either change that layout file too, or point the host **Root Directory** to `frontend` and redeploy.
+
+After deploy, hard-refresh the browser (cached `_next/static/*` chunks).
+
 ## Getting Started
 
 First, run the development server:

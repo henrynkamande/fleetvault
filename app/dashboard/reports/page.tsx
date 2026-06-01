@@ -1,5 +1,5 @@
-import PLReports from "@/features/dashboard/user/PLReports";
+import { LazyReports } from "@/lib/lazyDashboardPage";
 
 export default function ReportsPage() {
-  return <PLReports />;
+  return <LazyReports />;
 }

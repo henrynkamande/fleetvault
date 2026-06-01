@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { preloadDashboardPage } from '@/route/dashboardPreload'
 import LogTripModal from './modals/LogTripModal'
 import { AppRoutesPaths } from '@/route/paths'
 import { useCurrentUser } from '@/hooks/queries/useUsers'
@@ -274,6 +275,12 @@ function isCompletedToday(t: TripListDto): boolean {
 }
 
 export default function Trips() {
+  useEffect(() => {
+    ;(['dashboard', 'vehicles', 'drivers', 'income', 'expenses', 'reports', 'settings'] as const).forEach(
+      (page) => preloadDashboardPage(page),
+    )
+  }, [])
+
   const router = useRouter()
   const ready = useAuthStore((s) => s.ready)
   const version = useAuthStore((s) => s.version)

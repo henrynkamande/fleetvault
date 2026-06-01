@@ -1,5 +1,5 @@
-import Trips from "@/features/dashboard/user/Trips";
+import { LazyTrips } from "@/lib/lazyDashboardPage";
 
 export default function TripsPage() {
-  return <Trips />;
+  return <LazyTrips />;
 }

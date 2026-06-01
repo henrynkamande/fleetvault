@@ -1,5 +1,5 @@
-import Settings from "@/features/dashboard/user/Settings";
+import { LazySettings } from "@/lib/lazyDashboardPage";
 
 export default function SettingsPage() {
-  return <Settings />;
+  return <LazySettings />;
 }

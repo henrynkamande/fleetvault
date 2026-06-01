@@ -1,5 +1,5 @@
-import Vehicles from "@/features/dashboard/user/Vehicles";
+import { LazyVehicles } from "@/lib/lazyDashboardPage";
 
 export default function VehiclesPage() {
-  return <Vehicles />;
+  return <LazyVehicles />;
 }
