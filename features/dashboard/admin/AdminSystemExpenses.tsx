@@ -6,9 +6,9 @@ import {
   usePlatformSystemExpenses,
   type PlatformExpenseInput,
 } from "@/hooks/queries/usePlatformSystemExpenses";
+import { LoadingState } from "@/components/ui/LoadingSpinner";
 import { getErrorDetail } from "@/lib/apiErrors";
 import {
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
   PLATFORM_EXPENSE_CATEGORIES,
   type PlatformSystemExpense,
 } from "@/types/platform";
