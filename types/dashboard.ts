@@ -14,7 +14,8 @@ export type AdminAppPage =
   | "admin-vehicles"
   | "admin-subscriptions"
   | "admin-system-expenses"
-  | "admin-settings";
+  | "admin-settings"
+  | "admin-blog";
 
 export type AppPage = FleetAppPage | AdminAppPage;
 

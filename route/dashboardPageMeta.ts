@@ -29,6 +29,7 @@ const ADMIN_META: Record<
     | "admin-subscriptions"
     | "admin-system-expenses"
     | "admin-settings"
+    | "admin-blog"
   >,
   DashboardPageMeta
 > = {
@@ -38,6 +39,7 @@ const ADMIN_META: Record<
   "admin-subscriptions": { pageTitle: "Subscriptions & Payments", showPeriodFilter: false },
   "admin-system-expenses": { pageTitle: "System Expenses", showPeriodFilter: false },
   "admin-settings": { pageTitle: "Settings", showPeriodFilter: false },
+  "admin-blog": { pageTitle: "Blog", showPeriodFilter: false },
 };
 
 export function getDashboardPageMeta(

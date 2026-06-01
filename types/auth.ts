@@ -19,6 +19,7 @@ export interface RegisterFleetOwnerResponse {
   message: string
   email: string
   requires_verification: boolean
+  email_sent?: boolean
   otp_expires_minutes?: number
   resend_cooldown_seconds?: number
   dev_otp?: string

@@ -45,6 +45,9 @@ export function preloadDashboardPage(page: AppPage): void {
     case "admin-settings":
       void import("@/features/dashboard/admin/AdminSettings");
       break;
+    case "admin-blog":
+      void import("@/features/dashboard/admin/AdminBlog");
+      break;
     default:
       break;
   }

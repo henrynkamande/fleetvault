@@ -424,6 +424,13 @@ export default function DashboardLayout({
               onNavigate: handleSidebarNav,
             },
             {
+              label: 'Blog',
+              page: 'admin-blog',
+              icon: HiOutlineDocumentText,
+              active: resolvedActiveItem === 'admin-blog',
+              onNavigate: handleSidebarNav,
+            },
+            {
               label: 'Settings',
               page: 'admin-settings',
               icon: HiOutlineCog6Tooth,

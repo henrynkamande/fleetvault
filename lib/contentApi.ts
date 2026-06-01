@@ -1,7 +1,10 @@
 import axios from "axios";
+import { createFleetApiClient } from "@/lib/createFleetApiClient";
 import { getApiOrigin } from "@/lib/apiOrigin";
 
 const contentBase = `${getApiOrigin()}/content/api`;
+
+export const contentAdminApi = createFleetApiClient(contentBase);
 
 const publicClient = axios.create({
   baseURL: contentBase.replace(/\/$/, ""),
@@ -47,3 +50,32 @@ export async function fetchAllPublishedPosts(page = 1, limit = 12) {
   );
   return res.data;
 }
+
+export type BlogPostStatus = "DRAFT" | "PUBLISHED" | "SCHEDULED";
+
+export type AdminBlogPost = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  body: string;
+  cover_url: string;
+  status: BlogPostStatus;
+  seo_title: string;
+  seo_description: string;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminBlogPostInput = {
+  slug: string;
+  title: string;
+  excerpt?: string;
+  body: string;
+  cover_url?: string;
+  status: BlogPostStatus;
+  seo_title?: string;
+  seo_description?: string;
+  published_at?: string | null;
+};

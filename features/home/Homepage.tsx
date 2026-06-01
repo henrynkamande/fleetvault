@@ -1,4 +1,5 @@
 import Footer from '@/components/ui/Footer'
+import BlogPreview from './BlogPreview'
 import Explore from './Explore'
 import Hero from './Hero'
 import HowItWorks from './HowItWorks'
@@ -18,6 +19,7 @@ export default function Homepage() {
       <Hero />
       <Explore />
       <HowItWorks />
+      <BlogPreview />
       <Join />
       <Footer />
 

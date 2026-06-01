@@ -50,6 +50,13 @@ export default function SignupPage() {
     }
     registerMutation.mutate(payload, {
       onSuccess: (data) => {
+        if (data.email_sent === false) {
+          toast.error(
+            data.message ||
+              'We could not send the verification email. Fix your email settings or try again.',
+          )
+          return
+        }
         setPendingEmail(data.email)
         setOtpModalOpen(true)
         toast.success(data.message || 'Check your email for a verification code.')

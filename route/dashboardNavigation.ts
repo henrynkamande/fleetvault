@@ -31,6 +31,8 @@ export function appPageToPath(page: AppPage): string {
       return AppRoutesPaths.dashboard.admin.systemExpenses;
     case "admin-settings":
       return AppRoutesPaths.dashboard.admin.settings;
+    case "admin-blog":
+      return AppRoutesPaths.dashboard.admin.blog;
   }
 }
 
@@ -70,6 +72,7 @@ export function resolveActiveAppPage(
     return "admin-system-expenses";
   }
   if (path === AppRoutesPaths.dashboard.admin.settings) return "admin-settings";
+  if (path === AppRoutesPaths.dashboard.admin.blog) return "admin-blog";
 
   if (path === AppRoutesPaths.dashboard.root) return "dashboard";
   if (
