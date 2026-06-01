@@ -6,6 +6,7 @@ import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
 import { flattenFieldErrors, getErrorDetail, getResponseErrorData } from '@/lib/apiErrors'
 import { fleetConfirm } from '@/lib/fleetAlert'
 import { formatOdometerKm } from '@/lib/vehicleDisplay'
+import { getDriverSelectLabel } from '@/lib/userDisplay'
 import type { TripDetailDto, TripRevenueModel, UpdateTripPayload } from '@/types/trip'
 
 type RevenueModelUi = 'Fixed Rate' | 'Per km' | 'Per delivery' | 'Contract'
@@ -155,7 +156,7 @@ export default function TripProfileEditForm({
       .filter((d) => d.driver_profile_id)
       .map((d) => ({
         profileId: d.driver_profile_id as string,
-        label: `${d.full_name} (${d.email})`,
+        label: getDriverSelectLabel(d),
       }))
   }, [driversQuery.data?.drivers])
 

@@ -30,8 +30,20 @@ export function preloadDashboardPage(page: AppPage): void {
     case "admin-overview":
       void import("@/features/dashboard/admin/AdminOverview");
       break;
-    case "admin-companies":
-      void import("@/features/dashboard/admin/AdminCompanies");
+    case "admin-users":
+      void import("@/features/dashboard/admin/AdminUsers");
+      break;
+    case "admin-vehicles":
+      void import("@/features/dashboard/admin/AdminVehicles");
+      break;
+    case "admin-subscriptions":
+      void import("@/features/dashboard/admin/AdminSubscriptions");
+      break;
+    case "admin-system-expenses":
+      void import("@/features/dashboard/admin/AdminSystemExpenses");
+      break;
+    case "admin-settings":
+      void import("@/features/dashboard/admin/AdminSettings");
       break;
     default:
       break;

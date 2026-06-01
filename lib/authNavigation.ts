@@ -1,4 +1,4 @@
-import { DRIVER_APP_ENABLED, DRIVER_LIVE_API } from "@/lib/constants";
+import { DRIVER_APP_ENABLED, DRIVER_LIVE_API, SKIP_BILLING } from "@/lib/constants";
 import { AppRoutesPaths } from "@/route/paths";
 import type { LoginResponse, RegisterFleetOwnerResponse } from "@/types/auth";
 
@@ -59,7 +59,12 @@ export function resolvePostAuthNavigation(data: PostAuthInput): PostAuthResoluti
     }
   }
 
-  if ('requires_billing_checkout' in data && data.requires_billing_checkout && !isDriver) {
+  if (
+    'requires_billing_checkout' in data &&
+    data.requires_billing_checkout &&
+    !isDriver &&
+    !SKIP_BILLING
+  ) {
     return {
       path: AppRoutesPaths.onboarding.startTrial,
       rule: 'requires_billing_checkout',

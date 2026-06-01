@@ -22,7 +22,11 @@ export const AppRoutesPaths = {
       companyDetail: (companyId: string) =>
         `/dashboard/admin/companies/${encodeURIComponent(companyId)}`,
       users: "/dashboard/admin/users",
+      vehicles: "/dashboard/admin/vehicles",
+      subscriptions: "/dashboard/admin/subscriptions",
       billing: "/dashboard/admin/billing",
+      systemExpenses: "/dashboard/admin/system-expenses",
+      settings: "/dashboard/admin/settings",
       blog: "/dashboard/admin/blog",
     },
     vehicles: "/dashboard/vehicles",

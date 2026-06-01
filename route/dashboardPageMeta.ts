@@ -21,14 +21,23 @@ const FLEET_META: Record<
 };
 
 const ADMIN_META: Record<
-  Extract<AppPage, "admin-overview" | "admin-companies" | "admin-users" | "admin-billing" | "admin-blog">,
+  Extract<
+    AppPage,
+    | "admin-overview"
+    | "admin-users"
+    | "admin-vehicles"
+    | "admin-subscriptions"
+    | "admin-system-expenses"
+    | "admin-settings"
+  >,
   DashboardPageMeta
 > = {
-  "admin-overview": { pageTitle: "Platform pulse", showPeriodFilter: true },
-  "admin-companies": { pageTitle: "Companies", showPeriodFilter: false },
+  "admin-overview": { pageTitle: "Dashboard", showPeriodFilter: true },
   "admin-users": { pageTitle: "Users", showPeriodFilter: false },
-  "admin-billing": { pageTitle: "Billing", showPeriodFilter: false },
-  "admin-blog": { pageTitle: "Blog", showPeriodFilter: false },
+  "admin-vehicles": { pageTitle: "Vehicles", showPeriodFilter: false },
+  "admin-subscriptions": { pageTitle: "Subscriptions & Payments", showPeriodFilter: false },
+  "admin-system-expenses": { pageTitle: "System Expenses", showPeriodFilter: false },
+  "admin-settings": { pageTitle: "Settings", showPeriodFilter: false },
 };
 
 export function getDashboardPageMeta(

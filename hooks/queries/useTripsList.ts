@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getAccessToken } from '@/lib/tokenStorage'
 import { listTrips } from '@/services/tripService'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -14,5 +14,6 @@ export function useTripsListQuery(filters?: { status?: TripApiStatus }) {
     queryFn: () => listTrips(filters?.status ? { status: filters.status } : undefined),
     enabled: ready && !!getAccessToken(),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   })
 }

@@ -53,9 +53,20 @@ export interface TripListDto {
   created_at: string
 }
 
+export interface TripListStats {
+  active: number
+  completed_today: number
+  flagged: number
+  open_revenue: string
+}
+
 export interface ListTripsResponse {
   count: number
+  page: number
+  page_size: number
+  total_pages: number
   trips: TripListDto[]
+  stats?: TripListStats
 }
 
 export interface CreateTripPayload {

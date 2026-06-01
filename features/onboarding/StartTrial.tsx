@@ -6,14 +6,26 @@ import { useEffect, type ReactNode } from 'react'
 import { FiArrowRight, FiCheck, FiCreditCard, FiShield } from 'react-icons/fi'
 import { getAccessToken } from '@/lib/tokenStorage'
 import { CHECKOUT_SESSION_STORAGE_KEY } from '@/lib/billingApi'
-import { useBillingConfig, useBillingStatus, useStartTrialCheckout } from '@/hooks/queries/useBilling'
+import {
+  canSkipPaymentCheckout,
+  useBillingConfig,
+  useBillingStatus,
+  useStartTrialCheckout,
+  useStartTrialWithoutPayment,
+} from '@/hooks/queries/useBilling'
+import { APP_NAME, SKIP_BILLING } from '@/lib/constants'
 import { AppRoutesPaths } from '@/route/paths'
-import { APP_NAME } from '@/lib/constants'
 
 const BENEFITS = [
   'Full platform access during your trial',
   'Card collected securely by Stripe — not stored on our servers',
   'Update or cancel anytime from billing settings',
+] as const
+
+const BENEFITS_NO_CARD = [
+  'Full platform access during your trial',
+  'No charge during the trial period',
+  'Add a payment method later from billing settings when you go live',
 ] as const
 
 export default function StartTrial() {
@@ -22,6 +34,9 @@ export default function StartTrial() {
   const configQuery = useBillingConfig()
   const statusQuery = useBillingStatus()
   const startCheckout = useStartTrialCheckout()
+  const startWithoutPayment = useStartTrialWithoutPayment()
+
+  const skipPayment = canSkipPaymentCheckout(configQuery.data)
 
   useEffect(() => {
     if (!hasToken) {
@@ -45,6 +60,27 @@ export default function StartTrial() {
       )
     }
   }, [router, pendingSessionId, statusQuery.data?.has_access])
+
+  useEffect(() => {
+    if (!hasToken || !skipPayment) return
+    if (statusQuery.data?.has_access) {
+      router.replace(AppRoutesPaths.dashboard.root)
+    }
+  }, [hasToken, skipPayment, statusQuery.data?.has_access, router])
+
+  const handleContinue = () => {
+    if (SKIP_BILLING) {
+      router.replace(AppRoutesPaths.dashboard.root)
+      return
+    }
+    if (configQuery.data?.allow_trial_without_payment) {
+      startWithoutPayment.mutate(undefined, {
+        onSuccess: () => router.replace(AppRoutesPaths.dashboard.root),
+      })
+      return
+    }
+    startCheckout.mutate()
+  }
 
   if (!hasToken) {
     return null
@@ -71,6 +107,11 @@ export default function StartTrial() {
     ? `${AppRoutesPaths.onboarding.billingSuccess}?session_id=${encodeURIComponent(pendingSessionId)}`
     : AppRoutesPaths.onboarding.billingSuccess
 
+  const benefits = skipPayment ? BENEFITS_NO_CARD : BENEFITS
+  const isPending = startCheckout.isPending || startWithoutPayment.isPending
+  const canContinue =
+    skipPayment || configQuery.data?.stripe_configured === true
+
   return (
     <OnboardingShell>
       <Card>
@@ -81,13 +122,22 @@ export default function StartTrial() {
           Start your trial
         </h1>
         <p className="mx-auto mt-4 max-w-md text-center text-base leading-relaxed text-gray-600">
-          Add a payment method to unlock {APP_NAME}. You won&apos;t be charged until your {trialDays}-day trial ends.
+          {skipPayment ? (
+            <>
+              Start your {trialDays}-day trial on {APP_NAME} with no payment required right now.
+            </>
+          ) : (
+            <>
+              Add a payment method to unlock {APP_NAME}. You won&apos;t be charged until your{' '}
+              {trialDays}-day trial ends.
+            </>
+          )}
         </p>
 
         <PricingHighlight trialDays={trialDays} unitDisplay={unitDisplay} perVehicle={perVehicle} />
 
         <ul className="mt-8 space-y-4">
-          {BENEFITS.map((text) => (
+          {benefits.map((text) => (
             <li key={text} className="flex items-start gap-3 text-sm text-gray-700 md:text-base">
               <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#fbbd26]/20 text-[#b8860b]">
                 <FiCheck className="h-3.5 w-3.5" strokeWidth={3} />
@@ -97,43 +147,49 @@ export default function StartTrial() {
           ))}
         </ul>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-6 border-t border-gray-100 pt-6 text-xs font-medium uppercase tracking-wide text-gray-500">
-          <span className="inline-flex items-center gap-1.5">
-            <FiShield className="h-4 w-4 text-[#2f5aab]" /> Encrypted checkout
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <FiCreditCard className="h-4 w-4 text-[#2f5aab]" /> Powered by Stripe
-          </span>
-        </div>
+        {!skipPayment ? (
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 border-t border-gray-100 pt-6 text-xs font-medium uppercase tracking-wide text-gray-500">
+            <span className="inline-flex items-center gap-1.5">
+              <FiShield className="h-4 w-4 text-[#2f5aab]" /> Encrypted checkout
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <FiCreditCard className="h-4 w-4 text-[#2f5aab]" /> Powered by Stripe
+            </span>
+          </div>
+        ) : null}
 
         <button
           type="button"
-          disabled={startCheckout.isPending || !configQuery.data?.stripe_configured}
-          onClick={() => startCheckout.mutate()}
+          disabled={isPending || !canContinue}
+          onClick={handleContinue}
           className="mt-8 flex w-full items-center justify-center gap-2 rounded-full bg-[#fbbd26] px-8 py-4 text-base font-bold text-[#111827] shadow-md shadow-[#fbbd26]/30 transition hover:bg-[#f4b20a] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {startCheckout.isPending ? 'Opening secure checkout…' : 'Continue to secure checkout'}
-          {!startCheckout.isPending && <FiArrowRight className="h-5 w-5" />}
+          {isPending
+            ? 'Starting your trial…'
+            : skipPayment
+              ? 'Start free trial — no payment now'
+              : 'Continue to secure checkout'}
+          {!isPending && <FiArrowRight className="h-5 w-5" />}
         </button>
 
-        {!configQuery.data?.stripe_configured && (
+        {!skipPayment && !configQuery.data?.stripe_configured && (
           <p className="mt-4 text-center text-sm text-amber-800" role="alert">
             Billing is not configured on the server yet. Contact support or try again later.
           </p>
         )}
-        {startCheckout.isError && (
+        {(startCheckout.isError || startWithoutPayment.isError) && (
           <p className="mt-4 text-center text-sm text-red-600" role="alert">
-            {startCheckout.error.message}
+            {startCheckout.error?.message ?? startWithoutPayment.error?.message}
           </p>
         )}
 
         <p className="mt-6 text-center text-xs leading-relaxed text-gray-500">
-          By continuing, you agree to recurring billing at {perVehicle} after the trial, based on vehicles in your
-          fleet.
+          By continuing, you agree to recurring billing at {perVehicle} after the trial, based on
+          vehicles in your fleet.
         </p>
       </Card>
 
-      <FooterLinks resumeHref={resumeHref} />
+      <FooterLinks resumeHref={resumeHref} showStripeResume={!skipPayment} />
     </OnboardingShell>
   )
 }
@@ -189,12 +245,20 @@ function PricingHighlight({
   )
 }
 
-function FooterLinks({ resumeHref }: { resumeHref: string }) {
+function FooterLinks({
+  resumeHref,
+  showStripeResume,
+}: {
+  resumeHref: string
+  showStripeResume: boolean
+}) {
   return (
     <div className="mt-6 flex flex-col items-center gap-2 text-center">
-      <Link href={resumeHref} className="text-sm font-medium text-[#2f5aab] hover:underline">
-        Already completed checkout?
-      </Link>
+      {showStripeResume ? (
+        <Link href={resumeHref} className="text-sm font-medium text-[#2f5aab] hover:underline">
+          Already completed checkout?
+        </Link>
+      ) : null}
       <Link href={AppRoutesPaths.auth.signin} className="text-sm text-gray-500 hover:text-gray-700">
         Sign out
       </Link>

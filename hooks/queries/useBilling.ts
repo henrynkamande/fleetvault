@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   CHECKOUT_SESSION_STORAGE_KEY,
   confirmCheckoutSession,
@@ -6,7 +6,10 @@ import {
   createPortalSession,
   fetchBillingConfig,
   fetchBillingStatus,
+  startTrialWithoutPayment,
+  type BillingConfig,
 } from '@/lib/billingApi'
+import { SKIP_BILLING } from '@/lib/constants'
 import { getAccessToken } from '@/lib/tokenStorage'
 import { AppRoutesPaths } from '@/route/paths'
 
@@ -48,6 +51,22 @@ export function useStartTrialCheckout() {
       }
     },
   })
+}
+
+export function useStartTrialWithoutPayment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => startTrialWithoutPayment(),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'status'] })
+    },
+  })
+}
+
+/** True when user can enter the app without Stripe Checkout. */
+export function canSkipPaymentCheckout(config?: BillingConfig | null): boolean {
+  if (SKIP_BILLING) return true
+  return Boolean(config?.allow_trial_without_payment)
 }
 
 export function useConfirmCheckout() {

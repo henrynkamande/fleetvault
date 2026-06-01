@@ -16,8 +16,16 @@ export async function listTrips(params?: {
   driver?: string
   date_from?: string
   date_to?: string
+  page?: number
+  page_size?: number
+  include_stats?: boolean
 }): Promise<ListTripsResponse> {
-  const res = await tripsApi.get<ListTripsResponse>('/', { params })
+  const res = await tripsApi.get<ListTripsResponse>('/', {
+    params: {
+      ...params,
+      include_stats: params?.include_stats ? 'true' : undefined,
+    },
+  })
   return res.data
 }
 

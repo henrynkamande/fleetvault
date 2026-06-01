@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent, type FormEvent } from "react";
+import { HiEye, HiEyeSlash } from "react-icons/hi2";
 import { toast } from "react-toastify";
 import SuperAdminAuthShell from "@/features/auth/superAdmin/SuperAdminAuthShell";
 import { usePlatformRegisterMutation } from "@/hooks/queries/usePlatformAuthMutations";
@@ -24,6 +25,8 @@ export default function SuperAdminSignUp() {
   const router = useRouter();
   const registerMutation = usePlatformRegisterMutation();
   const [formData, setFormData] = useState(emptyForm);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
@@ -58,6 +61,9 @@ export default function SuperAdminSignUp() {
 
   const inputClass =
     "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:ring-indigo-900/40";
+  const passwordInputClass = `${inputClass} pr-11`;
+  const toggleBtnClass =
+    "absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200";
 
   return (
     <SuperAdminAuthShell
@@ -121,25 +127,55 @@ export default function SuperAdminSignUp() {
         </label>
         <label className="block space-y-1 text-sm font-medium text-slate-700 dark:text-slate-300">
           Password
-          <input
-            type="password"
-            name="password"
-            required
-            value={formData.password}
-            onChange={handleChange}
-            className={inputClass}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              required
+              autoComplete="new-password"
+              value={formData.password}
+              onChange={handleChange}
+              className={passwordInputClass}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className={toggleBtnClass}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <HiEyeSlash className="h-5 w-5" aria-hidden />
+              ) : (
+                <HiEye className="h-5 w-5" aria-hidden />
+              )}
+            </button>
+          </div>
         </label>
         <label className="block space-y-1 text-sm font-medium text-slate-700 dark:text-slate-300">
           Confirm password
-          <input
-            type="password"
-            name="confirm_password"
-            required
-            value={formData.confirm_password}
-            onChange={handleChange}
-            className={inputClass}
-          />
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirm_password"
+              required
+              autoComplete="new-password"
+              value={formData.confirm_password}
+              onChange={handleChange}
+              className={passwordInputClass}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((v) => !v)}
+              className={toggleBtnClass}
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            >
+              {showConfirmPassword ? (
+                <HiEyeSlash className="h-5 w-5" aria-hidden />
+              ) : (
+                <HiEye className="h-5 w-5" aria-hidden />
+              )}
+            </button>
+          </div>
         </label>
         <button
           type="submit"

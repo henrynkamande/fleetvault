@@ -10,10 +10,11 @@ export type FleetAppPage =
 
 export type AdminAppPage =
   | "admin-overview"
-  | "admin-companies"
   | "admin-users"
-  | "admin-billing"
-  | "admin-blog";
+  | "admin-vehicles"
+  | "admin-subscriptions"
+  | "admin-system-expenses"
+  | "admin-settings";
 
 export type AppPage = FleetAppPage | AdminAppPage;
 

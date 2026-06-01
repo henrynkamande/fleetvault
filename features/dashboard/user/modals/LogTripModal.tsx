@@ -11,6 +11,7 @@ import { useCurrentUser } from '@/hooks/queries/useUsers'
 import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
 import { flattenFieldErrors, getErrorDetail, getResponseErrorData } from '@/lib/apiErrors'
 import { formatOdometerKm } from '@/lib/vehicleDisplay'
+import { getDriverSelectLabel } from '@/lib/userDisplay'
 import type { TripRevenueModel } from '@/types/trip'
 
 type RevenueModelUi = 'Fixed Rate' | 'Per km' | 'Per delivery' | 'Contract'
@@ -366,7 +367,7 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
       .filter((d) => d.driver_profile_id)
       .map((d) => ({
         profileId: d.driver_profile_id as string,
-        label: `${d.full_name} (${d.email})`,
+        label: getDriverSelectLabel(d),
       }))
   }, [driversQuery.data?.drivers])
 

@@ -18,6 +18,26 @@ export function getNavSubtitle(user: User): string {
   return formatUserRole(user.role)
 }
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** Label for driver assignment dropdowns — name only, never id or email. */
+export function getDriverSelectLabel(user: {
+  first_name?: string | null
+  last_name?: string | null
+  full_name?: string | null
+}): string {
+  const firstLast = `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim()
+  const full = user.full_name?.trim() ?? ''
+  const candidates = [firstLast, full].filter(Boolean)
+  for (const name of candidates) {
+    if (UUID_RE.test(name)) continue
+    if (name.includes('@')) continue
+    return name
+  }
+  return firstLast || 'Driver'
+}
+
 /** Hide internal placeholder emails created for record-only drivers. */
 export function formatDriverEmailForDisplay(email: string | null | undefined): string | null {
   if (!email?.trim()) return null

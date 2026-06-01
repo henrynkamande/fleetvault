@@ -18,9 +18,9 @@ export default function ApiProvider({
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 1000 * 60 * 5,
+            staleTime: 1000 * 60,
             gcTime: 1000 * 60 * 10,
-            retry: 3,
+            retry: 1,
             retryDelay: (attemptIndex) =>
               Math.min(1000 * 2 ** attemptIndex, 30000),
             refetchOnWindowFocus: process.env.NODE_ENV === "production",

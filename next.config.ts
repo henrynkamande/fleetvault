@@ -48,7 +48,27 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/platform/billing",
-        destination: AppRoutesPaths.dashboard.admin.billing,
+        destination: AppRoutesPaths.dashboard.admin.subscriptions,
+        permanent: false,
+      },
+      {
+        source: "/platform/subscriptions",
+        destination: AppRoutesPaths.dashboard.admin.subscriptions,
+        permanent: false,
+      },
+      {
+        source: "/platform/vehicles",
+        destination: AppRoutesPaths.dashboard.admin.vehicles,
+        permanent: false,
+      },
+      {
+        source: "/platform/system-expenses",
+        destination: AppRoutesPaths.dashboard.admin.systemExpenses,
+        permanent: false,
+      },
+      {
+        source: "/platform/settings",
+        destination: AppRoutesPaths.dashboard.admin.settings,
         permanent: false,
       },
       {

@@ -25,6 +25,7 @@ export interface BillingConfig {
   stripe_publishable_key: string
   stripe_configured: boolean
   billing_enforced: boolean
+  allow_trial_without_payment: boolean
   pricing: {
     currency: string
     unit_amount_cents: number
@@ -58,6 +59,18 @@ export function createCheckoutSession(body?: { success_url?: string; cancel_url?
   return billingFetch<{ checkout_url: string; session_id: string }>('/checkout-session/', {
     method: 'POST',
     body: JSON.stringify(body ?? {}),
+  })
+}
+
+export function startTrialWithoutPayment() {
+  return billingFetch<{
+    billing_status: string
+    has_access: boolean
+    requires_checkout: boolean
+    trial_ends_at: string | null
+  }>('/start-trial-without-payment/', {
+    method: 'POST',
+    body: JSON.stringify({}),
   })
 }
 

@@ -397,22 +397,10 @@ export default function DashboardLayout({
         {
           items: [
             {
-              label: 'Platform pulse',
+              label: 'Dashboard',
               page: 'admin-overview',
-              icon: HiOutlineHome,
+              icon: HiOutlineChartBar,
               active: resolvedActiveItem === 'admin-overview',
-              onNavigate: handleNavigate,
-            },
-          ],
-        },
-        {
-          title: 'Platform',
-          items: [
-            {
-              label: 'Companies',
-              page: 'admin-companies',
-              icon: HiOutlineBuildingOffice2,
-              active: resolvedActiveItem === 'admin-companies',
               onNavigate: handleNavigate,
             },
             {
@@ -423,17 +411,31 @@ export default function DashboardLayout({
               onNavigate: handleNavigate,
             },
             {
-              label: 'Billing',
-              page: 'admin-billing',
-              icon: HiOutlineCurrencyDollar,
-              active: resolvedActiveItem === 'admin-billing',
+              label: 'Vehicles',
+              page: 'admin-vehicles',
+              icon: HiOutlineTruck,
+              active: resolvedActiveItem === 'admin-vehicles',
               onNavigate: handleNavigate,
             },
             {
-              label: 'Blog',
-              page: 'admin-blog',
-              icon: HiOutlineDocumentText,
-              active: resolvedActiveItem === 'admin-blog',
+              label: 'Subscriptions & Payments',
+              page: 'admin-subscriptions',
+              icon: HiOutlineCurrencyDollar,
+              active: resolvedActiveItem === 'admin-subscriptions',
+              onNavigate: handleNavigate,
+            },
+            {
+              label: 'System Expenses',
+              page: 'admin-system-expenses',
+              icon: HiOutlineReceiptPercent,
+              active: resolvedActiveItem === 'admin-system-expenses',
+              onNavigate: handleNavigate,
+            },
+            {
+              label: 'Settings',
+              page: 'admin-settings',
+              icon: HiOutlineCog6Tooth,
+              active: resolvedActiveItem === 'admin-settings',
               onNavigate: handleNavigate,
             },
           ],
