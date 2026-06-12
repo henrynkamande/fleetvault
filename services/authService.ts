@@ -60,3 +60,15 @@ export async function resetPassword(payload: ResetPasswordPayload): Promise<Auth
   const res = await api.post<AuthCodeMessageResponse>('/password/reset/', payload, { skipAuth: true })
   return res.data
 }
+
+export type ChangePasswordPayload = {
+  old_password: string
+  new_password: string
+  confirm_password: string
+}
+
+/** Authenticated password change (no OTP / 2FA). */
+export async function changePassword(payload: ChangePasswordPayload): Promise<{ message: string }> {
+  const res = await api.post<{ message: string }>('/password/change/', payload)
+  return res.data
+}

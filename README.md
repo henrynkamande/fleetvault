@@ -25,7 +25,9 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:5173](http://localhost:5173) with your browser (matches `FRONTEND_URL` in the API). Platform admin sign-in: [http://localhost:5173/auth/platform/signin](http://localhost:5173/auth/platform/signin).
+
+If you see a bare **HTTP 404** on that URL, something other than this Next app is bound to port 5173. Stop it, then from this folder run `npm run dev` again.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

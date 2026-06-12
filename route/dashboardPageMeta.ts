@@ -1,5 +1,6 @@
 import type { AppPage } from "@/types/dashboard";
 import { isAdminAppPage } from "@/types/dashboard";
+import { AppRoutesPaths } from "@/route/paths";
 
 export type DashboardPageMeta = {
   pageTitle: string;
@@ -60,6 +61,12 @@ export function getDashboardPageMeta(
   }
   if (path.startsWith(`${"/dashboard/admin/companies"}/`) && path !== "/dashboard/admin/companies") {
     return { pageTitle: "Company", showPeriodFilter: true };
+  }
+  if (path === AppRoutesPaths.dashboard.admin.blogAdd) {
+    return { pageTitle: "Add blog", showPeriodFilter: false };
+  }
+  if (path === AppRoutesPaths.dashboard.admin.notifications) {
+    return { pageTitle: "Notifications", showPeriodFilter: false };
   }
   if (isAdminAppPage(page)) {
     return ADMIN_META[page];

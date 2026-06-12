@@ -1,5 +1,5 @@
-import AdminSubscriptions from "@/features/dashboard/admin/AdminSubscriptions";
+import { LazyAdminSubscriptions } from "@/lib/lazyDashboardPage";
 
 export default function AdminSubscriptionsPage() {
-  return <AdminSubscriptions />;
+  return <LazyAdminSubscriptions />;
 }

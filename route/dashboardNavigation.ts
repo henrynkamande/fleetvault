@@ -72,7 +72,14 @@ export function resolveActiveAppPage(
     return "admin-system-expenses";
   }
   if (path === AppRoutesPaths.dashboard.admin.settings) return "admin-settings";
-  if (path === AppRoutesPaths.dashboard.admin.blog) return "admin-blog";
+  if (path === AppRoutesPaths.dashboard.admin.notifications) return "admin-overview";
+  if (
+    path === AppRoutesPaths.dashboard.admin.blog ||
+    path === AppRoutesPaths.dashboard.admin.blogAdd ||
+    path.startsWith(`${AppRoutesPaths.dashboard.admin.blog}/`)
+  ) {
+    return "admin-blog";
+  }
 
   if (path === AppRoutesPaths.dashboard.root) return "dashboard";
   if (

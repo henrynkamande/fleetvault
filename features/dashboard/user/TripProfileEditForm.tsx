@@ -39,6 +39,7 @@ export type TripEditFormState = {
   revenueModel: RevenueModelUi
   expectedRevenue: string
   fuelCost: string
+  driverPayment: string
   tollCost: string
   otherExpenses: string
   managerNotes: string
@@ -72,6 +73,7 @@ export function tripToEditForm(trip: TripDetailDto): TripEditFormState {
     revenueModel: model,
     expectedRevenue: trip.revenue_amount != null ? String(trip.revenue_amount) : '',
     fuelCost: trip.fuel_cost != null ? String(trip.fuel_cost) : '0',
+    driverPayment: trip.driver_payment != null ? String(trip.driver_payment) : '0',
     tollCost: trip.toll_cost != null ? String(trip.toll_cost) : '0',
     otherExpenses: trip.other_expenses != null ? String(trip.other_expenses) : '0',
     managerNotes: trip.manager_notes ?? '',
@@ -96,6 +98,7 @@ export function editFormToPayload(form: TripEditFormState): UpdateTripPayload {
     customer_name: form.customerName.trim() || null,
     cargo_description: form.cargoDescription.trim() || null,
     fuel_cost: Number.parseFloat(form.fuelCost.trim() || '0'),
+    driver_payment: Number.parseFloat(form.driverPayment.trim() || '0'),
     toll_cost: Number.parseFloat(form.tollCost.trim() || '0'),
     other_expenses: Number.parseFloat(form.otherExpenses.trim() || '0'),
     manager_notes: form.managerNotes.trim() || null,
@@ -132,8 +135,11 @@ export default function TripProfileEditForm({
   const driversQuery = useCompanyDriversQuery(true)
 
   useEffect(() => {
-    setForm(tripToEditForm(trip))
-    setErrors({})
+    const timer = window.setTimeout(() => {
+      setForm(tripToEditForm(trip))
+      setErrors({})
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [trip])
 
   const vehicleOptions = useMemo(() => {
@@ -177,6 +183,10 @@ export default function TripProfileEditForm({
     if (!form.plannedDeparture) next.plannedDeparture = 'Required'
     if (!form.expectedRevenue.trim() || Number.isNaN(Number.parseFloat(form.expectedRevenue))) {
       next.expectedRevenue = 'Enter a valid amount'
+    }
+    const driverPayment = form.driverPayment.trim() || '0'
+    if (Number.isNaN(Number.parseFloat(driverPayment)) || Number.parseFloat(driverPayment) < 0) {
+      next.driverPayment = 'Enter a valid amount'
     }
     setErrors(next)
     return Object.keys(next).length === 0
@@ -321,7 +331,19 @@ export default function TripProfileEditForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Toll cost</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600">Driver payment</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={form.driverPayment}
+            onChange={(e) => onFieldChange('driverPayment', e.target.value)}
+            className={fieldClass(errors.driverPayment)}
+          />
+          {errors.driverPayment ? <p className="mt-1 text-xs text-rose-600">{errors.driverPayment}</p> : null}
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-600">Toll expenses</label>
           <input
             type="number"
             step="0.01"
@@ -341,6 +363,9 @@ export default function TripProfileEditForm({
             onChange={(e) => onFieldChange('otherExpenses', e.target.value)}
             className={fieldClass()}
           />
+          <p className="mt-1 text-xs text-gray-500">
+            Parking, loading/unloading, permits, repairs, meals, or other trip-specific costs.
+          </p>
         </div>
         <div className="sm:col-span-2">
           <label className="mb-1 block text-xs font-medium text-gray-600">Cargo description (optional)</label>

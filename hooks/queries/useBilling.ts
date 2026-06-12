@@ -13,6 +13,10 @@ import { SKIP_BILLING } from '@/lib/constants'
 import { getAccessToken } from '@/lib/tokenStorage'
 import { AppRoutesPaths } from '@/route/paths'
 
+type QueryOptions = {
+  enabled?: boolean
+}
+
 function billingRedirectUrls() {
   const origin = window.location.origin
   return {
@@ -29,12 +33,12 @@ export function useBillingConfig() {
   })
 }
 
-export function useBillingStatus() {
+export function useBillingStatus(options: QueryOptions = {}) {
   const hasToken = !!getAccessToken()
   return useQuery({
     queryKey: ['billing', 'status'],
     queryFn: fetchBillingStatus,
-    enabled: hasToken,
+    enabled: (options.enabled ?? true) && hasToken,
     refetchOnWindowFocus: true,
   })
 }

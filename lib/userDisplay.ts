@@ -8,7 +8,7 @@ export function getUserInitials(fullName: string): string {
 }
 
 export function formatUserRole(role: string): string {
-  if (role === 'FLEET_OWNER') return 'Fleet owner'
+  if (role === 'FLEET_OWNER') return 'Vehicle owner'
   if (role === 'DRIVER') return 'Driver'
   return role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }

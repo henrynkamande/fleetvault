@@ -68,6 +68,28 @@ export type AdminBlogPost = {
   updated_at: string;
 };
 
+export type BlogCoverUploadResponse = {
+  cover_url: string;
+};
+
+export async function uploadBlogCoverImage(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("cover", file);
+  const res = await contentAdminApi.post<BlogCoverUploadResponse>(
+    "/admin/uploads/cover/",
+    fd,
+    {
+      transformRequest: [(data, headers) => {
+        if (data instanceof FormData) {
+          delete headers["Content-Type"];
+        }
+        return data;
+      }],
+    },
+  );
+  return res.data.cover_url;
+}
+
 export type AdminBlogPostInput = {
   slug: string;
   title: string;

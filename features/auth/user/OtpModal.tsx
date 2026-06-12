@@ -36,11 +36,13 @@ export default function OtpModal({
   const { secondsLeft, canResend, startCooldown } = useResendCooldown(60)
 
   useEffect(() => {
-    if (open) {
+    if (!open) return undefined
+    const timer = window.setTimeout(() => {
       setCode('')
       startCooldown(60)
-      window.setTimeout(() => inputRef.current?.focus(), 0)
-    }
+      inputRef.current?.focus()
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [open, startCooldown])
 
   if (!open) return null

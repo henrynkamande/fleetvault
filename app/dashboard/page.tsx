@@ -1,9 +1,8 @@
 "use client";
 
-import Dashboard from "@/features/dashboard/user/Dashboard";
-import AdminOverview from "@/features/dashboard/admin/AdminOverview";
+import { LazyAdminOverview, LazyDashboard } from "@/lib/lazyDashboardPage";
 import { useCurrentUser } from "@/hooks/queries/useUsers";
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
+import { LoadingState } from "@/components/ui/LoadingSpinner"
 
 export default function DashboardPage() {
   const { data: user, isLoading } = useCurrentUser();
@@ -15,8 +14,8 @@ export default function DashboardPage() {
   }
 
   if (user?.role === "PLATFORM_ADMIN") {
-    return <AdminOverview />;
+    return <LazyAdminOverview />;
   }
 
-  return <Dashboard />;
+  return <LazyDashboard />;
 }

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import MarketingShell from "@/components/marketing/MarketingShell";
 import MarkdownBody from "@/components/marketing/MarkdownBody";
 import MarketingSection from "@/components/marketing/MarketingSection";
+import { resolveBlogCoverUrl } from "@/lib/blogCoverUrl";
 import { fetchPublishedPost } from "@/lib/contentApi";
 import { APP_NAME } from "@/lib/constants";
 import { AppRoutesPaths } from "@/route/paths";
@@ -34,6 +35,8 @@ export default async function BlogPostPage({ params }: Props) {
     notFound();
   }
 
+  const coverSrc = resolveBlogCoverUrl(post.cover_url);
+
   return (
     <MarketingShell>
       <MarketingSection className="py-16">
@@ -44,6 +47,11 @@ export default async function BlogPostPage({ params }: Props) {
           ← All posts
         </Link>
         <article className="mx-auto mt-6 max-w-3xl">
+          {coverSrc ? (
+            <div className="mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-gray-100">
+              <img src={coverSrc} alt="" className="aspect-[16/9] w-full object-cover" />
+            </div>
+          ) : null}
           <time className="text-sm text-gray-500">
             {post.published_at
               ? new Date(post.published_at).toLocaleDateString()

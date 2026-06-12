@@ -26,7 +26,7 @@ type InvoiceRecord = {
   invoiceId: string
   client: string
   tripRef: string
-  tripNumber: string
+  tripId: string
   dateIssued: string
   amount: number
   status: InvoiceStatus
@@ -215,7 +215,7 @@ function IncomeTable({
                 <td className="py-3 text-gray-700">{row.client}</td>
                 <td className="py-3 font-medium text-emerald-700">
                   <Link
-                    href={AppRoutesPaths.dashboard.tripProfile(row.tripNumber)}
+                    href={AppRoutesPaths.dashboard.tripProfile(row.tripId)}
                     className="hover:underline"
                   >
                     {row.tripRef}
@@ -235,7 +235,7 @@ function IncomeTable({
                 </td>
                 <td className="py-3">
                   <Link
-                    href={AppRoutesPaths.dashboard.tripProfile(row.tripNumber)}
+                    href={AppRoutesPaths.dashboard.tripProfile(row.tripId)}
                     className="text-xs font-semibold text-[#111827] hover:text-[#f4b20a]"
                   >
                     View trip
@@ -364,7 +364,7 @@ export default function Income() {
       invoiceId: r.invoice_id,
       client: r.client,
       tripRef: r.trip_number,
-      tripNumber: r.trip_number,
+      tripId: r.trip_id,
       dateIssued: r.date,
       amount: r.amount,
       status: r.status,

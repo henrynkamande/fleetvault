@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { platformApi } from "@/lib/platformApi";
 import type { PlatformUserListItem } from "@/types/platform";
 
@@ -21,6 +21,8 @@ export function usePlatformUsers(params?: {
       const res = await platformApi.get<UsersResponse>("/users/", { params });
       return res.data;
     },
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

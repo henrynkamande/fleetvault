@@ -1,36 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import {
   useAdminBlogPosts,
-  useCreateBlogPostMutation,
   useDeleteBlogPostMutation,
   useUpdateBlogPostMutation,
 } from "@/hooks/queries/useBlogAdmin";
 import { getErrorDetail } from "@/lib/apiErrors";
+import { fleetConfirm } from "@/lib/fleetAlert";
 import type { AdminBlogPost, BlogPostStatus } from "@/lib/contentApi";
 import { AppRoutesPaths } from "@/route/paths";
 import { LoadingState } from "@/components/ui/LoadingSpinner";
-
-function slugify(title: string): string {
-  return title
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-const emptyForm = {
-  title: "",
-  slug: "",
-  excerpt: "",
-  body: "",
-  cover_url: "",
-  status: "DRAFT" as BlogPostStatus,
-};
 
 function StatusBadge({ status }: { status: BlogPostStatus }) {
   const styles: Record<BlogPostStatus, string> = {
@@ -45,198 +26,72 @@ function StatusBadge({ status }: { status: BlogPostStatus }) {
   );
 }
 
-export default function AdminBlog() {
-  const [editing, setEditing] = useState<AdminBlogPost | null>(null);
-  const [form, setForm] = useState(emptyForm);
-  const [slugTouched, setSlugTouched] = useState(false);
+function blogEditHref(post: AdminBlogPost): string {
+  const base = AppRoutesPaths.dashboard.admin.blogAdd;
+  return `${base}?id=${encodeURIComponent(post.id)}`;
+}
 
+export default function AdminBlog() {
   const { data, isLoading, isError, error } = useAdminBlogPosts({ page: 1, page_size: 50 });
-  const createMutation = useCreateBlogPostMutation();
-  const updateMutation = useUpdateBlogPostMutation();
   const deleteMutation = useDeleteBlogPostMutation();
+  const updateMutation = useUpdateBlogPostMutation();
 
   const posts = data?.results ?? [];
-  const saving = createMutation.isPending || updateMutation.isPending;
 
-  const resetForm = () => {
-    setEditing(null);
-    setForm(emptyForm);
-    setSlugTouched(false);
-  };
-
-  const loadForEdit = (post: AdminBlogPost) => {
-    setEditing(post);
-    setForm({
-      title: post.title,
-      slug: post.slug,
-      excerpt: post.excerpt ?? "",
-      body: post.body,
-      cover_url: post.cover_url ?? "",
-      status: post.status,
-    });
-    setSlugTouched(true);
-  };
-
-  const effectiveSlug = useMemo(() => {
-    if (slugTouched && form.slug.trim()) return form.slug.trim();
-    if (form.title.trim()) return slugify(form.title);
-    return "";
-  }, [form.slug, form.title, slugTouched]);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const title = form.title.trim();
-    const slug = effectiveSlug;
-    const body = form.body.trim();
-    if (!title || !slug || !body) {
-      toast.error("Title, slug, and body are required.");
-      return;
-    }
-    const payload = {
-      title,
-      slug,
-      body,
-      excerpt: form.excerpt.trim(),
-      cover_url: form.cover_url.trim(),
-      status: form.status,
-      seo_title: title,
-      seo_description: form.excerpt.trim().slice(0, 500),
-    };
+  const publishDraft = async (post: AdminBlogPost) => {
     try {
-      if (editing) {
-        await updateMutation.mutateAsync({ id: editing.id, payload });
-        toast.success("Post updated.");
-      } else {
-        await createMutation.mutateAsync(payload);
-        toast.success(
-          form.status === "PUBLISHED"
-            ? "Post published. It will appear on the site within a few minutes."
-            : "Post saved as draft.",
-        );
-      }
-      resetForm();
+      await updateMutation.mutateAsync({
+        id: post.id,
+        payload: { status: "PUBLISHED" },
+      });
+      toast.success(
+        "Post published. It may take up to a few minutes to appear on the homepage.",
+      );
     } catch (err) {
-      toast.error(getErrorDetail(err) ?? "Could not save post.");
+      toast.error(getErrorDetail(err) ?? "Could not publish post.");
     }
   };
 
   const remove = async (post: AdminBlogPost) => {
-    if (!window.confirm(`Delete “${post.title}”?`)) return;
+    const confirmed = await fleetConfirm({
+      title: "Delete this post?",
+      text: `“${post.title}” will be removed permanently.`,
+      confirmText: "Yes, delete",
+      cancelText: "Cancel",
+      icon: "warning",
+    });
+    if (!confirmed) return;
     try {
       await deleteMutation.mutateAsync(post.id);
       toast.success("Post deleted.");
-      if (editing?.id === post.id) resetForm();
     } catch (err) {
       toast.error(getErrorDetail(err) ?? "Could not delete post.");
     }
   };
 
   return (
-    <div className="space-y-8">
-      <p className="text-sm ff-muted">
-        Write posts in Markdown. Published posts appear on the{" "}
-        <Link href={AppRoutesPaths.blog.index} className="font-medium text-indigo-600 hover:underline dark:text-indigo-400">
-          public blog
-        </Link>{" "}
-        and the homepage blog section.
-      </p>
-
-      <form onSubmit={submit} className="ff-card max-w-3xl space-y-4">
-        <h3 className="text-lg font-semibold ff-heading">
-          {editing ? "Edit post" : "New post"}
-        </h3>
-        <label className="block text-sm">
-          <span className="ff-muted">Title</span>
-          <input
-            className="ff-dashboard-select mt-1 w-full"
-            value={form.title}
-            onChange={(e) => {
-              const title = e.target.value;
-              setForm((f) => ({
-                ...f,
-                title,
-                slug: slugTouched ? f.slug : slugify(title),
-              }));
-            }}
-            required
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="ff-muted">URL slug</span>
-          <input
-            className="ff-dashboard-select mt-1 w-full font-mono text-sm"
-            value={slugTouched ? form.slug : effectiveSlug}
-            onChange={(e) => {
-              setSlugTouched(true);
-              setForm((f) => ({ ...f, slug: e.target.value }));
-            }}
-            required
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="ff-muted">Excerpt (shown on cards)</span>
-          <textarea
-            className="ff-dashboard-select mt-1 min-h-[72px] w-full"
-            value={form.excerpt}
-            onChange={(e) => setForm((f) => ({ ...f, excerpt: e.target.value }))}
-            rows={2}
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="ff-muted">Cover image URL (optional)</span>
-          <input
-            className="ff-dashboard-select mt-1 w-full"
-            type="url"
-            value={form.cover_url}
-            onChange={(e) => setForm((f) => ({ ...f, cover_url: e.target.value }))}
-            placeholder="https://…"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="ff-muted">Body (Markdown)</span>
-          <textarea
-            className="ff-dashboard-select mt-1 min-h-[200px] w-full font-mono text-sm"
-            value={form.body}
-            onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
-            required
-            placeholder={"## Heading\n\nYour content…"}
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="ff-muted">Status</span>
-          <select
-            className="ff-dashboard-select mt-1"
-            value={form.status}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, status: e.target.value as BlogPostStatus }))
-            }
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm ff-muted">
+          Manage posts shown on the{" "}
+          <Link
+            href={AppRoutesPaths.blog.index}
+            className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
           >
-            <option value="DRAFT">Draft</option>
-            <option value="PUBLISHED">Published</option>
-          </select>
-        </label>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
-          >
-            {saving ? "Saving…" : editing ? "Update post" : "Publish / save"}
-          </button>
-          {editing ? (
-            <button
-              type="button"
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium ff-muted hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800"
-              onClick={resetForm}
-            >
-              Cancel edit
-            </button>
-          ) : null}
-        </div>
-      </form>
+            public blog
+          </Link>{" "}
+          and the homepage blog section.
+        </p>
+        <Link
+          href={AppRoutesPaths.dashboard.admin.blogAdd}
+          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+        >
+          Add blog
+        </Link>
+      </div>
 
       <section className="space-y-3">
-        <h3 className="text-lg font-semibold ff-heading">Your posts</h3>
+        <h3 className="text-lg font-semibold ff-heading">All posts</h3>
         {isLoading ? <LoadingState /> : null}
         {isError ? (
           <p className="text-sm text-rose-600 dark:text-rose-400">
@@ -244,7 +99,16 @@ export default function AdminBlog() {
           </p>
         ) : null}
         {!isLoading && !isError && posts.length === 0 ? (
-          <p className="text-sm ff-muted">No posts yet. Create one above.</p>
+          <p className="text-sm ff-muted">
+            No posts yet.{" "}
+            <Link
+              href={AppRoutesPaths.dashboard.admin.blogAdd}
+              className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+              Create your first post
+            </Link>
+            .
+          </p>
         ) : null}
         {!isLoading && posts.length > 0 ? (
           <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
@@ -269,6 +133,16 @@ export default function AdminBlog() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex flex-wrap justify-end gap-2">
+                        {post.status === "DRAFT" ? (
+                          <button
+                            type="button"
+                            className="font-medium text-emerald-600 hover:underline dark:text-emerald-400"
+                            disabled={updateMutation.isPending}
+                            onClick={() => void publishDraft(post)}
+                          >
+                            Publish
+                          </button>
+                        ) : null}
                         {post.status === "PUBLISHED" ? (
                           <Link
                             href={AppRoutesPaths.blog.post(post.slug)}
@@ -279,18 +153,19 @@ export default function AdminBlog() {
                             View
                           </Link>
                         ) : null}
-                        <button
-                          type="button"
+                        <Link
+                          href={blogEditHref(post)}
                           className="text-indigo-600 hover:underline dark:text-indigo-400"
-                          onClick={() => loadForEdit(post)}
                         >
                           Edit
-                        </button>
+                        </Link>
                         <button
                           type="button"
                           className="text-rose-600 hover:underline dark:text-rose-400"
-                          onClick={() => void remove(post)}
                           disabled={deleteMutation.isPending}
+                          onClick={async () => {
+                            await remove(post);
+                          }}
                         >
                           Delete
                         </button>

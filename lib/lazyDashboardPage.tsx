@@ -37,3 +37,35 @@ export const LazySettings = dynamic(
   () => import("@/features/dashboard/user/Settings"),
   { loading },
 );
+export const LazyAdminOverview = dynamic(
+  () => import("@/features/dashboard/admin/AdminOverview"),
+  { loading },
+);
+export const LazyAdminUsers = dynamic(
+  () => import("@/features/dashboard/admin/AdminUsers"),
+  { loading },
+);
+export const LazyAdminVehicles = dynamic(
+  () => import("@/features/dashboard/admin/AdminVehicles"),
+  { loading },
+);
+export const LazyAdminSubscriptions = dynamic(
+  () => import("@/features/dashboard/admin/AdminSubscriptions"),
+  { loading },
+);
+export const LazyAdminSystemExpenses = dynamic(
+  () => import("@/features/dashboard/admin/AdminSystemExpenses"),
+  { loading },
+);
+export const LazyAdminSettings = dynamic(
+  () => import("@/features/dashboard/admin/AdminSettings"),
+  { loading },
+);
+export const LazyAdminBlog = dynamic(
+  () => import("@/features/dashboard/admin/AdminBlog"),
+  { loading },
+);
+export const LazyAdminCompanies = dynamic(
+  () => import("@/features/dashboard/admin/AdminCompanies"),
+  { loading },
+);

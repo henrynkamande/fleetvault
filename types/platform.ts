@@ -14,12 +14,13 @@ export type PlatformOverview = {
   };
   fleet_ops: {
     vehicles: number;
-    trips_total: number;
-    trips_in_period: number;
     revenue: number;
     expenses: number;
     profit: number;
     revenue_previous: number;
+    trip_count?: number;
+    platform_system_expenses?: number;
+    subscription_revenue_estimate?: number;
   };
   subscriptions: {
     active: number;
@@ -28,28 +29,40 @@ export type PlatformOverview = {
     mrr: number;
     outstanding_revenue: number;
   };
-  risk: { kyc_pending: number };
-  recent_signups: Array<{
-    id: string;
-    name: string;
-    owner_email: string | null;
-    subscription_plan: string;
-    billing_status: string;
-    created_at: string;
-  }>;
-  recent_activity: Array<{
-    type: string;
-    at: string;
-    title: string;
-    detail: string;
-  }>;
-  companies_needing_attention: Array<{
-    id: string;
-    name: string;
-    billing_status: string;
-    trial_ends_at: string | null;
-    owner_email: string | null;
-  }>;
+};
+
+export type PlatformRecentSignup = {
+  id: string;
+  name: string;
+  owner_email: string | null;
+  subscription_plan: string;
+  billing_status: string;
+  created_at: string;
+};
+
+export type PlatformRecentActivity = {
+  id: string;
+  type: string;
+  at: string;
+  title: string;
+  role: string;
+};
+
+export type PlatformPaginated<T> = {
+  count: number;
+  page: number;
+  page_size: number;
+  results: T[];
+};
+
+export type PlatformNotification = {
+  id: string;
+  type: string;
+  severity: "info" | "warning" | "error";
+  title: string;
+  detail: string;
+  at: string;
+  href: string;
 };
 
 export type PlatformCompanyListItem = {
@@ -107,7 +120,7 @@ export type PlatformSubscriptionRow = {
 export type PlatformSystemExpense = {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   category: string;
   amount: string;
   recorded_at: string;
@@ -118,11 +131,9 @@ export type PlatformSystemExpense = {
 
 export const PLATFORM_EXPENSE_CATEGORIES = [
   "HOSTING",
-  "INFRASTRUCTURE",
   "MARKETING",
-  "STAFF",
-  "SOFTWARE_LICENSES",
   "OPERATIONS",
+  "SOFTWARE",
   "OTHER",
 ] as const;
 

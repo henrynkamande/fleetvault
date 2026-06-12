@@ -50,7 +50,6 @@ export default function FleetOwnerRouteGuard({
   const router = useRouter();
   const pathname = usePathname() ?? "";
   const userQuery = useCurrentUser();
-  const billingQuery = useBillingStatus();
   const hasToken = !!getAccessToken();
   const billingExempt = BILLING_EXEMPT_PREFIXES.some((p) =>
     pathname.startsWith(p),
@@ -58,6 +57,9 @@ export default function FleetOwnerRouteGuard({
   const role = userQuery.data?.role;
   const isPlatformAdmin = role === "PLATFORM_ADMIN";
   const isDriver = role === "DRIVER";
+  const shouldCheckBilling =
+    !SKIP_BILLING && role === "FLEET_OWNER" && !billingExempt;
+  const billingQuery = useBillingStatus({ enabled: shouldCheckBilling });
 
   useEffect(() => {
     if (!hasToken) {
@@ -87,9 +89,7 @@ export default function FleetOwnerRouteGuard({
       return;
     }
     if (
-      !SKIP_BILLING &&
-      role === "FLEET_OWNER" &&
-      !billingExempt &&
+      shouldCheckBilling &&
       billingQuery.data?.requires_checkout &&
       billingQuery.data?.stripe_configured
     ) {
@@ -102,6 +102,7 @@ export default function FleetOwnerRouteGuard({
     role,
     isPlatformAdmin,
     isDriver,
+    shouldCheckBilling,
     billingQuery.data,
     billingExempt,
     pathname,
@@ -115,9 +116,7 @@ export default function FleetOwnerRouteGuard({
   if (isPlatformAdmin && isFleetOnlyPath(pathname)) return <LoadingScreen />;
   if (role === "FLEET_OWNER" && isAdminDashboardPath(pathname)) return <LoadingScreen />;
   if (
-    !SKIP_BILLING &&
-    role === "FLEET_OWNER" &&
-    !billingExempt &&
+    shouldCheckBilling &&
     billingQuery.data?.requires_checkout &&
     billingQuery.data?.stripe_configured
   ) {

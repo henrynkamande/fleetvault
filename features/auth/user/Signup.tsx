@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image'
@@ -8,7 +9,6 @@ import { toast } from 'react-toastify'
 import { AppRoutesPaths } from '@/route/paths'
 import fleetImage from '@/assets/6.png'
 import { HiArrowLeft, HiEye, HiEyeSlash } from 'react-icons/hi2'
-import OtpModal from './OtpModal'
 import {
   useRegisterFleetOwnerMutation,
   useResendSignupOtpMutation,
@@ -17,6 +17,9 @@ import {
 import { toastApiError } from '@/lib/toastApiError'
 import type { FleetOwnerRegisterPayload } from '@/types/auth'
 import { APP_NAME } from '@/lib/constants'
+import { resolvePostAuthPath } from '@/lib/authNavigation'
+
+const OtpModal = dynamic(() => import('./OtpModal'), { ssr: false })
 
 export default function SignupPage() {
   const router = useRouter()
@@ -50,6 +53,11 @@ export default function SignupPage() {
     }
     registerMutation.mutate(payload, {
       onSuccess: (data) => {
+        if (!data.requires_verification) {
+          toast.success(data.message || 'Account created. Start your free trial to continue.')
+          router.replace(resolvePostAuthPath(data))
+          return
+        }
         if (data.email_sent === false) {
           toast.error(
             data.message ||
@@ -75,8 +83,8 @@ export default function SignupPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/70 via-[#0f172a]/25 to-transparent" />
           <div className="absolute bottom-10 left-10 right-10 text-white">
             <p className="inline-flex rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold uppercase tracking-wide">{APP_NAME}</p>
-            <h2 className="mt-4 text-4xl font-bold leading-tight lg:text-5xl">Scale your fleet operations with clarity.</h2>
-            <p className="mt-3 text-base text-white/90">Driver management, trip records, and profitability insights - all in one platform.</p>
+            <h2 className="mt-4 text-4xl font-bold leading-tight lg:text-5xl">Manage your vehicles with clarity.</h2>
+            <p className="mt-3 text-base text-white/90">Vehicle records, trip logs, drivers, and profitability insights - all in one platform.</p>
           </div>
         </aside>
 
@@ -93,7 +101,7 @@ export default function SignupPage() {
           </button>
 
           <h1 className="text-4xl font-bold text-[#111827] md:text-5xl">Create your {APP_NAME} account</h1>
-          <p className="mt-3 text-base text-gray-700 md:text-xl">Set up your workspace in less than two minutes.</p>
+          <p className="mt-3 text-base text-gray-700 md:text-xl">Set up your vehicle owner account in less than two minutes.</p>
 
           <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
             <div className="grid gap-4 md:grid-cols-2">
@@ -213,30 +221,32 @@ export default function SignupPage() {
         </div>
       </div>
 
-      <OtpModal
-        open={otpModalOpen}
-        email={pendingEmail}
-        pending={verifyOtpMutation.isPending || resendOtpMutation.isPending}
-        onClose={() => setOtpModalOpen(false)}
-        onVerify={async (otp) => {
-          try {
-            await verifyOtpMutation.mutateAsync({ email: pendingEmail, otp })
-            toast.success('Email verified. You can sign in now.')
-            setOtpModalOpen(false)
-            router.replace(AppRoutesPaths.auth.signin)
-          } catch (err) {
-            toastApiError(err)
-          }
-        }}
-        onResend={async () => {
-          try {
-            const data = await resendOtpMutation.mutateAsync({ email: pendingEmail })
-            toast.success(data.message || 'A new code was sent.')
-          } catch (err) {
-            toastApiError(err)
-          }
-        }}
-      />
+      {otpModalOpen && (
+        <OtpModal
+          open={otpModalOpen}
+          email={pendingEmail}
+          pending={verifyOtpMutation.isPending || resendOtpMutation.isPending}
+          onClose={() => setOtpModalOpen(false)}
+          onVerify={async (otp) => {
+            try {
+              const data = await verifyOtpMutation.mutateAsync({ email: pendingEmail, otp })
+              toast.success(data.message || 'Email verified. Start your free trial to continue.')
+              setOtpModalOpen(false)
+              router.replace(resolvePostAuthPath(data))
+            } catch (err) {
+              toastApiError(err)
+            }
+          }}
+          onResend={async () => {
+            try {
+              const data = await resendOtpMutation.mutateAsync({ email: pendingEmail })
+              toast.success(data.message || 'A new code was sent.')
+            } catch (err) {
+              toastApiError(err)
+            }
+          }}
+        />
+      )}
     </div>
   )
 }

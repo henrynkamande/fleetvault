@@ -12,8 +12,8 @@
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { preloadDashboardPage } from '@/route/dashboardPreload'
+import dynamic from 'next/dynamic'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { IconType } from 'react-icons'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLogoutMutation } from '@/hooks/queries/useAuthMutations'
@@ -30,7 +30,6 @@ import type { User } from '@/types/user'
 import type { AppPage } from '@/types/dashboard'
 import {
   HiOutlineArrowRightOnRectangle,
-  HiOutlineBuildingOffice2,
   HiOutlineChartBar,
   HiOutlineChevronDoubleLeft,
   HiOutlineChevronDoubleRight,
@@ -39,13 +38,17 @@ import {
   HiOutlineCurrencyDollar,
   HiOutlineDocumentChartBar,
   HiOutlineDocumentText,
-  HiOutlineHome,
   HiOutlineReceiptPercent,
   HiOutlineTruck,
   HiOutlineUserGroup,
   HiOutlineUsers,
   HiOutlineMap,
 } from 'react-icons/hi2'
+
+const PlatformNotificationBell = dynamic(
+  () => import('@/features/dashboard/admin/PlatformNotificationBell'),
+  { ssr: false },
+)
 
 type NavItemProps = {
   label: string
@@ -54,12 +57,14 @@ type NavItemProps = {
   collapsed?: boolean
   active?: boolean
   onNavigate?: (page: AppPage) => void
+  onWarmNav?: (page: AppPage) => void
 }
 
 type SidebarSectionProps = {
   title?: string
   collapsed?: boolean
   items: NavItemProps[]
+  onWarmNav?: (page: AppPage) => void
 }
 
 type DashboardLayoutProps = {
@@ -77,14 +82,6 @@ function MenuIcon() {
   )
 }
 
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 11-6 0h6z" />
-    </svg>
-  )
-}
-
 function TruckIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
@@ -93,7 +90,15 @@ function TruckIcon() {
   )
 }
 
-function NavItem({ label, page, icon: Icon, collapsed = false, active = false, onNavigate }: NavItemProps) {
+function NavItem({
+  label,
+  page,
+  icon: Icon,
+  collapsed = false,
+  active = false,
+  onNavigate,
+  onWarmNav,
+}: NavItemProps) {
   const pathname = usePathname()
   const path = appPageToPath(page)
   const isActive = active || resolveActiveAppPage(pathname) === page
@@ -101,12 +106,13 @@ function NavItem({ label, page, icon: Icon, collapsed = false, active = false, o
   return (
     <Link
       href={path}
-      prefetch
-      onMouseEnter={() => preloadDashboardPage(page)}
-      onFocus={() => preloadDashboardPage(page)}
-      onClick={() => {
+      prefetch={false}
+      onMouseEnter={() => onWarmNav?.(page)}
+      onFocus={() => onWarmNav?.(page)}
+      onClick={(e) => {
         onNavigate?.(page)
         if (pathname === path) {
+          e.preventDefault()
           document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })
         }
       }}
@@ -119,7 +125,7 @@ function NavItem({ label, page, icon: Icon, collapsed = false, active = false, o
   )
 }
 
-function SidebarSection({ title, collapsed = false, items }: SidebarSectionProps) {
+function SidebarSection({ title, collapsed = false, items, onWarmNav }: SidebarSectionProps) {
   return (
     <section className="space-y-2">
       {title && !collapsed ? (
@@ -127,7 +133,7 @@ function SidebarSection({ title, collapsed = false, items }: SidebarSectionProps
       ) : null}
       <div className="space-y-1">
         {items.map((item) => (
-          <NavItem key={item.label} collapsed={collapsed} {...item} />
+          <NavItem key={item.label} collapsed={collapsed} onWarmNav={onWarmNav} {...item} />
         ))}
       </div>
     </section>
@@ -140,18 +146,6 @@ function SidebarFooter() {
       <p className="ff-heading text-sm font-semibold">Zero GPS Tracking</p>
       <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">Privacy-first management for modern fleets.</p>
     </div>
-  )
-}
-
-function FAB() {
-  return (
-    <button
-      type="button"
-      aria-label="Quick add"
-      className="fixed bottom-6 left-6 z-20 grid h-12 w-12 place-items-center rounded-full bg-indigo-600 text-xl text-white shadow-lg transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 lg:left-[17.5rem]"
-    >
-      +
-    </button>
   )
 }
 
@@ -263,6 +257,7 @@ type DashboardNavProps = {
   onOpenSidebar?: () => void
   user: User | undefined
   userLoading: boolean
+  showPlatformNotifications?: boolean
 }
 
 const PERIOD_SELECT_OPTIONS: { label: string; value: FinancePeriodPreset }[] = [
@@ -277,6 +272,7 @@ function DashboardNav({
   onOpenSidebar,
   user,
   userLoading,
+  showPlatformNotifications = false,
 }: DashboardNavProps) {
   const periodCtx = useDashboardPeriodOptional()
 
@@ -314,9 +310,9 @@ function DashboardNav({
             </>
           ) : null}
           <ThemeToggle />
-          <button type="button" aria-label="Notifications" className="ff-dashboard-icon-btn">
-            <BellIcon />
-          </button>
+          {showPlatformNotifications ? (
+            <PlatformNotificationBell />
+          ) : null}
           {userLoading ? (
             <div className="ff-dashboard-user-chip">
               <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
@@ -367,12 +363,55 @@ export default function DashboardLayout({
   }, [userQuery.isError, userQuery.error, router, queryClient])
 
   const pathname = usePathname()
+  const periodCtx = useDashboardPeriodOptional()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const canWarmNavigationRef = useRef(false)
 
   const isPlatformAdmin = user?.role === 'PLATFORM_ADMIN'
   const resolvedActiveItem =
     activeItem ?? resolveActiveAppPage(pathname, user?.role)
+
+  const warmDashboardPage = useCallback(
+    (page: AppPage) => {
+      if (!canWarmNavigationRef.current) return
+      void import('@/route/dashboardPreload').then(({ preloadDashboardPage }) => {
+        preloadDashboardPage(page, queryClient, { period: periodCtx?.period })
+      })
+    },
+    [queryClient, periodCtx?.period],
+  )
+
+  useEffect(() => {
+    if (!user?.id) return
+    canWarmNavigationRef.current = false
+    let cancelled = false
+    const markUsable = () => {
+      if (cancelled) return
+      canWarmNavigationRef.current = true
+      void import('@/route/dashboardDataPrefetch').then(
+        ({ prefetchNextLikelyDashboardPage }) => {
+          if (cancelled) return
+          prefetchNextLikelyDashboardPage(queryClient, user.role, resolvedActiveItem, {
+            period: periodCtx?.period,
+          })
+        },
+      )
+    }
+    const timer = window.setTimeout(() => {
+      window.requestAnimationFrame(markUsable)
+    }, 1200)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [
+    user?.id,
+    user?.role,
+    resolvedActiveItem,
+    queryClient,
+    periodCtx?.period,
+  ])
 
   /** Sidebar uses <Link>; this only closes the mobile drawer. */
   const handleSidebarNav = (_page?: AppPage) => {
@@ -381,7 +420,8 @@ export default function DashboardLayout({
   }
 
   useEffect(() => {
-    setIsMobileSidebarOpen(false)
+    const timer = window.setTimeout(() => setIsMobileSidebarOpen(false), 0)
+    return () => window.clearTimeout(timer)
   }, [pathname])
 
   const navGroups: SidebarSectionProps[] = isPlatformAdmin
@@ -491,7 +531,7 @@ export default function DashboardLayout({
     <div className="ff-dashboard-shell">
       <div className="flex min-h-screen w-full lg:flex">
         {isMobileSidebarOpen ? (
-          <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true">
+          <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true">
             <button
               type="button"
               aria-label="Close sidebar overlay"
@@ -523,7 +563,12 @@ export default function DashboardLayout({
 
               <div className="flex-1 space-y-6">
                 {navGroups.map((group, idx) => (
-                  <SidebarSection key={`mobile-${group.title ?? 'root'}-${idx}`} title={group.title} items={group.items} />
+                  <SidebarSection
+                    key={`mobile-${group.title ?? 'root'}-${idx}`}
+                    title={group.title}
+                    items={group.items}
+                    onWarmNav={warmDashboardPage}
+                  />
                 ))}
               </div>
             </aside>
@@ -557,7 +602,13 @@ export default function DashboardLayout({
 
           <div className="flex-1 space-y-6">
             {navGroups.map((group, idx) => (
-              <SidebarSection key={`${group.title ?? 'root'}-${idx}`} title={group.title} collapsed={isSidebarCollapsed} items={group.items} />
+              <SidebarSection
+                key={`${group.title ?? 'root'}-${idx}`}
+                title={group.title}
+                collapsed={isSidebarCollapsed}
+                items={group.items}
+                onWarmNav={warmDashboardPage}
+              />
             ))}
           </div>
 
@@ -571,11 +622,11 @@ export default function DashboardLayout({
             onOpenSidebar={() => setIsMobileSidebarOpen(true)}
             user={user}
             userLoading={userLoading}
+            showPlatformNotifications={isPlatformAdmin}
           />
           <div className="w-full max-w-none flex-1 p-4 md:p-6">{children}</div>
         </main>
       </div>
-      {!isSidebarCollapsed && !isPlatformAdmin ? <FAB /> : null}
     </div>
   )
 }

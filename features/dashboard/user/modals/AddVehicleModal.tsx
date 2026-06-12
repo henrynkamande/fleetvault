@@ -5,6 +5,7 @@ import axios from 'axios'
 import { useCompanyDriversQuery } from '@/hooks/queries/useCompanyDrivers'
 import { useCreateVehicleMutation } from '@/hooks/queries/useCreateVehicle'
 import { apiStatusFromModal, VEHICLE_TYPE_OPTIONS } from '@/lib/vehicleDisplay'
+import { getDriverSelectLabel } from '@/lib/userDisplay'
 import type { VehicleTypeCode } from '@/types/vehicle'
 import { flattenFieldErrors, getErrorDetail, getResponseErrorData } from '@/lib/apiErrors'
 import type { CreateVehiclePayload } from '@/types/vehicle'
@@ -49,7 +50,9 @@ export default function AddVehicleModal({ isOpen, onClose }: AddVehicleModalProp
   const overlayRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!isOpen) setForm(initialForm)
+    if (isOpen) return undefined
+    const timer = window.setTimeout(() => setForm(initialForm), 0)
+    return () => window.clearTimeout(timer)
   }, [isOpen])
 
   useEffect(() => {
@@ -140,7 +143,7 @@ export default function AddVehicleModal({ isOpen, onClose }: AddVehicleModalProp
 
         {permissionError ? (
           <p className="border-b border-amber-100 bg-amber-50 px-6 py-3 text-sm text-amber-900">
-            Only fleet owners can add vehicles.
+            Only vehicle owners can add vehicles.
           </p>
         ) : null}
         {generalError ? (
@@ -300,7 +303,7 @@ export default function AddVehicleModal({ isOpen, onClose }: AddVehicleModalProp
                 <option value="">{driversQuery.isLoading ? 'Loading drivers…' : 'Unassigned'}</option>
                 {driversQuery.data?.drivers.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.full_name} ({d.email})
+                    {getDriverSelectLabel(d)}
                   </option>
                 ))}
               </select>

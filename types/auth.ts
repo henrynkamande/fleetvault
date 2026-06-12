@@ -28,6 +28,9 @@ export interface RegisterFleetOwnerResponse {
   tokens?: JwtTokens
   next_step?: string
   requires_company?: boolean
+  billing_status?: string | null
+  requires_billing_checkout?: boolean
+  has_billing_access?: boolean
 }
 
 export interface VerifySignupOtpPayload {
@@ -47,6 +50,12 @@ export interface AuthCodeMessageResponse {
   code_expires_minutes?: number
   dev_otp?: string
   dev_code?: string
+  user?: User
+  tokens?: JwtTokens
+  requires_verification?: boolean
+  billing_status?: string | null
+  requires_billing_checkout?: boolean
+  has_billing_access?: boolean
 }
 
 export interface ForgotPasswordPayload {

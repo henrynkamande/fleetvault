@@ -1,5 +1,6 @@
-import RegisterCompany from "@/features/onboarding/RegisterCompany";
+import { redirect } from "next/navigation";
+import { AppRoutesPaths } from "@/route/paths";
 
 export default function RegisterCompanyPage() {
-  return <RegisterCompany />;
+  redirect(AppRoutesPaths.dashboard.root);
 }

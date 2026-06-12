@@ -55,13 +55,7 @@ export async function updateDriverExtendedProfile(payload: {
   return res.data
 }
 
-export async function changePassword(payload: {
-  old_password: string
-  new_password: string
-  confirm_password: string
-}): Promise<void> {
-  await api.post('/password/change/', payload)
-}
+export { changePassword } from '@/services/authService'
 
 export async function verifyDriverOtp(payload: VerifyDriverOtpPayload): Promise<LoginResponse> {
   const res = await api.post<LoginResponse>('/auth/verify-otp/', payload, { skipAuth: true })
@@ -69,13 +63,10 @@ export async function verifyDriverOtp(payload: VerifyDriverOtpPayload): Promise<
 }
 
 export async function listDriverKycDocuments(): Promise<KycListResponse> {
-  const res = await api.get<KycListResponse>('/kyc/')
-  return res.data
+  return { count: 0, documents: [] }
 }
 
-export async function uploadKycDocument(formData: FormData): Promise<unknown> {
-  const res = await api.post('/kyc/upload/', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
-  return res.data
+export async function uploadKycDocument(_formData: FormData): Promise<unknown> {
+  void _formData
+  throw new Error('KYC document uploads are no longer part of this FleetFlow workspace.')
 }

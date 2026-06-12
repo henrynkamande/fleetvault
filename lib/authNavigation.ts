@@ -1,6 +1,6 @@
-import { DRIVER_APP_ENABLED, DRIVER_LIVE_API, SKIP_BILLING } from "@/lib/constants";
+import { DRIVER_APP_ENABLED, SKIP_BILLING } from "@/lib/constants";
 import { AppRoutesPaths } from "@/route/paths";
-import type { LoginResponse, RegisterFleetOwnerResponse } from "@/types/auth";
+import type { AuthCodeMessageResponse, LoginResponse, RegisterFleetOwnerResponse } from "@/types/auth";
 
 const driverUnavailable = () => AppRoutesPaths.driverAppUnavailable
 
@@ -31,7 +31,10 @@ export type PostAuthRule =
   | 'backend_redirect_allowlist'
   | 'default'
 
-export type PostAuthInput = Pick<RegisterFleetOwnerResponse, 'requires_company'> | LoginResponse
+export type PostAuthInput =
+  | Pick<RegisterFleetOwnerResponse, 'requires_company' | 'requires_billing_checkout'>
+  | AuthCodeMessageResponse
+  | LoginResponse
 
 export interface PostAuthResolution {
   path: string

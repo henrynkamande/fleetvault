@@ -15,6 +15,7 @@ export interface User {
   is_active: boolean
   date_joined: string
   last_login: string | null
+  fleet_owner_id?: string | null
   company_id: string | null
   company_name: string | null
   has_company: boolean

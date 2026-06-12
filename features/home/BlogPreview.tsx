@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BlogPostCard from "@/components/marketing/BlogPostCard";
 import MarketingSection from "@/components/marketing/MarketingSection";
 import { fetchPublishedPosts } from "@/lib/contentApi";
 import { AppRoutesPaths } from "@/route/paths";
@@ -40,34 +41,9 @@ export default async function BlogPreview() {
           </Link>
         </div>
       ) : (
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto mt-10 grid max-w-6xl gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => (
-          <article
-            key={post.id}
-            className="flex flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
-          >
-            <time className="text-xs font-medium text-gray-500">
-              {post.published_at
-                ? new Date(post.published_at).toLocaleDateString(undefined, {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })
-                : ""}
-            </time>
-            <h3 className="mt-2 text-lg font-semibold text-[#111827]">
-              {post.title}
-            </h3>
-            <p className="mt-2 flex-1 text-sm text-gray-700 line-clamp-3">
-              {post.excerpt}
-            </p>
-            <Link
-              href={AppRoutesPaths.blog.post(post.slug)}
-              className="mt-4 text-sm font-semibold text-[#2f5aab] hover:underline"
-            >
-              Read more
-            </Link>
-          </article>
+          <BlogPostCard key={post.id} post={post} linkLabel="Read more" />
         ))}
       </div>
       )}

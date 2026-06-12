@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getAccessToken } from '@/lib/tokenStorage'
+import { listStaleTime } from '@/lib/queryKeys'
 import { listCompanyUsers } from '@/services/companyUsersService'
 import { useAuthStore } from '@/store/useAuthStore'
 
@@ -13,6 +14,6 @@ export function useDriversListQuery() {
     queryKey: ['companyUsers', 'DRIVER', 'list', version],
     queryFn: () => listCompanyUsers({ role: 'DRIVER' }),
     enabled: ready && !!getAccessToken(),
-    staleTime: 30_000,
+    staleTime: listStaleTime.drivers,
   })
 }

@@ -1,5 +1,5 @@
-import AdminBlog from "@/features/dashboard/admin/AdminBlog";
+import { LazyAdminBlog } from "@/lib/lazyDashboardPage";
 
 export default function AdminBlogPage() {
-  return <AdminBlog />;
+  return <LazyAdminBlog />;
 }

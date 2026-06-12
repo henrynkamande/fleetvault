@@ -1,19 +1,26 @@
 "use client";
 
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useMemo, useState } from 'react'
-import AddDriverModal from './modals/AddDriverModal'
 import { formatDriverEmailForDisplay } from '@/lib/userDisplay'
 import { useDriversListQuery } from '@/hooks/queries/useDriversList'
 import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
+import { useCurrentUser } from '@/hooks/queries/useUsers'
+import { useDeactivateDriverMutation } from '@/hooks/queries/useDeactivateDriver'
+import { fleetAlertSuccess, fleetConfirm } from '@/lib/fleetAlert'
 import { getErrorDetail } from '@/lib/apiErrors'
+import { toast } from 'react-toastify'
 import { getAccessToken } from '@/lib/tokenStorage'
 import { LoadingCard } from '@/components/ui/LoadingSpinner'
-import { OptionalCompanyBanner } from '@/components/onboarding/OptionalCompanyBanner'
 import { AppRoutesPaths } from '@/route/paths'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { User } from '@/types/user'
+
+const AddDriverModal = dynamic(() => import('./modals/AddDriverModal'), {
+  ssr: false,
+})
 
 function initialsFromUser(u: User): string {
   const a = u.first_name?.[0] ?? ''
@@ -40,10 +47,14 @@ function DriverCard({
   user,
   assignedVehicle,
   onViewProfile,
+  onDelete,
+  deletePending,
 }: {
   user: User
   assignedVehicle: string
   onViewProfile: () => void
+  onDelete?: (user: User) => void
+  deletePending?: boolean
 }) {
   const isUnassigned = assignedVehicle === 'Unassigned'
   const displayEmail = formatDriverEmailForDisplay(user.email)
@@ -78,13 +89,25 @@ function DriverCard({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={onViewProfile}
-        className="mt-4 inline-flex w-full justify-center rounded-lg border border-[#fbbd26]/70 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-[#fff8e6] hover:text-[#111827]"
-      >
-        View profile
-      </button>
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+        <button
+          type="button"
+          onClick={onViewProfile}
+          className="inline-flex flex-1 justify-center rounded-lg border border-[#fbbd26]/70 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-[#fff8e6] hover:text-[#111827]"
+        >
+          View profile
+        </button>
+        {onDelete && user.is_active ? (
+          <button
+            type="button"
+            onClick={() => onDelete(user)}
+            disabled={deletePending}
+            className="inline-flex flex-1 justify-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-100 disabled:opacity-50"
+          >
+            Remove
+          </button>
+        ) : null}
+      </div>
     </article>
   )
 }
@@ -116,6 +139,27 @@ export default function Drivers() {
     return m
   }, [vehiclesQuery.data?.vehicles])
 
+  const userQuery = useCurrentUser()
+  const isFleetOwner = userQuery.data?.role === 'FLEET_OWNER'
+  const deactivateMutation = useDeactivateDriverMutation()
+
+  async function handleRemoveDriver(user: User) {
+    const confirmed = await fleetConfirm({
+      title: 'Remove this driver?',
+      html: `<p class="text-sm text-slate-600"><strong>${user.full_name}</strong> will be deactivated and can no longer sign in. You can re-invite them later if needed.</p>`,
+      confirmText: 'Yes, remove',
+      cancelText: 'Cancel',
+      icon: 'warning',
+    })
+    if (!confirmed) return
+    try {
+      const data = await deactivateMutation.mutateAsync(user.id)
+      await fleetAlertSuccess('Driver removed', data.message)
+    } catch (err) {
+      toast.error(getErrorDetail(err) ?? 'Could not remove driver.')
+    }
+  }
+
   const filteredDrivers = useMemo(() => {
     const users = driversQuery.data?.users ?? []
     return users.filter((u) => {
@@ -131,17 +175,10 @@ export default function Drivers() {
   return (
     <>
     <section className="space-y-4 rounded-2xl p-4">
-        <OptionalCompanyBanner className="mb-1" />
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <h2 className="text-xl font-semibold text-[#111827]">Drivers</h2>
             <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href={AppRoutesPaths.onboarding.registerCompany}
-                className="inline-flex items-center rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 dark:border-indigo-800 dark:bg-slate-900 dark:text-indigo-200 dark:hover:bg-indigo-950/50"
-              >
-                Add company (optional)
-              </Link>
               <button
                 type="button"
                 onClick={() => setIsAddDriverOpen(true)}
@@ -177,7 +214,7 @@ export default function Drivers() {
           <LoadingCard />
         ) : !hasToken ? (
           <p className="rounded-2xl border border-gray-200 bg-white py-12 text-center text-sm text-gray-600 shadow-sm">
-            Sign in as a fleet owner to load drivers.{' '}
+            Sign in as a vehicle owner to load drivers.{' '}
             <Link href={AppRoutesPaths.auth.signin} className="font-semibold text-indigo-600 hover:text-indigo-700">
               Sign in
             </Link>
@@ -206,6 +243,8 @@ export default function Drivers() {
                   vehicleByDriverId.get(u.driver_profile_id ?? u.id) ?? 'Unassigned'
                 }
                 onViewProfile={() => router.push(AppRoutesPaths.dashboard.driverProfile(u.id))}
+                onDelete={isFleetOwner ? handleRemoveDriver : undefined}
+                deletePending={deactivateMutation.isPending}
               />
             ))}
           </section>

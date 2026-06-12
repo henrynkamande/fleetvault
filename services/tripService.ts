@@ -48,6 +48,13 @@ export async function updateTrip(tripRef: string, payload: UpdateTripPayload): P
   return res.data
 }
 
+export async function deleteTrip(tripRef: string): Promise<{ message: string }> {
+  const res = await tripsApi.delete<{ message: string }>(
+    `/${encodeURIComponent(tripRef)}/delete/`,
+  )
+  return res.data
+}
+
 export async function cancelTrip(tripRef: string, reason?: string): Promise<CancelTripResponse> {
   const res = await tripsApi.post<CancelTripResponse>(
     `/${encodeURIComponent(tripRef)}/cancel/`,

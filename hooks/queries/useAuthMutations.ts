@@ -35,14 +35,36 @@ export function useLoginMutation() {
 }
 
 export function useRegisterFleetOwnerMutation() {
+  const queryClient = useQueryClient()
+  const setSession = useAuthStore((s) => s.setSession)
+
   return useMutation({
     mutationFn: (payload: FleetOwnerRegisterPayload) => registerFleetOwner(payload),
+    onSuccess: (data) => {
+      if (data.tokens) {
+        setSession(data.tokens)
+      }
+      if (data.user) {
+        queryClient.setQueryData(['currentUser'], data.user)
+      }
+    },
   })
 }
 
 export function useVerifySignupOtpMutation() {
+  const queryClient = useQueryClient()
+  const setSession = useAuthStore((s) => s.setSession)
+
   return useMutation({
     mutationFn: (payload: VerifySignupOtpPayload) => verifySignupOtp(payload),
+    onSuccess: (data) => {
+      if (data.tokens) {
+        setSession(data.tokens)
+      }
+      if (data.user) {
+        queryClient.setQueryData(['currentUser'], data.user)
+      }
+    },
   })
 }
 

@@ -40,6 +40,7 @@ type LogTripForm = {
   revenueModel: RevenueModelUi
   expectedRevenue: string
   fuelCost: string
+  driverPayment: string
   tollCost: string
   otherExpenses: string
   cargoDescription: string
@@ -80,6 +81,7 @@ const initialForm: LogTripForm = {
   revenueModel: 'Fixed Rate',
   expectedRevenue: '',
   fuelCost: '0',
+  driverPayment: '0',
   tollCost: '0',
   otherExpenses: '0',
   cargoDescription: '',
@@ -96,6 +98,7 @@ const API_FIELD_TO_FORM: Partial<Record<string, keyof LogTripForm>> = {
   customer_name: 'customerName',
   revenue_model: 'revenueModel',
   revenue_amount: 'expectedRevenue',
+  driver_payment: 'driverPayment',
 }
 
 function fieldClass(error?: string): string {
@@ -274,7 +277,19 @@ function ScheduleFinancialForm({ form, onFieldChange, errors }: ScheduleFinancia
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Toll cost</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600">Driver payment</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={form.driverPayment}
+            onChange={(event) => onFieldChange('driverPayment', event.target.value)}
+            className={fieldClass(errors.driverPayment)}
+          />
+          {errors.driverPayment ? <p className="mt-1 text-xs text-rose-600">{errors.driverPayment}</p> : null}
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-600">Toll expenses</label>
           <input
             type="number"
             step="0.01"
@@ -294,6 +309,9 @@ function ScheduleFinancialForm({ form, onFieldChange, errors }: ScheduleFinancia
             onChange={(event) => onFieldChange('otherExpenses', event.target.value)}
             className={fieldClass()}
           />
+          <p className="mt-1 text-xs text-gray-500">
+            Parking, loading or unloading fees, permits, repairs, meals, or other trip-specific costs.
+          </p>
         </div>
         <div className="md:col-span-2">
           <label className="mb-1 block text-xs font-medium text-gray-600">Cargo description (optional)</label>
@@ -344,6 +362,7 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
   const [form, setForm] = useState<LogTripForm>(initialForm)
   const [errors, setErrors] = useState<Partial<Record<keyof LogTripForm, string>>>({})
   const overlayRef = useRef<HTMLDivElement>(null)
+  const wasOpenRef = useRef(isOpen)
 
   const userQuery = useCurrentUser()
   const vehiclesQuery = useVehiclesQuery(undefined)
@@ -377,17 +396,31 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
   }, [form.vehicleId, vehicleOptions])
 
   useEffect(() => {
-    if (!isOpen) {
-      setForm(initialForm)
-      setErrors({})
-      createMutation.reset()
+    if (isOpen) {
+      wasOpenRef.current = true
+      return
     }
+    if (!wasOpenRef.current) return
+
+    wasOpenRef.current = false
+    setForm(initialForm)
+    setErrors({})
+    createMutation.reset()
   }, [isOpen, createMutation])
 
   useEffect(() => {
     if (!isOpen) return
     overlayRef.current?.scrollTo(0, 0)
   }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
 
@@ -407,6 +440,10 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
     if (!rev) nextErrors.expectedRevenue = 'Expected revenue is required.'
     else if (Number.isNaN(Number.parseFloat(rev)) || Number.parseFloat(rev) < 0) {
       nextErrors.expectedRevenue = 'Enter a valid amount.'
+    }
+    const driverPayment = form.driverPayment.trim() || '0'
+    if (Number.isNaN(Number.parseFloat(driverPayment)) || Number.parseFloat(driverPayment) < 0) {
+      nextErrors.driverPayment = 'Enter a valid amount.'
     }
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
@@ -433,6 +470,7 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
       revenue_model: REVENUE_UI_TO_API[form.revenueModel],
       revenue_amount: Number.parseFloat(form.expectedRevenue.trim()),
       fuel_cost: Number.parseFloat(form.fuelCost.trim() || '0'),
+      driver_payment: Number.parseFloat(form.driverPayment.trim() || '0'),
       toll_cost: Number.parseFloat(form.tollCost.trim() || '0'),
       other_expenses: Number.parseFloat(form.otherExpenses.trim() || '0'),
       ...(form.driverProfileId ? { driver: form.driverProfileId } : {}),
@@ -448,7 +486,7 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
       onSuccess: async (data) => {
         onClose()
         await fleetAlertSuccess('Trip created', data.message || 'The trip record was created successfully.')
-        router.push(AppRoutesPaths.dashboard.tripProfile(data.trip.trip_number))
+        router.push(AppRoutesPaths.dashboard.tripProfile(data.trip.id))
       },
       onError: async () => {
         await fleetAlertError('Could not create trip', 'Review the highlighted fields or try again in a moment.')
@@ -475,6 +513,9 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
     <div
       ref={overlayRef}
       className="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden overscroll-y-contain bg-slate-900/45 [touch-action:pan-y]"
+      onMouseDown={(e) => {
+        if (e.target === overlayRef.current) onClose()
+      }}
     >
       <div className="flex min-h-full w-full items-center justify-center p-4 py-6 sm:py-10">
         <div
@@ -502,7 +543,7 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
 
           {!isFleetOwner ? (
             <p className="border-b border-amber-100 bg-amber-50 px-6 py-3 text-sm text-amber-900">
-              Only fleet owners can create trips. Ask your fleet administrator to log this trip.
+              Only vehicle owners can create trips. Ask your fleet administrator to log this trip.
             </p>
           ) : null}
           {permissionError ? (

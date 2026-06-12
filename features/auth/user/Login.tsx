@@ -82,7 +82,7 @@ export default function LoginPage() {
           <h1 className="text-4xl font-bold text-[#111827] md:text-5xl">Sign in to {APP_NAME}</h1>
           {wantsDashboard ? (
             <p className="mt-3 rounded-xl border border-[#e7ecf4] bg-[#f7f9fd] px-4 py-3 text-base text-gray-800 md:text-lg">
-              Sign in to open your fleet owner dashboard, or{' '}
+              Sign in to open your vehicle owner dashboard, or{' '}
               <Link className="font-semibold text-[#2f5aab] underline" href={AppRoutesPaths.auth.signup}>
                 create an account
               </Link>{' '}

@@ -7,6 +7,11 @@ import { HiArrowLeft } from 'react-icons/hi2'
 import { AppRoutesPaths } from '@/route/paths'
 import { useVehicleQuery } from '@/hooks/queries/useVehicleDetail'
 import { useVehicleTripsQuery } from '@/hooks/queries/useVehicleTrips'
+import { useCurrentUser } from '@/hooks/queries/useUsers'
+import { useDeleteVehicleMutation } from '@/hooks/queries/useDeleteVehicle'
+import { fleetAlertSuccess, fleetConfirm } from '@/lib/fleetAlert'
+import { getErrorDetail } from '@/lib/apiErrors'
+import { toast } from 'react-toastify'
 import type { TripListDto } from '@/types/trip'
 import {
   formatOdometerKm,
@@ -91,7 +96,10 @@ export default function VehicleProfilePage() {
   const { vehicleId } = useParams<{ vehicleId: string }>()
   const router = useRouter()
   const vehicleQuery = useVehicleQuery(vehicleId)
+  const userQuery = useCurrentUser()
+  const deleteVehicleMutation = useDeleteVehicleMutation()
   const tripsQuery = useVehicleTripsQuery(vehicleId)
+  const isFleetOwner = userQuery.data?.role === 'FLEET_OWNER'
 
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<TripFilterStatus>('All')
@@ -188,6 +196,32 @@ export default function VehicleProfilePage() {
             </span>
             Back to vehicles
           </button>
+          {isFleetOwner ? (
+            <button
+              type="button"
+              disabled={deleteVehicleMutation.isPending}
+              className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-100 disabled:opacity-50"
+              onClick={async () => {
+                const confirmed = await fleetConfirm({
+                  title: 'Delete this vehicle?',
+                  html: `<p class="text-sm text-slate-600"><strong>${vehicle.registration_number}</strong> will be permanently removed.</p>`,
+                  confirmText: 'Yes, delete',
+                  cancelText: 'Cancel',
+                  icon: 'warning',
+                })
+                if (!confirmed || !vehicleId) return
+                try {
+                  const data = await deleteVehicleMutation.mutateAsync(vehicleId)
+                  await fleetAlertSuccess('Vehicle deleted', data.message)
+                  router.push(AppRoutesPaths.dashboard.vehicles)
+                } catch (err) {
+                  toast.error(getErrorDetail(err) ?? 'Could not delete vehicle.')
+                }
+              }}
+            >
+              {deleteVehicleMutation.isPending ? 'Deleting…' : 'Delete vehicle'}
+            </button>
+          ) : null}
         </div>
 
         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">

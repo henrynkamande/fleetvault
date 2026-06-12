@@ -1,5 +1,5 @@
-import AdminUsers from "@/features/dashboard/admin/AdminUsers";
+import { LazyAdminUsers } from "@/lib/lazyDashboardPage";
 
 export default function AdminUsersPage() {
-  return <AdminUsers />;
+  return <LazyAdminUsers />;
 }

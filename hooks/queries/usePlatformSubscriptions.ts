@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { platformApi } from "@/lib/platformApi";
 import type { PlatformSubscriptionRow } from "@/types/platform";
 
@@ -29,5 +29,7 @@ export function usePlatformSubscriptions(params?: {
       });
       return res.data;
     },
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }

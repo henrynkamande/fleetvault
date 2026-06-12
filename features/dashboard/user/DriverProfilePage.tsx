@@ -9,7 +9,12 @@ import { useCompanyUserQuery } from '@/hooks/queries/useCompanyUser'
 import { useDriverCompletedTripsQuery } from '@/hooks/queries/useDriverCompletedTrips'
 import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
 import type { TripPeriodFilter } from '@/lib/tripDateRange'
+import { useCurrentUser } from '@/hooks/queries/useUsers'
+import { useDeactivateDriverMutation } from '@/hooks/queries/useDeactivateDriver'
+import { fleetAlertSuccess, fleetConfirm } from '@/lib/fleetAlert'
+import { getErrorDetail } from '@/lib/apiErrors'
 import { formatDriverEmailForDisplay } from '@/lib/userDisplay'
+import { toast } from 'react-toastify'
 import type { TripListDto } from '@/types/trip'
 import type { User } from '@/types/user'
 import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
@@ -75,6 +80,8 @@ export default function DriverProfilePage() {
   const [period, setPeriod] = useState<TripPeriodFilter>('weekly')
 
   const userQuery = useCompanyUserQuery(driverId, !!driverId)
+  const currentUserQuery = useCurrentUser()
+  const deactivateMutation = useDeactivateDriverMutation()
   const vehiclesQuery = useVehiclesQuery(undefined)
   const user = userQuery.data
   const driverProfileId = user?.driver_profile_id ?? driverId
@@ -130,7 +137,33 @@ export default function DriverProfilePage() {
         Back to drivers
       </button>
 
-      <DriverSummaryCard user={user} displayEmail={displayEmail} assignedVehicleLabel={assignedVehicleLabel} />
+      <DriverSummaryCard
+        user={user}
+        displayEmail={displayEmail}
+        assignedVehicleLabel={assignedVehicleLabel}
+        onRemove={
+          currentUserQuery.data?.role === 'FLEET_OWNER' && user.is_active
+            ? async () => {
+                const confirmed = await fleetConfirm({
+                  title: 'Remove this driver?',
+                  html: `<p class="text-sm text-slate-600"><strong>${user.full_name}</strong> will be deactivated and can no longer sign in.</p>`,
+                  confirmText: 'Yes, remove',
+                  cancelText: 'Cancel',
+                  icon: 'warning',
+                })
+                if (!confirmed) return
+                try {
+                  const data = await deactivateMutation.mutateAsync(user.id)
+                  await fleetAlertSuccess('Driver removed', data.message)
+                  router.push(AppRoutesPaths.dashboard.drivers)
+                } catch (err) {
+                  toast.error(getErrorDetail(err) ?? 'Could not remove driver.')
+                }
+              }
+            : undefined
+        }
+        removePending={deactivateMutation.isPending}
+      />
 
       <div>
         <h3 className="mb-3 text-lg font-semibold text-[#111827]">Overview</h3>
@@ -199,10 +232,14 @@ function DriverSummaryCard({
   user,
   displayEmail,
   assignedVehicleLabel,
+  onRemove,
+  removePending,
 }: {
   user: User
   displayEmail: string | null
   assignedVehicleLabel: string
+  onRemove?: () => void
+  removePending?: boolean
 }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
@@ -213,15 +250,27 @@ function DriverSummaryCard({
           <p className="mt-1 text-sm text-gray-700">{user.phone_number || '—'}</p>
           {displayEmail ? <p className="mt-1 text-sm text-gray-600">{displayEmail}</p> : null}
         </div>
-        <span
-          className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${
-            user.is_active
-              ? 'bg-emerald-100 text-emerald-700 ring-emerald-200'
-              : 'bg-slate-100 text-slate-600 ring-slate-200'
-          }`}
-        >
-          {user.is_active ? 'Active' : 'Inactive'}
-        </span>
+        <div className="flex flex-col items-end gap-2">
+          <span
+            className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${
+              user.is_active
+                ? 'bg-emerald-100 text-emerald-700 ring-emerald-200'
+                : 'bg-slate-100 text-slate-600 ring-slate-200'
+            }`}
+          >
+            {user.is_active ? 'Active' : 'Inactive'}
+          </span>
+          {onRemove ? (
+            <button
+              type="button"
+              onClick={() => void onRemove()}
+              disabled={removePending}
+              className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-800 hover:bg-rose-100 disabled:opacity-50"
+            >
+              {removePending ? 'Removing…' : 'Remove driver'}
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <DriverSummaryGrid assignedVehicleLabel={assignedVehicleLabel} />
@@ -246,7 +295,7 @@ function TripListItem({ trip }: { trip: TripListDto }) {
     <li className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <Link
-          href={AppRoutesPaths.dashboard.tripProfile(trip.trip_number)}
+          href={AppRoutesPaths.dashboard.tripProfile(trip.id)}
           className="font-semibold text-indigo-700 hover:text-indigo-800"
         >
           {trip.trip_number}

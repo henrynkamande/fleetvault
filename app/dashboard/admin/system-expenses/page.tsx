@@ -1,5 +1,5 @@
-import AdminSystemExpenses from "@/features/dashboard/admin/AdminSystemExpenses";
+import { LazyAdminSystemExpenses } from "@/lib/lazyDashboardPage";
 
 export default function AdminSystemExpensesPage() {
-  return <AdminSystemExpenses />;
+  return <LazyAdminSystemExpenses />;
 }

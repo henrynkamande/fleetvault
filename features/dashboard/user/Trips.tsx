@@ -1,17 +1,23 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react'
-import { preloadDashboardPage } from '@/route/dashboardPreload'
-import LogTripModal from './modals/LogTripModal'
+import dynamic from 'next/dynamic'
+import Link from 'next/link'
+import { useMemo, useState } from 'react'
+import { toast } from 'react-toastify'
 import { AppRoutesPaths } from '@/route/paths'
 import { useCurrentUser } from '@/hooks/queries/useUsers'
+import { useDeleteTripMutation } from '@/hooks/queries/useTripMutations'
 import { useTripsListQuery } from '@/hooks/queries/useTripsList'
+import { fleetAlertSuccess, fleetConfirm } from '@/lib/fleetAlert'
 import { getErrorDetail } from '@/lib/apiErrors'
 import { getAccessToken } from '@/lib/tokenStorage'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { TripListDto } from '@/types/trip'
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
+import { LoadingCard } from "@/components/ui/LoadingSpinner"
+
+const LogTripModal = dynamic(() => import('./modals/LogTripModal'), {
+  ssr: false,
+})
 
 type TripStatusUi = 'Ongoing' | 'Completed' | 'Flagged' | 'Planned' | 'Cancelled' | 'Delayed'
 
@@ -23,6 +29,7 @@ type TripSummary = {
 
 type TripRow = {
   id: string
+  detailHref: string
   tripNumber: string
   status: TripStatusUi
   start: string
@@ -36,11 +43,15 @@ type TripRow = {
 
 type TripSummaryCardProps = TripSummary
 
-type TripCardProps = TripRow & { onViewDetails: () => void }
+type TripCardProps = TripRow & {
+  onDelete?: () => void
+  deletePending?: boolean
+}
 
 type TripListProps = {
   trips: TripRow[]
-  onViewTrip: (tripNumber: string) => void
+  onDeleteTrip?: (trip: TripRow) => void
+  deletePending?: boolean
 }
 
 type TripsPageHeaderProps = {
@@ -53,15 +64,15 @@ type TripsPageHeaderProps = {
 }
 
 function summaryTone(statusColor: TripSummary['statusColor']): string {
-  if (statusColor === 'green') return 'text-emerald-700 bg-emerald-50 ring-emerald-100'
-  if (statusColor === 'yellow') return 'text-amber-700 bg-amber-50 ring-amber-100'
-  return 'text-slate-700 bg-slate-100 ring-slate-200'
+  if (statusColor === 'green') return 'text-emerald-700 bg-emerald-50 ring-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-900'
+  if (statusColor === 'yellow') return 'text-amber-700 bg-amber-50 ring-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-900'
+  return 'text-slate-700 bg-slate-100 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700'
 }
 
 function TripSummaryCard({ label, value, statusColor }: TripSummaryCardProps) {
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
+    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400">{label}</p>
       <p className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-2xl font-semibold ring-1 ${summaryTone(statusColor)}`}>
         {value}
       </p>
@@ -70,17 +81,17 @@ function TripSummaryCard({ label, value, statusColor }: TripSummaryCardProps) {
 }
 
 function statusBadge(status: TripStatusUi): string {
-  if (status === 'Ongoing') return 'bg-emerald-100 text-emerald-700 ring-emerald-200'
-  if (status === 'Completed') return 'bg-slate-100 text-slate-700 ring-slate-200'
-  if (status === 'Flagged') return 'bg-rose-100 text-rose-700 ring-rose-200'
-  if (status === 'Cancelled') return 'bg-rose-50 text-rose-800 ring-rose-100'
-  if (status === 'Delayed') return 'bg-amber-100 text-amber-800 ring-amber-100'
-  if (status === 'Planned') return 'bg-amber-100 text-amber-700 ring-amber-200'
-  return 'bg-slate-100 text-slate-600 ring-slate-200'
+  if (status === 'Ongoing') return 'bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-900'
+  if (status === 'Completed') return 'bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700'
+  if (status === 'Flagged') return 'bg-rose-100 text-rose-700 ring-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:ring-rose-900'
+  if (status === 'Cancelled') return 'bg-rose-50 text-rose-800 ring-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:ring-rose-900'
+  if (status === 'Delayed') return 'bg-amber-100 text-amber-800 ring-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-900'
+  if (status === 'Planned') return 'bg-amber-100 text-amber-700 ring-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-900'
+  return 'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700'
 }
 
 function TripCard({
-  tripNumber,
+  detailHref,
   status,
   start,
   destination,
@@ -89,53 +100,65 @@ function TripCard({
   distance,
   income,
   flagReason,
-  onViewDetails,
+  onDelete,
+  deletePending,
 }: TripCardProps) {
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-[#fbbd26]/50 hover:shadow-md">
+    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-[#fbbd26]/50 hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <p className="text-lg font-semibold text-[#111827]">{tripNumber}</p>
           <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${statusBadge(status)}`}>
             {status}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={onViewDetails}
-          className="text-sm font-semibold text-[#111827] hover:text-[#f4b20a]"
-        >
-          View Details
-        </button>
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-gray-700 md:grid-cols-4">
-        <div>
-          <p className="text-xs text-gray-500">Start Location</p>
-          <p className="font-semibold text-[#111827]">{start}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Destination</p>
-          <p className="font-semibold text-[#111827]">{destination}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Driver</p>
-          <p className="font-semibold text-[#111827]">{driver}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Vehicle</p>
-          <p className="font-semibold text-[#111827]">{vehicle}</p>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <Link
+            href={detailHref}
+            prefetch
+            className="text-sm font-semibold text-[#111827] hover:text-[#f4b20a] dark:text-slate-100"
+          >
+            View Details
+          </Link>
+          {onDelete ? (
+            <button
+              type="button"
+              onClick={onDelete}
+              disabled={deletePending}
+              className="text-sm font-semibold text-rose-700 hover:text-rose-800 disabled:opacity-50"
+            >
+              Delete
+            </button>
+          ) : null}
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-[#f8fafc] p-3 md:grid-cols-4">
+      <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-gray-700 dark:text-slate-300 md:grid-cols-4">
         <div>
-          <p className="text-xs text-gray-500">Distance</p>
-          <p className="font-semibold text-[#111827]">{distance}</p>
+          <p className="text-xs text-gray-500 dark:text-slate-400">Start Location</p>
+          <p className="font-semibold text-[#111827] dark:text-slate-100">{start}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500">Income</p>
-          <p className="font-semibold text-emerald-600">{income}</p>
+          <p className="text-xs text-gray-500 dark:text-slate-400">Destination</p>
+          <p className="font-semibold text-[#111827] dark:text-slate-100">{destination}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500 dark:text-slate-400">Driver</p>
+          <p className="font-semibold text-[#111827] dark:text-slate-100">{driver}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500 dark:text-slate-400">Vehicle</p>
+          <p className="font-semibold text-[#111827] dark:text-slate-100">{vehicle}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-[#f8fafc] p-3 dark:bg-slate-800/50 md:grid-cols-4">
+        <div>
+          <p className="text-xs text-gray-500 dark:text-slate-400">Distance</p>
+          <p className="font-semibold text-[#111827] dark:text-slate-100">{distance}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500 dark:text-slate-400">Income</p>
+          <p className="font-semibold text-emerald-600 dark:text-emerald-400">{income}</p>
         </div>
       </div>
 
@@ -148,15 +171,24 @@ function TripCard({
   )
 }
 
-function TripList({ trips, onViewTrip }: TripListProps) {
+function TripList({ trips, onDeleteTrip, deletePending }: TripListProps) {
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-[#111827]">Trip List</h3>
+        <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">Trip List</h3>
       </div>
       <div className="max-h-[32rem] space-y-3 overflow-y-auto pr-1">
         {trips.map((trip) => (
-          <TripCard key={trip.id} {...trip} onViewDetails={() => onViewTrip(trip.tripNumber)} />
+          <TripCard
+            key={trip.id || trip.tripNumber}
+            {...trip}
+            onDelete={
+              onDeleteTrip && trip.status !== 'Ongoing'
+                ? () => onDeleteTrip(trip)
+                : undefined
+            }
+            deletePending={deletePending}
+          />
         ))}
       </div>
     </section>
@@ -174,12 +206,12 @@ function TripsPageHeader({
   return (
     <section className="space-y-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-xl font-semibold text-[#111827]">Trips (GPS-Free)</h2>
+        <h2 className="text-xl font-semibold text-[#111827] dark:text-slate-100">Trips (GPS-Free)</h2>
         <button
           type="button"
           onClick={onOpenLogTrip}
           disabled={!canLogTrips}
-          title={!canLogTrips ? 'Only fleet owners can log new trips.' : undefined}
+          title={!canLogTrips ? 'Only vehicle owners can log new trips.' : undefined}
           className="inline-flex items-center gap-2 rounded-lg bg-[#fbbd26] px-4 py-2 text-sm font-semibold text-[#111827] transition hover:bg-[#f4b20a] focus:outline-none focus:ring-2 focus:ring-[#fbbd26]/50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           + Log New Trip
@@ -191,12 +223,12 @@ function TripsPageHeader({
           value={searchTerm}
           onChange={(event) => onSearchTermChange(event.target.value)}
           placeholder="Search trip number or driver..."
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 sm:max-w-sm"
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500 sm:max-w-sm"
         />
         <select
           value={statusFilter}
           onChange={(event) => onStatusFilterChange(event.target.value as 'All' | TripStatusUi)}
-          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 sm:w-52"
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 sm:w-52"
         >
           <option value="All">Status: All</option>
           <option value="Planned">Status: Planned</option>
@@ -239,14 +271,23 @@ function toUiStatus(t: TripListDto): TripStatusUi {
   }
 }
 
+function tripDetailHref(t: TripListDto): string {
+  const id = typeof t.id === 'string' ? t.id.trim() : ''
+  const ref = id || (typeof t.trip_number === 'string' ? t.trip_number.trim() : '')
+  if (!ref) return AppRoutesPaths.dashboard.trips
+  return AppRoutesPaths.dashboard.tripProfile(ref)
+}
+
 function tripToRow(t: TripListDto): TripRow {
   const ui = toUiStatus(t)
   const dist =
     t.distance_km !== null && t.distance_km !== undefined
       ? `${t.distance_km} km${t.distance_is_estimated ? ' (est.)' : ''}`
       : '—'
+  const id = typeof t.id === 'string' && t.id.trim() ? t.id.trim() : t.trip_number
   return {
-    id: t.id,
+    id,
+    detailHref: tripDetailHref(t),
     tripNumber: t.trip_number,
     status: ui,
     start: t.pickup_location,
@@ -275,13 +316,6 @@ function isCompletedToday(t: TripListDto): boolean {
 }
 
 export default function Trips() {
-  useEffect(() => {
-    ;(['dashboard', 'vehicles', 'drivers', 'income', 'expenses', 'reports', 'settings'] as const).forEach(
-      (page) => preloadDashboardPage(page),
-    )
-  }, [])
-
-  const router = useRouter()
   const ready = useAuthStore((s) => s.ready)
   const version = useAuthStore((s) => s.version)
   void version
@@ -326,6 +360,25 @@ export default function Trips() {
   }, [searchTerm, statusFilter, rows])
 
   const canLogTrips = !!token && userQuery.data?.role === 'FLEET_OWNER'
+  const isFleetOwner = userQuery.data?.role === 'FLEET_OWNER'
+  const deleteTripMutation = useDeleteTripMutation()
+
+  async function handleDeleteTrip(trip: TripRow) {
+    const confirmed = await fleetConfirm({
+      title: 'Delete this trip?',
+      html: `<p class="text-sm text-slate-600">Trip <strong>${trip.tripNumber}</strong> will be permanently removed. This cannot be undone.</p>`,
+      confirmText: 'Yes, delete',
+      cancelText: 'Cancel',
+      icon: 'warning',
+    })
+    if (!confirmed) return
+    try {
+      const data = await deleteTripMutation.mutateAsync(trip.id)
+      await fleetAlertSuccess('Trip deleted', data.message)
+    } catch (err) {
+      toast.error(getErrorDetail(err) ?? 'Could not delete trip.')
+    }
+  }
 
   return (
     <>
@@ -370,7 +423,8 @@ export default function Trips() {
         {token && tripsQuery.isSuccess ? (
           <TripList
             trips={filteredTrips}
-            onViewTrip={(tripNumber) => router.push(AppRoutesPaths.dashboard.tripProfile(tripNumber))}
+            onDeleteTrip={isFleetOwner ? handleDeleteTrip : undefined}
+            deletePending={deleteTripMutation.isPending}
           />
         ) : null}
       </section>

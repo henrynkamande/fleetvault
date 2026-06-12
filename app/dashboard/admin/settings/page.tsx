@@ -1,5 +1,5 @@
-import AdminSettings from "@/features/dashboard/admin/AdminSettings";
+import { LazyAdminSettings } from "@/lib/lazyDashboardPage";
 
 export default function AdminSettingsPage() {
-  return <AdminSettings />;
+  return <LazyAdminSettings />;
 }

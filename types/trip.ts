@@ -22,6 +22,7 @@ export interface TripDetailDto extends TripListDto {
   manager_notes?: string | null
   profit_margin?: number | null
   duration_hours?: number | null
+  fleet_owner?: string | null
   company_name?: string | null
   created_by_name?: string | null
 }
@@ -46,6 +47,7 @@ export interface TripListDto {
   planned_distance_km?: number | null
   revenue_amount: string | null
   fuel_cost: string | null
+  driver_payment: string | null
   toll_cost: string | null
   other_expenses: string | null
   total_expenses: string | null
@@ -82,6 +84,7 @@ export interface CreateTripPayload {
   customer_name?: string | null
   cargo_description?: string | null
   fuel_cost?: string | number
+  driver_payment?: string | number
   toll_cost?: string | number
   other_expenses?: string | number
   manager_notes?: string | null
@@ -105,6 +108,7 @@ export interface UpdateTripPayload {
   customer_name?: string | null
   cargo_description?: string | null
   fuel_cost?: string | number
+  driver_payment?: string | number
   toll_cost?: string | number
   other_expenses?: string | number
   manager_notes?: string | null

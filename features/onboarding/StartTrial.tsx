@@ -19,6 +19,7 @@ import { AppRoutesPaths } from '@/route/paths'
 const BENEFITS = [
   'Full platform access during your trial',
   'Card collected securely by Stripe — not stored on our servers',
+  'No charge today; billing starts automatically after the trial',
   'Update or cancel anytime from billing settings',
 ] as const
 
@@ -36,7 +37,8 @@ export default function StartTrial() {
   const startCheckout = useStartTrialCheckout()
   const startWithoutPayment = useStartTrialWithoutPayment()
 
-  const skipPayment = canSkipPaymentCheckout(configQuery.data)
+  const stripeCheckoutAvailable = !SKIP_BILLING && configQuery.data?.stripe_configured === true
+  const skipPayment = !stripeCheckoutAvailable && canSkipPaymentCheckout(configQuery.data)
 
   useEffect(() => {
     if (!hasToken) {
@@ -71,6 +73,10 @@ export default function StartTrial() {
   const handleContinue = () => {
     if (SKIP_BILLING) {
       router.replace(AppRoutesPaths.dashboard.root)
+      return
+    }
+    if (stripeCheckoutAvailable) {
+      startCheckout.mutate()
       return
     }
     if (configQuery.data?.allow_trial_without_payment) {
@@ -110,7 +116,7 @@ export default function StartTrial() {
   const benefits = skipPayment ? BENEFITS_NO_CARD : BENEFITS
   const isPending = startCheckout.isPending || startWithoutPayment.isPending
   const canContinue =
-    skipPayment || configQuery.data?.stripe_configured === true
+    skipPayment || stripeCheckoutAvailable
 
   return (
     <OnboardingShell>
@@ -119,7 +125,7 @@ export default function StartTrial() {
           {trialDays}-day free trial
         </p>
         <h1 className="mt-3 text-center font-title text-3xl font-bold leading-tight text-[#111827] md:text-4xl">
-          Start your trial
+          Add your card to start your trial
         </h1>
         <p className="mx-auto mt-4 max-w-md text-center text-base leading-relaxed text-gray-600">
           {skipPayment ? (
@@ -128,7 +134,7 @@ export default function StartTrial() {
             </>
           ) : (
             <>
-              Add a payment method to unlock {APP_NAME}. You won&apos;t be charged until your{' '}
+              Add a payment method to unlock {APP_NAME} today. You won&apos;t be charged until your{' '}
               {trialDays}-day trial ends.
             </>
           )}
@@ -168,7 +174,7 @@ export default function StartTrial() {
             ? 'Starting your trial…'
             : skipPayment
               ? 'Start free trial — no payment now'
-              : 'Continue to secure checkout'}
+              : 'Add card and start free trial'}
           {!isPending && <FiArrowRight className="h-5 w-5" />}
         </button>
 
@@ -185,7 +191,8 @@ export default function StartTrial() {
 
         <p className="mt-6 text-center text-xs leading-relaxed text-gray-500">
           By continuing, you agree to recurring billing at {perVehicle} after the trial, based on
-          vehicles in your fleet.
+          vehicles in your fleet. If payment fails after the trial, workspace access is paused until
+          billing is resolved.
         </p>
       </Card>
 

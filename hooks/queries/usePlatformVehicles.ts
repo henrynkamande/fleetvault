@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { platformApi } from "@/lib/platformApi";
 import type { PlatformVehicleListItem } from "@/types/platform";
 
@@ -26,6 +26,8 @@ export function usePlatformVehicles(params?: {
       const res = await platformApi.get<VehiclesResponse>("/vehicles/", { params });
       return res.data;
     },
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

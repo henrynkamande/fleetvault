@@ -66,9 +66,9 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <a href="/#how-it-works" className="hover:text-[#111827]">
+              <Link href="/#how-it-works" className="hover:text-[#111827]">
                 How It Works
-              </a>
+              </Link>
             </li>
           </ul>
         </div>

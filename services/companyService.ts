@@ -1,7 +1,7 @@
 import api from '@/lib/api'
 import type { Company, RegisterCompanyPayload, RegisterCompanyResponse } from '@/types/company'
 
-/** GET `/company/` — authenticated; 404 if user has no company (caller should gate with `user.has_company`). */
+/** GET `/company/` — authenticated internal fleet workspace used for billing/tenant data. */
 export async function fetchCompany(): Promise<Company> {
   const res = await api.get<Company>('/company/')
   return res.data
@@ -24,10 +24,7 @@ function appendIfPresent(fd: FormData, key: string, value: string | undefined): 
   if (value !== undefined && value !== '') fd.append(key, value)
 }
 
-/**
- * Fleet owner step 2 — `POST /company/register/` (authenticated).
- * Uses JSON when there is no logo file; otherwise `FormData` so the file uploads correctly.
- */
+/** Legacy workspace detail update endpoint; kept for compatibility with the backend API. */
 export async function registerCompany(payload: RegisterCompanyPayload): Promise<RegisterCompanyResponse> {
   const { name, registration_number, address, contact_email, contact_phone, logo } = payload
 

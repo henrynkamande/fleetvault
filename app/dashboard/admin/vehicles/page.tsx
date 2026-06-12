@@ -1,5 +1,5 @@
-import AdminVehicles from "@/features/dashboard/admin/AdminVehicles";
+import { LazyAdminVehicles } from "@/lib/lazyDashboardPage";
 
 export default function AdminVehiclesPage() {
-  return <AdminVehicles />;
+  return <LazyAdminVehicles />;
 }

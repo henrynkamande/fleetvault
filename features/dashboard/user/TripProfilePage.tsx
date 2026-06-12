@@ -7,7 +7,11 @@ import { HiArrowLeft } from 'react-icons/hi2'
 import { fleetAlertError, fleetAlertSuccess, fleetConfirm } from '@/lib/fleetAlert'
 import { AppRoutesPaths } from '@/route/paths'
 import { useTripDetailQuery } from '@/hooks/queries/useTripDetail'
-import { useCancelTripMutation, useUpdateTripMutation } from '@/hooks/queries/useTripMutations'
+import {
+  useCancelTripMutation,
+  useDeleteTripMutation,
+  useUpdateTripMutation,
+} from '@/hooks/queries/useTripMutations'
 import { useCurrentUser } from '@/hooks/queries/useUsers'
 import { getErrorDetail } from '@/lib/apiErrors'
 import { formatActualTripTime, formatTripDistanceKm } from '@/lib/tripDisplay'
@@ -58,12 +62,16 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 export default function TripProfilePage() {
-  const { tripRef } = useParams<{ tripRef: string }>()
+  const params = useParams<{ tripRef: string | string[] }>()
+  const rawRef = Array.isArray(params.tripRef) ? params.tripRef[0] : params.tripRef
+  const tripRef =
+    typeof rawRef === 'string' && rawRef.length > 0 ? decodeURIComponent(rawRef) : undefined
   const router = useRouter()
   const userQuery = useCurrentUser()
   const tripQuery = useTripDetailQuery(tripRef)
   const updateMutation = useUpdateTripMutation(tripRef)
   const cancelMutation = useCancelTripMutation(tripRef)
+  const deleteTripMutation = useDeleteTripMutation()
   const [isEditing, setIsEditing] = useState(false)
 
   const isFleetOwner = userQuery.data?.role === 'FLEET_OWNER'
@@ -112,6 +120,7 @@ export default function TripProfilePage() {
     isFleetOwner && (trip.status === 'PLANNED' || trip.status === 'DELAYED') && !isEditing
   const canCancel =
     isFleetOwner && trip.status !== 'COMPLETED' && trip.status !== 'CANCELLED'
+  const canDelete = isFleetOwner && trip.status !== 'ONGOING'
 
   async function handleCancelTrip() {
     const confirmed = await fleetConfirm({
@@ -131,6 +140,24 @@ export default function TripProfilePage() {
         await fleetAlertError('Could not cancel trip', 'Please try again or contact support if the problem continues.')
       },
     })
+  }
+
+  async function handleDeleteTrip() {
+    const confirmed = await fleetConfirm({
+      title: 'Delete this trip?',
+      html: `<p class="text-sm text-slate-600">Trip <strong>${trip.trip_number}</strong> will be permanently removed. This cannot be undone.</p>`,
+      confirmText: 'Yes, delete',
+      cancelText: 'Cancel',
+      icon: 'warning',
+    })
+    if (!confirmed) return
+    try {
+      const data = await deleteTripMutation.mutateAsync(trip.id)
+      await fleetAlertSuccess('Trip deleted', data.message)
+      router.push(AppRoutesPaths.dashboard.trips)
+    } catch {
+      await fleetAlertError('Could not delete trip', 'Please try again or contact support if the problem continues.')
+    }
   }
 
   return (
@@ -180,6 +207,17 @@ export default function TripProfilePage() {
               {cancelMutation.isPending ? 'Cancelling…' : 'Cancel trip'}
             </button>
           ) : null}
+          {canDelete ? (
+            <button
+              type="button"
+              onClick={() => void handleDeleteTrip()}
+              disabled={deleteTripMutation.isPending}
+              className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
+            >
+              {deleteTripMutation.isPending ? 'Deleting…' : 'Delete trip'}
+            </button>
+          ) : null}
+
         </div>
       </div>
 

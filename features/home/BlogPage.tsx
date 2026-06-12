@@ -1,9 +1,8 @@
-import Link from "next/link";
 import MarketingPageHero from "@/components/marketing/MarketingPageHero";
+import BlogPostCard from "@/components/marketing/BlogPostCard";
 import { fetchAllPublishedPosts } from "@/lib/contentApi";
 import { APP_NAME } from "@/lib/constants";
 import { MARKETING_CONTAINER } from "@/lib/marketingLayout";
-import { AppRoutesPaths } from "@/route/paths";
 
 export const BLOG_PAGE_REVALIDATE = 300;
 
@@ -38,40 +37,11 @@ export default async function BlogPage() {
               </p>
             </div>
           ) : (
-            <ul className="space-y-10">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {posts.map((post) => (
-                <li key={post.id}>
-                  <article>
-                    <time className="text-sm font-medium text-gray-500">
-                      {post.published_at
-                        ? new Date(post.published_at).toLocaleDateString(undefined, {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })
-                        : ""}
-                    </time>
-                    <h2 className="mt-2 font-title text-2xl font-bold text-[#111827] md:text-3xl">
-                      <Link
-                        href={AppRoutesPaths.blog.post(post.slug)}
-                        className="transition hover:text-[#2f5aab]"
-                      >
-                        {post.title}
-                      </Link>
-                    </h2>
-                    {post.excerpt ? (
-                      <p className="mt-3 max-w-3xl text-gray-700 leading-relaxed">{post.excerpt}</p>
-                    ) : null}
-                    <Link
-                      href={AppRoutesPaths.blog.post(post.slug)}
-                      className="mt-4 inline-block text-sm font-semibold text-[#2f5aab] hover:underline"
-                    >
-                      Read article
-                    </Link>
-                  </article>
-                </li>
+                <BlogPostCard key={post.id} post={post} linkLabel="Read article" />
               ))}
-            </ul>
+            </div>
           )}
         </div>
       </section>

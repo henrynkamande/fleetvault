@@ -1,7 +1,21 @@
 import type { NextConfig } from "next";
 import { AppRoutesPaths } from "./route/paths";
 
+function apiOriginForRewrites(): string {
+  const raw = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/users/api";
+  return raw.replace(/\/users\/api\/?$/, "").replace(/\/$/, "");
+}
+
 const nextConfig: NextConfig = {
+  async rewrites() {
+    const origin = apiOriginForRewrites();
+    return [
+      {
+        source: "/media/:path*",
+        destination: `${origin}/media/:path*`,
+      },
+    ];
+  },
   async redirects() {
     return [
       { source: "/vehicles", destination: AppRoutesPaths.dashboard.vehicles, permanent: true },

@@ -20,3 +20,9 @@ export async function getCompanyUser(userId: string): Promise<User> {
   const res = await api.get<User>(`/users/${userId}/`)
   return res.data
 }
+
+/** Deactivates a driver (or other company user); fleet owner only. */
+export async function deactivateCompanyUser(userId: string): Promise<{ message: string; user: User }> {
+  const res = await api.post<{ message: string; user: User }>(`/users/${userId}/deactivate/`)
+  return res.data
+}

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { platformApi } from "@/lib/platformApi";
 import type { PlatformSystemExpense } from "@/types/platform";
 
@@ -23,6 +23,16 @@ export type PlatformExpenseInput = {
   recorded_at: string;
 };
 
+
+function platformExpensePayload(payload: PlatformExpenseInput) {
+  return {
+    name: payload.name,
+    category: payload.category,
+    amount: payload.amount,
+    recorded_at: payload.recorded_at,
+  };
+}
+
 export function usePlatformSystemExpenses(params?: {
   page?: number;
   search?: string;
@@ -38,6 +48,8 @@ export function usePlatformSystemExpenses(params?: {
       });
       return res.data;
     },
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -52,7 +64,7 @@ export function usePlatformExpenseMutations() {
     mutationFn: async (payload: PlatformExpenseInput) => {
       const res = await platformApi.post<PlatformSystemExpense>(
         "/system-expenses/",
-        payload,
+        platformExpensePayload(payload),
       );
       return res.data;
     },
@@ -66,7 +78,7 @@ export function usePlatformExpenseMutations() {
     }: PlatformExpenseInput & { id: string }) => {
       const res = await platformApi.patch<PlatformSystemExpense>(
         `/system-expenses/${id}/`,
-        payload,
+        platformExpensePayload(payload),
       );
       return res.data;
     },

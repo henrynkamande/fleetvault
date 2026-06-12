@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   contentAdminApi,
   type AdminBlogPost,
@@ -17,6 +17,8 @@ export function useAdminBlogPosts(params?: { page?: number; page_size?: number; 
       const res = await contentAdminApi.get<AdminPostsResponse>("/admin/posts/", { params });
       return res.data;
     },
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

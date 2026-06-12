@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react'
-import { useUpdateCompanyMutation } from '@/hooks/queries/useCompanyMutations'
 import { useCompany } from '@/hooks/queries/useCompany'
 import { useUpdateProfileMutation } from '@/hooks/queries/useProfileMutations'
 import { useCurrentUser } from '@/hooks/queries/useUsers'
@@ -83,61 +82,39 @@ function SettingsSkeletonGrid() {
   )
 }
 
-function emptyAsEmDash(value: string | null | undefined): string {
-  const s = value?.trim()
-  return s && s.length > 0 ? s : ''
-}
-
 type ProfileForm = {
   first_name: string
   last_name: string
   phone_number: string
 }
 
-type CompanyForm = {
-  name: string
-  registration_number: string
-  contact_email: string
-  contact_phone: string
-  address: string
-}
-
 export default function Settings() {
   const userQuery = useCurrentUser()
-  const companyQuery = useCompany()
   const updateProfile = useUpdateProfileMutation()
-  const updateCompany = useUpdateCompanyMutation()
-
-  const user = userQuery.data
-  const company = companyQuery.data
-  const isFleetOwner = user?.role === 'FLEET_OWNER'
-
   const [profileForm, setProfileForm] = useState<ProfileForm | null>(null)
-  const [companyForm, setCompanyForm] = useState<CompanyForm | null>(null)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'general' | 'billing'>('general')
-  const billingStatus = useBillingStatus()
+
+  const user = userQuery.data
+  const isFleetOwner = user?.role === 'FLEET_OWNER'
+  const billingEnabled = activeTab === 'billing' && isFleetOwner
+  const companyQuery = useCompany({ enabled: billingEnabled })
+  const company = companyQuery.data
+
+  const billingStatus = useBillingStatus({ enabled: billingEnabled })
   const billingPortal = useBillingPortal()
 
   useEffect(() => {
     if (!user) return
-    setProfileForm({
-      first_name: user.first_name,
-      last_name: user.last_name,
-      phone_number: user.phone_number,
-    })
+    const timer = window.setTimeout(() => {
+      setProfileForm({
+        first_name: user.first_name,
+        last_name: user.last_name,
+        phone_number: user.phone_number,
+      })
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [user])
-
-  useEffect(() => {
-    if (!company) return
-    setCompanyForm({
-      name: company.name,
-      registration_number: emptyAsEmDash(company.registration_number),
-      contact_email: emptyAsEmDash(company.contact_email),
-      contact_phone: emptyAsEmDash(company.contact_phone),
-      address: emptyAsEmDash(company.address),
-    })
-  }, [company])
 
   const profileDirty = useMemo(() => {
     if (!user || !profileForm) return false
@@ -148,32 +125,16 @@ export default function Settings() {
     )
   }, [user, profileForm])
 
-  const companyDirty = useMemo(() => {
-    if (!company || !companyForm) return false
-    return (
-      companyForm.name !== company.name ||
-      companyForm.registration_number !== emptyAsEmDash(company.registration_number) ||
-      companyForm.contact_email !== emptyAsEmDash(company.contact_email) ||
-      companyForm.contact_phone !== emptyAsEmDash(company.contact_phone) ||
-      companyForm.address !== emptyAsEmDash(company.address)
-    )
-  }, [company, companyForm])
-
-  const canSave = profileDirty || (isFleetOwner && companyDirty)
-  const isSaving = updateProfile.isPending || updateCompany.isPending
+  const canSave = profileDirty
+  const isSaving = updateProfile.isPending
 
   const userError =
     userQuery.isError && !userQuery.isPending
       ? getErrorDetail(userQuery.error) ?? 'Could not load your profile. Refresh the page or sign in again.'
       : null
 
-  const companyError =
-    companyQuery.isError && !companyQuery.isPending
-      ? getErrorDetail(companyQuery.error) ?? 'Could not load company details.'
-      : null
-
   const saveError = (() => {
-    for (const err of [updateProfile.error, updateCompany.error]) {
+    for (const err of [updateProfile.error]) {
       if (!err) continue
       const fieldMsgs = Object.values(flattenFieldErrors(getResponseErrorData(err))).filter(Boolean)
       if (fieldMsgs.length > 0) return fieldMsgs.join(' ')
@@ -182,9 +143,6 @@ export default function Settings() {
     }
     return null
   })()
-
-  const showCompanySkeleton =
-    isFleetOwner && companyQuery.isPending && !company && !companyError
 
   const handleCancel = () => {
     setSaveMessage(null)
@@ -195,36 +153,17 @@ export default function Settings() {
         phone_number: user.phone_number,
       })
     }
-    if (company) {
-      setCompanyForm({
-        name: company.name,
-        registration_number: emptyAsEmDash(company.registration_number),
-        contact_email: emptyAsEmDash(company.contact_email),
-        contact_phone: emptyAsEmDash(company.contact_phone),
-        address: emptyAsEmDash(company.address),
-      })
-    }
   }
 
   const handleSave = async () => {
     setSaveMessage(null)
     updateProfile.reset()
-    updateCompany.reset()
     try {
       if (profileDirty && profileForm) {
         await updateProfile.mutateAsync({
           first_name: profileForm.first_name.trim(),
           last_name: profileForm.last_name.trim(),
           phone_number: profileForm.phone_number.trim(),
-        })
-      }
-      if (isFleetOwner && companyDirty && companyForm) {
-        await updateCompany.mutateAsync({
-          name: companyForm.name.trim(),
-          registration_number: companyForm.registration_number.trim() || undefined,
-          contact_email: companyForm.contact_email.trim() || undefined,
-          contact_phone: companyForm.contact_phone.trim() || undefined,
-          address: companyForm.address.trim() || undefined,
         })
       }
       setSaveMessage('Your changes were saved.')
@@ -239,7 +178,7 @@ export default function Settings() {
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-2xl font-semibold text-[#111827]">Settings &amp; Preferences</h2>
-            <p className="text-sm text-gray-700">Update your account and company details.</p>
+            <p className="text-sm text-gray-700">Update your vehicle owner account and billing preferences.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -361,92 +300,6 @@ export default function Settings() {
           ) : null}
         </section>
 
-        <section className="rounded-2xl border border-gray-200 bg-white p-4 md:p-5">
-          <h3 className="mb-1 text-lg font-semibold text-[#111827]">Company profile</h3>
-          <p className="mb-4 text-xs text-gray-600">
-            {isFleetOwner ? 'Fleet owners can edit business details below.' : 'Your assigned company (read-only).'}
-          </p>
-
-          {isFleetOwner && user && !user.has_company && !company ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <p className="font-medium">No formal company registration yet.</p>
-              <p className="mt-1 text-amber-800/90">
-                A workspace may still be created automatically when you manage trips. You can also register full business
-                details.
-              </p>
-              <Link
-                className="mt-3 inline-block font-semibold text-[#111827] underline"
-                href={AppRoutesPaths.onboarding.registerCompany}
-              >
-                Register your company
-              </Link>
-            </div>
-          ) : null}
-
-          {companyError ? (
-            <p className="text-sm text-rose-600" role="alert">
-              {companyError}
-            </p>
-          ) : null}
-
-          {showCompanySkeleton ? <SettingsSkeletonGrid /> : null}
-
-          {company && companyForm ? (
-            <div className="grid gap-3 md:grid-cols-2">
-              <EditableField
-                label="Company name"
-                value={companyForm.name}
-                onChange={(v) => setCompanyForm((c) => (c ? { ...c, name: v } : c))}
-                helper="Registered company name."
-                readOnly={!isFleetOwner}
-              />
-              <EditableField
-                label="Business registration number"
-                value={companyForm.registration_number}
-                onChange={(v) => setCompanyForm((c) => (c ? { ...c, registration_number: v } : c))}
-                helper="Legal registration identifier."
-                readOnly={!isFleetOwner}
-              />
-              <EditableField
-                label="Support email"
-                value={companyForm.contact_email}
-                onChange={(v) => setCompanyForm((c) => (c ? { ...c, contact_email: v } : c))}
-                helper="Primary operations mailbox."
-                readOnly={!isFleetOwner}
-                type="email"
-              />
-              <EditableField
-                label="Contact phone"
-                value={companyForm.contact_phone}
-                onChange={(v) => setCompanyForm((c) => (c ? { ...c, contact_phone: v } : c))}
-                helper="Main company contact number."
-                readOnly={!isFleetOwner}
-                type="tel"
-              />
-              <div className="md:col-span-2">
-                <EditableField
-                  label="Headquarters address"
-                  value={companyForm.address}
-                  onChange={(v) => setCompanyForm((c) => (c ? { ...c, address: v } : c))}
-                  helper="Registered office / main address."
-                  readOnly={!isFleetOwner}
-                />
-              </div>
-              <EditableField
-                label="Subscription"
-                value={company.subscription_plan}
-                helper="Current plan on the account."
-                readOnly
-              />
-              <EditableField
-                label="Status"
-                value={company.is_active ? 'Active' : 'Inactive'}
-                helper="Company account status."
-                readOnly
-              />
-            </div>
-          ) : null}
-        </section>
       </div>
       ) : null}
     </section>

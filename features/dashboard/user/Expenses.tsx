@@ -1,12 +1,17 @@
 "use client";
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
+import { toast } from 'react-toastify'
 import FinanceFiltersBar, { financeFiltersToParams, type FinanceFiltersState } from './finance/FinanceFiltersBar'
 import { formatDeltaPct, formatUsd } from './finance/financeFormat'
+import { useExpenseMutations, useExpenses } from '@/hooks/queries/useExpenses'
 import { useExpensesReportQuery } from '@/hooks/queries/useFinanceReports'
 import type { FinanceGranularity } from '@/types/finance'
-import { getErrorDetail } from '@/lib/apiErrors'
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
+import { flattenFieldErrors, getErrorDetail, getResponseErrorData } from '@/lib/apiErrors'
+import { LoadingState } from "@/components/ui/LoadingSpinner"
+import { useTripsListQuery } from '@/hooks/queries/useTripsList'
+import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
+import type { ExpenseCategory, ExpenseInput, ExpenseScope, ExpenseStatus as ApiExpenseStatus } from '@/types/expense'
 
 type ExpenseStatus = 'paid' | 'pending' | 'overdue'
 type Aggregation = 'Monthly' | 'Quarterly'
@@ -21,6 +26,7 @@ type ExpenseRecord = {
   status: ExpenseStatus
   notes?: string
   vendor?: string
+  description?: string
 }
 
 type ExpenseChartData = { period: string; total: number; byCategory?: { category: string; amount: number }[] }
@@ -50,6 +56,8 @@ type CategoryListProps = {
 
 type ExpenseTableProps = {
   rows: ExpenseRecord[]
+  totalRows: number
+  categoryOptions: string[]
   sortBy: SortBy
   onSortByChange: (value: SortBy) => void
   statusFilter: 'all' | ExpenseStatus
@@ -60,8 +68,53 @@ type ExpenseTableProps = {
   onSearchTermChange: (value: string) => void
   page: number
   totalPages: number
+  pageSize: number
   onPageChange: (page: number) => void
 }
+
+type ExpenseFormState = {
+  scope: ExpenseScope
+  category: ExpenseCategory
+  status: ApiExpenseStatus
+  amount: string
+  description: string
+  vendor: string
+  expense_date: string
+  vehicle: string
+  trip: string
+  odometer_reading: string
+  notes: string
+}
+
+type CreateExpenseModalProps = {
+  open: boolean
+  onClose: () => void
+}
+
+const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
+  { value: 'FUEL', label: 'Fuel' },
+  { value: 'MAINTENANCE', label: 'Maintenance' },
+  { value: 'INSURANCE', label: 'Insurance' },
+  { value: 'REGISTRATION', label: 'Registration' },
+  { value: 'TOLL', label: 'Toll' },
+  { value: 'PARKING', label: 'Parking' },
+  { value: 'DRIVER_WAGES', label: 'Driver wages' },
+  { value: 'OTHER', label: 'Other' },
+]
+
+const initialExpenseForm = (): ExpenseFormState => ({
+  scope: 'FLEET',
+  category: 'FUEL',
+  status: 'PENDING',
+  amount: '',
+  description: '',
+  vendor: '',
+  expense_date: new Date().toISOString().slice(0, 10),
+  vehicle: '',
+  trip: '',
+  odometer_reading: '',
+  notes: '',
+})
 
 function formatCurrency(value: number, withCents = false): string {
   return new Intl.NumberFormat('en-US', {
@@ -82,6 +135,20 @@ function statusBadgeClass(status: ExpenseStatus): string {
   if (status === 'paid') return 'bg-emerald-100 text-emerald-700 ring-emerald-200'
   if (status === 'pending') return 'bg-amber-100 text-amber-700 ring-amber-200'
   return 'bg-rose-100 text-rose-700 ring-rose-200'
+}
+
+function normalizeExpenseStatus(status: string): ExpenseStatus {
+  const normalized = status.toLowerCase()
+  if (normalized === 'pending') return 'pending'
+  if (normalized === 'overdue') return 'overdue'
+  return 'paid'
+}
+
+function readableCategory(category: string): string {
+  return category
+    .split('_')
+    .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+    .join(' ')
 }
 
 function deltaToneClass(tone: KpiCardProps['tone']): string {
@@ -199,8 +266,272 @@ function referenceText(reference?: ExpenseRecord['reference']): string {
   return `${reference.type.toUpperCase()}-${reference.id}`
 }
 
+function expenseTitle(row: ExpenseRecord): string {
+  return row.description?.trim() || `${row.category} expense`
+}
+
+function expenseSubtitle(row: ExpenseRecord): string | null {
+  if (row.notes?.trim()) return row.notes.trim()
+  if (row.vendor?.trim()) return `Vendor: ${row.vendor.trim()}`
+  return null
+}
+
+function CreateExpenseModal({ open, onClose }: CreateExpenseModalProps) {
+  const [form, setForm] = useState<ExpenseFormState>(() => initialExpenseForm())
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const mutations = useExpenseMutations()
+  const vehiclesQuery = useVehiclesQuery({ page_size: 100, is_active: true })
+  const tripsQuery = useTripsListQuery()
+
+  if (!open) return null
+
+  const vehicleOptions = vehiclesQuery.data?.vehicles ?? []
+  const tripOptions = tripsQuery.data?.trips ?? []
+  const creating = mutations.create.isPending
+
+  function update<K extends keyof ExpenseFormState>(field: K, value: ExpenseFormState[K]) {
+    setForm((prev) => {
+      const next = { ...prev, [field]: value }
+      if (field === 'scope') {
+        next.vehicle = ''
+        next.trip = ''
+      }
+      return next
+    })
+    setFieldErrors((prev) => ({ ...prev, [field]: '' }))
+  }
+
+  function closeAndReset() {
+    setForm(initialExpenseForm())
+    setFieldErrors({})
+    mutations.create.reset()
+    onClose()
+  }
+
+  function validate(): boolean {
+    const next: Record<string, string> = {}
+    if (!form.description.trim()) next.description = 'Description is required.'
+    if (!form.amount.trim()) next.amount = 'Amount is required.'
+    else if (Number.isNaN(Number(form.amount)) || Number(form.amount) <= 0) {
+      next.amount = 'Enter an amount greater than 0.'
+    }
+    if (!form.expense_date) next.expense_date = 'Date is required.'
+    if (form.scope === 'VEHICLE' && !form.vehicle) next.vehicle = 'Select a vehicle.'
+    if (form.scope === 'TRIP' && !form.trip) next.trip = 'Select a trip.'
+    setFieldErrors(next)
+    return Object.keys(next).length === 0
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!validate()) return
+
+    const payload: ExpenseInput = {
+      scope: form.scope,
+      category: form.category,
+      status: form.status,
+      amount: Number(form.amount),
+      description: form.description.trim(),
+      vendor: form.vendor.trim(),
+      expense_date: form.expense_date,
+      vehicle: form.scope === 'VEHICLE' ? form.vehicle : null,
+      trip: form.scope === 'TRIP' ? form.trip : null,
+      odometer_reading: form.odometer_reading.trim() ? Number(form.odometer_reading) : null,
+      notes: form.notes.trim(),
+    }
+
+    mutations.create.mutate(payload, {
+      onSuccess: () => {
+        toast.success('Expense created successfully.')
+        closeAndReset()
+      },
+      onError: (error) => {
+        setFieldErrors(flattenFieldErrors(getResponseErrorData(error)))
+        toast.error(getErrorDetail(error) || 'Could not create expense.')
+      },
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/45 px-4 py-8">
+      <div className="mx-auto w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="flex items-start justify-between border-b border-slate-100 px-6 py-4">
+          <div>
+            <h2 className="text-xl font-semibold text-[#111827]">Create Expense</h2>
+            <p className="mt-1 text-sm text-slate-600">Add a fleet, vehicle, or trip cost to your expense ledger.</p>
+          </div>
+          <button
+            type="button"
+            onClick={closeAndReset}
+            className="rounded-lg px-2 py-1 text-xl leading-none text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+            aria-label="Close create expense"
+          >
+            ×
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5 px-6 py-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="space-y-1">
+              <span className="text-sm font-semibold text-slate-700">Scope</span>
+              <select
+                value={form.scope}
+                onChange={(event) => update('scope', event.target.value as ExpenseScope)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+              >
+                <option value="FLEET">Fleet expense</option>
+                <option value="VEHICLE">Vehicle expense</option>
+                <option value="TRIP">Trip expense</option>
+              </select>
+            </label>
+            <label className="space-y-1">
+              <span className="text-sm font-semibold text-slate-700">Category</span>
+              <select
+                value={form.category}
+                onChange={(event) => update('category', event.target.value as ExpenseCategory)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+              >
+                {EXPENSE_CATEGORIES.map((category) => (
+                  <option key={category.value} value={category.value}>{category.label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {form.scope === 'VEHICLE' ? (
+            <label className="block space-y-1">
+              <span className="text-sm font-semibold text-slate-700">Vehicle</span>
+              <select
+                value={form.vehicle}
+                onChange={(event) => update('vehicle', event.target.value)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+              >
+                <option value="">{vehiclesQuery.isLoading ? 'Loading vehicles...' : 'Select vehicle'}</option>
+                {vehicleOptions.map((vehicle) => (
+                  <option key={vehicle.id} value={vehicle.id}>
+                    {vehicle.registration_number} - {vehicle.make} {vehicle.model}
+                  </option>
+                ))}
+              </select>
+              {fieldErrors.vehicle ? <span className="text-xs text-rose-600">{fieldErrors.vehicle}</span> : null}
+            </label>
+          ) : null}
+
+          {form.scope === 'TRIP' ? (
+            <label className="block space-y-1">
+              <span className="text-sm font-semibold text-slate-700">Trip</span>
+              <select
+                value={form.trip}
+                onChange={(event) => update('trip', event.target.value)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+              >
+                <option value="">{tripsQuery.isLoading ? 'Loading trips...' : 'Select trip'}</option>
+                {tripOptions.map((trip) => (
+                  <option key={trip.id} value={trip.id}>
+                    {trip.trip_number} - {trip.pickup_location} to {trip.destination}
+                  </option>
+                ))}
+              </select>
+              {fieldErrors.trip ? <span className="text-xs text-rose-600">{fieldErrors.trip}</span> : null}
+            </label>
+          ) : null}
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <label className="space-y-1 md:col-span-2">
+              <span className="text-sm font-semibold text-slate-700">Description</span>
+              <input
+                value={form.description}
+                onChange={(event) => update('description', event.target.value)}
+                placeholder="e.g. Diesel refill, parking fee, garage repair"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+              />
+              {fieldErrors.description ? <span className="text-xs text-rose-600">{fieldErrors.description}</span> : null}
+            </label>
+            <label className="space-y-1">
+              <span className="text-sm font-semibold text-slate-700">Amount</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.amount}
+                onChange={(event) => update('amount', event.target.value)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+              />
+              {fieldErrors.amount ? <span className="text-xs text-rose-600">{fieldErrors.amount}</span> : null}
+            </label>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <label className="space-y-1">
+              <span className="text-sm font-semibold text-slate-700">Date</span>
+              <input
+                type="date"
+                value={form.expense_date}
+                onChange={(event) => update('expense_date', event.target.value)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+              />
+              {fieldErrors.expense_date ? <span className="text-xs text-rose-600">{fieldErrors.expense_date}</span> : null}
+            </label>
+            <label className="space-y-1">
+              <span className="text-sm font-semibold text-slate-700">Status</span>
+              <select
+                value={form.status}
+                onChange={(event) => update('status', event.target.value as ApiExpenseStatus)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+              >
+                <option value="PENDING">Pending</option>
+                <option value="PAID">Paid</option>
+                <option value="OVERDUE">Overdue</option>
+              </select>
+            </label>
+            <label className="space-y-1">
+              <span className="text-sm font-semibold text-slate-700">Vendor</span>
+              <input
+                value={form.vendor}
+                onChange={(event) => update('vendor', event.target.value)}
+                placeholder="Optional"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+              />
+            </label>
+          </div>
+
+          <label className="block space-y-1">
+            <span className="text-sm font-semibold text-slate-700">Notes</span>
+            <textarea
+              value={form.notes}
+              onChange={(event) => update('notes', event.target.value)}
+              rows={3}
+              placeholder="Optional internal notes"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            />
+          </label>
+
+          <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+            <button
+              type="button"
+              onClick={closeAndReset}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={creating}
+              className="rounded-xl bg-[#fbbd26] px-4 py-2 text-sm font-semibold text-[#111827] hover:bg-[#f4b20a] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {creating ? 'Creating...' : 'Create Expense'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 function ExpenseTable({
   rows,
+  totalRows,
+  categoryOptions,
   sortBy,
   onSortByChange,
   statusFilter,
@@ -211,24 +542,32 @@ function ExpenseTable({
   onSearchTermChange,
   page,
   totalPages,
+  pageSize,
   onPageChange,
 }: ExpenseTableProps) {
+  const startRow = totalRows === 0 ? 0 : (page - 1) * pageSize + 1
+  const endRow = Math.min(totalRows, (page - 1) * pageSize + rows.length)
+
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <h3 className="text-lg font-semibold text-[#111827]">Recent Expense Records</h3>
-        <div className="flex flex-wrap items-center gap-2">
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-100 bg-slate-50/70 p-4">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-[#111827]">Recent Expense Records</h3>
+            <p className="mt-1 text-sm text-slate-500">Track fleet, vehicle, and trip costs in one ledger.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
           <input
             type="search"
             value={searchTerm}
             onChange={(event) => onSearchTermChange(event.target.value)}
-            placeholder="Search ID or reference..."
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            placeholder="Search expense, category, or reference..."
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
           />
           <select
             value={statusFilter}
             onChange={(event) => onStatusFilterChange(event.target.value as 'all' | ExpenseStatus)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
           >
             <option value="all">All statuses</option>
             <option value="paid">Paid</option>
@@ -238,86 +577,73 @@ function ExpenseTable({
           <select
             value={categoryFilter}
             onChange={(event) => onCategoryFilterChange(event.target.value)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
           >
             <option value="All">All categories</option>
-            <option value="Fuel">Fuel</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Driver Wages">Driver Wages</option>
-            <option value="Insurance">Insurance</option>
-            <option value="Tolls & Parking">Tolls & Parking</option>
-            <option value="Others">Others</option>
+            {categoryOptions.map((category) => (
+              <option key={category} value={category}>{category}</option>
+            ))}
           </select>
           <select
             value={sortBy}
             onChange={(event) => onSortByChange(event.target.value as SortBy)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
           >
             <option value="date_desc">Newest date</option>
             <option value="date_asc">Oldest date</option>
             <option value="amount_desc">Highest amount</option>
             <option value="amount_asc">Lowest amount</option>
           </select>
-          <button
-            type="button"
-            className="rounded-lg bg-[#fbbd26] px-3 py-2 text-sm font-semibold text-[#111827] transition hover:bg-[#f4b20a]"
-          >
-            + Log Expense
-          </button>
+          </div>
         </div>
       </div>
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
-          <thead className="text-gray-500">
-            <tr className="border-b border-gray-100">
-              <th className="pb-3 font-medium">Expense ID</th>
-              <th className="pb-3 font-medium">Category</th>
-              <th className="pb-3 font-medium">Reference (Trip/Vehicle)</th>
-              <th className="pb-3 font-medium">Date Issued</th>
-              <th className="pb-3 font-medium">Amount</th>
-              <th className="pb-3 font-medium">Status</th>
-              <th className="pb-3 font-medium">Action</th>
+          <thead className="bg-white text-xs uppercase tracking-wide text-slate-500">
+            <tr className="border-b border-slate-100">
+              <th className="px-4 py-3 font-semibold">Expense</th>
+              <th className="px-4 py-3 font-semibold">Category</th>
+              <th className="px-4 py-3 font-semibold">Reference</th>
+              <th className="px-4 py-3 font-semibold">Date Issued</th>
+              <th className="px-4 py-3 text-right font-semibold">Amount</th>
+              <th className="px-4 py-3 font-semibold">Status</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-10 text-center">
+                <td colSpan={6} className="py-12 text-center">
                   <p className="text-sm font-medium text-[#111827]">No expense records found.</p>
                   <p className="mt-1 text-xs text-gray-600">Try adjusting filters or add your first expense entry.</p>
                 </td>
               </tr>
             ) : (
               rows.map((row) => (
-                <tr key={row.id} className="border-b border-gray-100 last:border-none">
-                  <td className="py-3 font-semibold text-[#111827]">{row.id}</td>
-                  <td className="py-3 text-gray-700">{row.category}</td>
-                  <td className="py-3 text-gray-700">{referenceText(row.reference)}</td>
-                  <td className="py-3 text-gray-700">
+                <tr key={row.id} className="border-b border-slate-100 transition hover:bg-slate-50/70 last:border-none">
+                  <td className="px-4 py-4">
+                    <p className="max-w-[18rem] truncate font-semibold text-[#111827]">{expenseTitle(row)}</p>
+                    {expenseSubtitle(row) ? (
+                      <p className="mt-1 max-w-[18rem] truncate text-xs text-slate-500">{expenseSubtitle(row)}</p>
+                    ) : null}
+                  </td>
+                  <td className="px-4 py-4 text-slate-700">{row.category}</td>
+                  <td className="px-4 py-4 text-slate-700">{referenceText(row.reference)}</td>
+                  <td className="px-4 py-4 text-slate-700">
                     {new Date(row.dateIssued).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
                     })}
                   </td>
-                  <td className="py-3 font-semibold text-[#111827]">{formatCurrency(row.amount, true)}</td>
-                  <td className="py-3">
+                  <td className="px-4 py-4 text-right font-semibold text-[#111827]">{formatCurrency(row.amount, true)}</td>
+                  <td className="px-4 py-4">
                     <span
                       aria-label={`Expense status ${statusLabel(row.status)}`}
                       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${statusBadgeClass(row.status)}`}
                     >
                       {statusLabel(row.status)}
                     </span>
-                  </td>
-                  <td className="py-3">
-                    <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                      <button type="button" className="text-[#111827] hover:text-[#f4b20a]">View</button>
-                      <button type="button" className="text-gray-700 hover:text-gray-900">Edit</button>
-                      <button type="button" className="text-emerald-700 hover:text-emerald-800">Mark Paid</button>
-                      <button type="button" className="text-amber-700 hover:text-amber-800">Send Reminder</button>
-                      <button type="button" className="text-gray-700 hover:text-gray-900">Export PDF</button>
-                    </div>
                   </td>
                 </tr>
               ))
@@ -326,8 +652,10 @@ function ExpenseTable({
         </table>
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-sm text-gray-600">Page {page} of {totalPages}</p>
+      <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
+        <p className="text-sm text-gray-600">
+          {totalRows === 0 ? 'No records' : `Showing ${startRow}-${endRow} of ${totalRows}`} · Page {page} of {totalPages}
+        </p>
         <div className="flex gap-2">
           <button
             type="button"
@@ -351,32 +679,15 @@ function ExpenseTable({
   )
 }
 
-function QuickActions() {
+function QuickActions({ onCreateExpense }: { onCreateExpense: () => void }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <button
         type="button"
+        onClick={onCreateExpense}
         className="rounded-lg bg-[#fbbd26] px-3 py-2 text-sm font-semibold text-[#111827] transition hover:bg-[#f4b20a]"
       >
         Create Expense
-      </button>
-      <button
-        type="button"
-        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-[#fbbd26]/60 hover:bg-[#fffef8]"
-      >
-        Bulk Upload
-      </button>
-      <button
-        type="button"
-        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-[#fbbd26]/60 hover:bg-[#fffef8]"
-      >
-        Export
-      </button>
-      <button
-        type="button"
-        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-[#fbbd26]/60 hover:bg-[#fffef8]"
-      >
-        Share Report
       </button>
     </div>
   )
@@ -393,11 +704,17 @@ export default function Expenses() {
   const [page, setPage] = useState(1)
   const pageSize = 8
   const [activeKpi, setActiveKpi] = useState<'none' | 'pending' | 'overdue' | 'total' | 'month'>('none')
+  const [createExpenseOpen, setCreateExpenseOpen] = useState(false)
 
   const granularity: FinanceGranularity = aggregation === 'Quarterly' ? 'quarterly' : 'monthly'
   const reportQuery = useExpensesReportQuery({ ...financeFiltersToParams(filters), granularity })
+  const ledgerQuery = useExpenses({
+    page: 1,
+    page_size: 100,
+    scope: 'FLEET',
+  })
   const summary = reportQuery.data?.summary
-  const categoryTotals = reportQuery.data?.by_category ?? []
+  const categoryTotals = useMemo(() => reportQuery.data?.by_category ?? [], [reportQuery.data?.by_category])
   const topCategory = categoryTotals[0]?.category ?? '—'
 
   const kpis = useMemo(() => {
@@ -428,6 +745,25 @@ export default function Expenses() {
   }, [reportQuery.data?.trend])
 
   const seedRows: ExpenseRecord[] = useMemo(() => {
+    const ledgerRows = ledgerQuery.data?.expenses ?? []
+    if (ledgerRows.length > 0) {
+      return ledgerRows.map((expense) => ({
+        id: expense.id,
+        category: readableCategory(expense.category),
+        reference: expense.trip_number
+          ? { type: 'trip' as const, id: expense.trip ?? expense.trip_number, label: expense.trip_number }
+          : expense.vehicle_registration
+            ? { type: 'vehicle' as const, id: expense.vehicle ?? expense.vehicle_registration, label: expense.vehicle_registration }
+            : undefined,
+        dateIssued: expense.expense_date,
+        amount: Number(expense.amount),
+        status: normalizeExpenseStatus(expense.status),
+        notes: expense.notes || undefined,
+        vendor: expense.vendor || undefined,
+        description: expense.description || undefined,
+      }))
+    }
+
     return (reportQuery.data?.records ?? []).map((r) => ({
       id: r.id,
       category: r.category,
@@ -437,8 +773,13 @@ export default function Expenses() {
       status: r.status,
       notes: r.notes ?? undefined,
       vendor: r.vendor ?? undefined,
+      description: r.notes ?? undefined,
     }))
-  }, [reportQuery.data?.records])
+  }, [ledgerQuery.data?.expenses, reportQuery.data?.records])
+
+  const categoryOptions = useMemo(() => {
+    return Array.from(new Set(seedRows.map((row) => row.category))).sort((a, b) => a.localeCompare(b))
+  }, [seedRows])
 
   const filteredRows = useMemo(() => {
     let rows = [...seedRows]
@@ -461,7 +802,7 @@ export default function Expenses() {
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase()
       rows = rows.filter((row) =>
-        `${row.id} ${referenceText(row.reference)} ${row.category} ${row.vendor ?? ''}`.toLowerCase().includes(q),
+        `${expenseTitle(row)} ${referenceText(row.reference)} ${row.category} ${row.vendor ?? ''} ${row.notes ?? ''}`.toLowerCase().includes(q),
       )
     }
 
@@ -489,10 +830,10 @@ export default function Expenses() {
     return filteredRows.slice(start, start + pageSize)
   }, [filteredRows, page, totalPages])
 
-  if (reportQuery.isError) {
+  if (reportQuery.isError || ledgerQuery.isError) {
     return (
       <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-800">
-        Could not load expenses report: {getErrorDetail(reportQuery.error)}
+        Could not load expenses: {getErrorDetail(reportQuery.error ?? ledgerQuery.error)}
       </section>
     )
   }
@@ -500,9 +841,9 @@ export default function Expenses() {
   return (
     <section className="space-y-4 rounded-2xl  p-4">
         <FinanceFiltersBar value={filters} onChange={(next) => { setFilters(next); setPage(1) }} />
-        {reportQuery.isLoading ? <LoadingState /> : null}
+        {reportQuery.isLoading || ledgerQuery.isLoading ? <LoadingState /> : null}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <QuickActions />
+          <QuickActions onCreateExpense={() => setCreateExpenseOpen(true)} />
           <select
             value={aggregation}
             onChange={(event) => setAggregation(event.target.value as Aggregation)}
@@ -553,6 +894,8 @@ export default function Expenses() {
 
         <ExpenseTable
           rows={currentRows}
+          totalRows={filteredRows.length}
+          categoryOptions={categoryOptions}
           sortBy={sortBy}
           onSortByChange={(value) => {
             setSortBy(value)
@@ -575,8 +918,10 @@ export default function Expenses() {
           }}
           page={Math.min(page, totalPages)}
           totalPages={totalPages}
+          pageSize={pageSize}
           onPageChange={setPage}
         />
+        <CreateExpenseModal open={createExpenseOpen} onClose={() => setCreateExpenseOpen(false)} />
       </section>
 )
 }

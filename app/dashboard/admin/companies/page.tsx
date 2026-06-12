@@ -1,5 +1,5 @@
-import AdminCompanies from "@/features/dashboard/admin/AdminCompanies";
+import { LazyAdminCompanies } from "@/lib/lazyDashboardPage";
 
 export default function AdminCompaniesPage() {
-  return <AdminCompanies />;
+  return <LazyAdminCompanies />;
 }

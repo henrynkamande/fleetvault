@@ -122,9 +122,12 @@ export interface DashboardTopVehicleDto {
 export interface DashboardOverviewResponse {
   summary: FinanceSummary
   trip_count_change: number
+  active_trip_count: number
   ongoing_trips: DashboardOngoingTripDto[]
   expense_breakdown: DashboardExpenseSegmentDto[]
   expense_total: number
   top_drivers: DashboardTopDriverDto[]
   top_vehicles: DashboardTopVehicleDto[]
+  most_profitable_vehicle: DashboardTopVehicleDto | null
+  worst_performing_vehicle: DashboardTopVehicleDto | null
 }

@@ -102,7 +102,7 @@ function DriverDocuments({ documents }: Pick<DriverProfileData, 'documents'>) {
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">KYC &amp; Documents</h3>
       <div className="space-y-3 text-sm text-gray-700">
         <div>
-          <p className="font-semibold text-[#111827]">Driver's License</p>
+          <p className="font-semibold text-[#111827]">Driver&apos;s License</p>
           <p>No: {documents.licenseNo}</p>
           <p>Expires: {documents.licenseExpiry}</p>
         </div>

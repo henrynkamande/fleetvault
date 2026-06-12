@@ -16,8 +16,9 @@ export type VehicleApiStatus = 'ACTIVE' | 'INACTIVE' | 'UNDER_MAINTENANCE' | 'OU
 
 export interface VehicleDto {
   id: string
-  company: string
-  company_name: string | null
+  fleet_owner: string
+  company?: string
+  company_name?: string | null
   registration_number: string
   make: string
   model: string
@@ -37,9 +38,32 @@ export interface VehicleDto {
   created_at: string
 }
 
+export type VehicleListDto = Pick<
+  VehicleDto,
+  | 'id'
+  | 'registration_number'
+  | 'make'
+  | 'model'
+  | 'year'
+  | 'color'
+  | 'vehicle_type'
+  | 'status'
+  | 'current_odometer'
+  | 'assigned_driver'
+  | 'assigned_driver_name'
+  | 'is_active'
+  | 'updated_at'
+  | 'created_at'
+> & {
+  company_name?: string | null
+}
+
 export interface ListVehiclesResponse {
   count: number
-  vehicles: VehicleDto[]
+  page: number
+  page_size: number
+  total_pages: number
+  vehicles: VehicleListDto[]
 }
 
 export interface CreateVehiclePayload {
@@ -57,7 +81,9 @@ export interface CreateVehiclePayload {
   notes?: string
 }
 
-export interface CreateVehicleResponse {
+export type UpdateVehiclePayload = Partial<CreateVehiclePayload>
+
+export interface VehicleMutationResponse {
   message: string
   vehicle: VehicleDto
 }

@@ -40,10 +40,12 @@ export default function AddDriverModal({ isOpen, onClose }: AddDriverModalProps)
   }, [vehiclesQuery.data?.vehicles])
 
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) return undefined
+    const timer = window.setTimeout(() => {
       setForm(initialForm)
       setFieldErrors({})
-    }
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [isOpen])
 
   useEffect(() => {

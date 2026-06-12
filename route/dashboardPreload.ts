@@ -1,7 +1,19 @@
+import type { QueryClient } from "@tanstack/react-query";
 import type { AppPage } from "@/types/dashboard";
+import {
+  prefetchDashboardPageData,
+  type DashboardPrefetchContext,
+} from "@/route/dashboardDataPrefetch";
 
-/** Warm route chunks before navigation (Next.js dynamic imports). */
-export function preloadDashboardPage(page: AppPage): void {
+/** Warm route JS + API cache before navigation. */
+export function preloadDashboardPage(
+  page: AppPage,
+  queryClient?: QueryClient,
+  ctx?: DashboardPrefetchContext,
+): void {
+  if (queryClient) {
+    prefetchDashboardPageData(queryClient, page, ctx);
+  }
   switch (page) {
     case "dashboard":
       void import("@/features/dashboard/user/Dashboard");

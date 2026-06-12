@@ -11,7 +11,6 @@ export const AppRoutesPaths = {
     forgotPassword: "/auth/forgot-password",
   },
   onboarding: {
-    registerCompany: "/onboarding/register-company",
     startTrial: "/onboarding/start-trial",
     billingSuccess: "/onboarding/billing-success",
   },
@@ -28,6 +27,8 @@ export const AppRoutesPaths = {
       systemExpenses: "/dashboard/admin/system-expenses",
       settings: "/dashboard/admin/settings",
       blog: "/dashboard/admin/blog",
+      blogAdd: "/dashboard/admin/blog/add-blog",
+      notifications: "/dashboard/admin/notifications",
     },
     vehicles: "/dashboard/vehicles",
     vehicleProfile: (vehicleId: string) =>
@@ -36,6 +37,7 @@ export const AppRoutesPaths = {
     driverProfile: (driverId: string) =>
       `/dashboard/drivers/${encodeURIComponent(driverId)}`,
     trips: "/dashboard/trips",
+    /** `tripRef` is the trip UUID (preferred) or legacy `trip_number`. */
     tripProfile: (tripRef: string) =>
       `/dashboard/trips/${encodeURIComponent(tripRef)}`,
     income: "/dashboard/income",
