@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import { HiEllipsisVertical } from 'react-icons/hi2'
 import { toast } from 'react-toastify'
 import { AppRoutesPaths } from '@/route/paths'
 import { useCurrentUser } from '@/hooks/queries/useUsers'
@@ -13,6 +14,7 @@ import { getErrorDetail } from '@/lib/apiErrors'
 import { getAccessToken } from '@/lib/tokenStorage'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { TripListDto } from '@/types/trip'
+import { driverPaymentModeLabel } from '@/lib/driverPaymentModes'
 import { LoadingCard } from "@/components/ui/LoadingSpinner"
 
 const LogTripModal = dynamic(() => import('./modals/LogTripModal'), {
@@ -38,6 +40,7 @@ type TripRow = {
   vehicle: string
   distance: string
   income: string
+  paymentMode: string
   flagReason?: string
 }
 
@@ -103,6 +106,8 @@ function TripCard({
   onDelete,
   deletePending,
 }: TripCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false)
+
   return (
     <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-[#fbbd26]/50 hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
       <div className="flex items-center justify-between gap-3">
@@ -111,23 +116,38 @@ function TripCard({
             {status}
           </span>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <Link
-            href={detailHref}
-            prefetch
-            className="text-sm font-semibold text-[#111827] hover:text-[#f4b20a] dark:text-slate-100"
+        <div className="relative flex shrink-0 items-center">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Trip actions"
+            className="grid h-9 w-9 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-[#111827]"
           >
-            View Details
-          </Link>
-          {onDelete ? (
-            <button
-              type="button"
-              onClick={onDelete}
-              disabled={deletePending}
-              className="text-sm font-semibold text-rose-700 hover:text-rose-800 disabled:opacity-50"
-            >
-              Delete
-            </button>
+            <HiEllipsisVertical className="h-5 w-5" />
+          </button>
+          {menuOpen ? (
+            <div className="absolute right-0 top-10 z-10 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-xl">
+              <Link
+                href={detailHref}
+                prefetch
+                className="block px-3 py-2 font-semibold text-[#111827] hover:bg-slate-50"
+              >
+                Edit trip details
+              </Link>
+              {onDelete ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    onDelete()
+                  }}
+                  disabled={deletePending}
+                  className="block w-full px-3 py-2 text-left font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Edit or remove record
+                </button>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </div>
@@ -160,6 +180,10 @@ function TripCard({
           <p className="text-xs text-gray-500 dark:text-slate-400">Income</p>
           <p className="font-semibold text-emerald-600 dark:text-emerald-400">{income}</p>
         </div>
+        <div>
+          <p className="text-xs text-gray-500 dark:text-slate-400">Driver pay</p>
+          <p className="font-semibold text-[#111827] dark:text-slate-100">{paymentMode}</p>
+        </div>
       </div>
 
       {status === 'Flagged' && flagReason ? (
@@ -183,7 +207,7 @@ function TripList({ trips, onDeleteTrip, deletePending }: TripListProps) {
             key={trip.id || trip.tripNumber}
             {...trip}
             onDelete={
-              onDeleteTrip && trip.status !== 'Ongoing'
+              onDeleteTrip && (trip.status === 'Planned' || trip.status === 'Delayed')
                 ? () => onDeleteTrip(trip)
                 : undefined
             }
@@ -296,6 +320,7 @@ function tripToRow(t: TripListDto): TripRow {
     vehicle: t.vehicle_registration?.trim() ? t.vehicle_registration : '—',
     distance: dist,
     income: formatMoney(parseDecimal(t.revenue_amount)),
+    paymentMode: driverPaymentModeLabel(t.driver_payment_mode),
     flagReason: t.flag_reason ?? undefined,
   }
 }
@@ -365,16 +390,16 @@ export default function Trips() {
 
   async function handleDeleteTrip(trip: TripRow) {
     const confirmed = await fleetConfirm({
-      title: 'Delete this trip?',
-      html: `<p class="text-sm text-slate-600">Trip <strong>${trip.tripNumber}</strong> will be permanently removed. This cannot be undone.</p>`,
-      confirmText: 'Yes, delete',
-      cancelText: 'Cancel',
+      title: 'Edit this trip record?',
+      html: `<p class="text-sm text-slate-600">Trip <strong>${trip.tripNumber}</strong> can be removed from owner records if it was logged by mistake. This keeps driver payout history fair and transparent.</p>`,
+      confirmText: 'Remove from records',
+      cancelText: 'Keep record',
       icon: 'warning',
     })
     if (!confirmed) return
     try {
       const data = await deleteTripMutation.mutateAsync(trip.id)
-      await fleetAlertSuccess('Trip deleted', data.message)
+      await fleetAlertSuccess('Trip record updated', data.message)
     } catch (err) {
       toast.error(getErrorDetail(err) ?? 'Could not delete trip.')
     }

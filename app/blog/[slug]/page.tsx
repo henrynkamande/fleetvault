@@ -17,9 +17,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   try {
     const post = await fetchPublishedPost(slug);
+    const title = post.seo_title || post.title;
+    const description = post.seo_description || post.excerpt;
+    const coverUrl = resolveBlogCoverUrl(post.cover_url);
     return {
-      title: `${post.seo_title || post.title} — ${APP_NAME}`,
-      description: post.seo_description || post.excerpt,
+      title: `${title} — ${APP_NAME}`,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "article",
+        images: coverUrl ? [{ url: coverUrl }] : undefined,
+      },
+      twitter: {
+        card: coverUrl ? "summary_large_image" : "summary",
+        title,
+        description,
+        images: coverUrl ? [coverUrl] : undefined,
+      },
     };
   } catch {
     return { title: `Blog — ${APP_NAME}` };
@@ -49,6 +64,7 @@ export default async function BlogPostPage({ params }: Props) {
         <article className="mx-auto mt-6 max-w-3xl">
           {coverSrc ? (
             <div className="mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-gray-100">
+              {/* eslint-disable-next-line @next/next/no-img-element -- Blog covers can come from API media or absolute CMS URLs. */}
               <img src={coverSrc} alt="" className="aspect-[16/9] w-full object-cover" />
             </div>
           ) : null}

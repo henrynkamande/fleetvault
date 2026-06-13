@@ -6,6 +6,7 @@ import { useCompany } from '@/hooks/queries/useCompany'
 import { useUpdateProfileMutation } from '@/hooks/queries/useProfileMutations'
 import { useCurrentUser } from '@/hooks/queries/useUsers'
 import { flattenFieldErrors, getErrorDetail, getResponseErrorData } from '@/lib/apiErrors'
+import { getCurrencyOptions, normalizeCurrency } from '@/lib/currencies'
 import { formatUserRole } from '@/lib/userDisplay'
 import { APP_NAME } from '@/lib/constants'
 import { useBillingPortal, useBillingStatus } from '@/hooks/queries/useBilling'
@@ -86,6 +87,7 @@ type ProfileForm = {
   first_name: string
   last_name: string
   phone_number: string
+  preferred_currency: string
 }
 
 export default function Settings() {
@@ -103,6 +105,7 @@ export default function Settings() {
 
   const billingStatus = useBillingStatus({ enabled: billingEnabled })
   const billingPortal = useBillingPortal()
+  const currencyOptions = useMemo(() => getCurrencyOptions(), [])
 
   useEffect(() => {
     if (!user) return
@@ -111,6 +114,7 @@ export default function Settings() {
         first_name: user.first_name,
         last_name: user.last_name,
         phone_number: user.phone_number,
+        preferred_currency: normalizeCurrency(user.preferred_currency),
       })
     }, 0)
     return () => window.clearTimeout(timer)
@@ -121,7 +125,8 @@ export default function Settings() {
     return (
       profileForm.first_name !== user.first_name ||
       profileForm.last_name !== user.last_name ||
-      profileForm.phone_number !== user.phone_number
+      profileForm.phone_number !== user.phone_number ||
+      profileForm.preferred_currency !== normalizeCurrency(user.preferred_currency)
     )
   }, [user, profileForm])
 
@@ -151,6 +156,7 @@ export default function Settings() {
         first_name: user.first_name,
         last_name: user.last_name,
         phone_number: user.phone_number,
+        preferred_currency: normalizeCurrency(user.preferred_currency),
       })
     }
   }
@@ -164,6 +170,7 @@ export default function Settings() {
           first_name: profileForm.first_name.trim(),
           last_name: profileForm.last_name.trim(),
           phone_number: profileForm.phone_number.trim(),
+          preferred_currency: isFleetOwner ? profileForm.preferred_currency : undefined,
         })
       }
       setSaveMessage('Your changes were saved.')
@@ -290,6 +297,25 @@ export default function Settings() {
                 helper="Account phone number."
                 type="tel"
               />
+              {isFleetOwner ? (
+                <label className="space-y-1">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Currency</span>
+                  <select
+                    value={profileForm.preferred_currency}
+                    onChange={(e) =>
+                      setProfileForm((p) => (p ? { ...p, preferred_currency: e.target.value } : p))
+                    }
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                  >
+                    {currencyOptions.map((currency) => (
+                      <option key={currency.code} value={currency.code}>
+                        {currency.code} - {currency.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500">Used to personalize dashboard financial amounts.</p>
+                </label>
+              ) : null}
               <EditableField
                 label="Verification"
                 value={user.is_verified ? 'Verified' : 'Not verified'}

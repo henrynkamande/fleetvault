@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, type ReactNode } from 'react'
 import { FiArrowRight, FiCheck, FiCreditCard, FiShield } from 'react-icons/fi'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { getAccessToken } from '@/lib/tokenStorage'
 import { CHECKOUT_SESSION_STORAGE_KEY } from '@/lib/billingApi'
 import {
@@ -18,8 +19,8 @@ import { AppRoutesPaths } from '@/route/paths'
 
 const BENEFITS = [
   'Full platform access during your trial',
-  'Card collected securely by Stripe — not stored on our servers',
-  'No charge today; billing starts automatically after the trial',
+  'No charge today; Stripe secures your payment method',
+  'Your subscription starts after the trial unless you cancel',
   'Update or cancel anytime from billing settings',
 ] as const
 
@@ -48,23 +49,23 @@ export default function StartTrial() {
 
   const pricing = configQuery.data?.pricing
   const trialDays = pricing?.trial_days ?? 7
-  const perVehicle = pricing?.per_vehicle_label ?? '$4 USD per vehicle / month'
-  const unitDisplay = pricing?.unit_amount_display ?? '$4.00'
+  const perVehicle = pricing?.per_vehicle_label ?? '$10 USD per vehicle / month'
+  const unitDisplay = pricing?.unit_amount_display ?? '$10.00'
   const pendingSessionId =
     typeof sessionStorage !== 'undefined'
       ? sessionStorage.getItem(CHECKOUT_SESSION_STORAGE_KEY)
       : null
 
   useEffect(() => {
-    if (pendingSessionId && !statusQuery.data?.has_access) {
+    if (pendingSessionId && statusQuery.data && !statusQuery.data.has_access) {
       router.replace(
         `${AppRoutesPaths.onboarding.billingSuccess}?session_id=${encodeURIComponent(pendingSessionId)}`,
       )
     }
-  }, [router, pendingSessionId, statusQuery.data?.has_access])
+  }, [router, pendingSessionId, statusQuery.data])
 
   useEffect(() => {
-    if (!hasToken || !skipPayment) return
+    if (!hasToken) return
     if (statusQuery.data?.has_access) {
       router.replace(AppRoutesPaths.dashboard.root)
     }
@@ -92,18 +93,14 @@ export default function StartTrial() {
     return null
   }
 
-  if (statusQuery.data?.has_access) {
+  if (statusQuery.isPending || statusQuery.data?.has_access) {
     return (
       <OnboardingShell>
         <Card className="text-center">
-          <h1 className="text-2xl font-bold text-[#111827] md:text-3xl">You&apos;re all set</h1>
-          <p className="mt-2 text-gray-600">Your trial or subscription is active.</p>
-          <Link
-            href={AppRoutesPaths.dashboard.root}
-            className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-[#2f5aab] px-8 py-3.5 font-semibold text-white shadow-lg shadow-[#2f5aab]/25 transition hover:bg-[#264a94]"
-          >
-            Go to dashboard <FiArrowRight />
-          </Link>
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-sm text-gray-600">
+            Checking your trial status…
+          </p>
         </Card>
       </OnboardingShell>
     )
@@ -125,7 +122,7 @@ export default function StartTrial() {
           {trialDays}-day free trial
         </p>
         <h1 className="mt-3 text-center font-title text-3xl font-bold leading-tight text-[#111827] md:text-4xl">
-          Add your card to start your trial
+          Start your trial with secure checkout
         </h1>
         <p className="mx-auto mt-4 max-w-md text-center text-base leading-relaxed text-gray-600">
           {skipPayment ? (
@@ -134,8 +131,8 @@ export default function StartTrial() {
             </>
           ) : (
             <>
-              Add a payment method to unlock {APP_NAME} today. You won&apos;t be charged until your{' '}
-              {trialDays}-day trial ends.
+              Add a payment method so your workspace opens immediately. Nothing is charged today,
+              and you stay in control from billing settings.
             </>
           )}
         </p>
@@ -174,7 +171,7 @@ export default function StartTrial() {
             ? 'Starting your trial…'
             : skipPayment
               ? 'Start free trial — no payment now'
-              : 'Add card and start free trial'}
+              : 'Start my free trial'}
           {!isPending && <FiArrowRight className="h-5 w-5" />}
         </button>
 

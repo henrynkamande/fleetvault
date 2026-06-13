@@ -8,12 +8,13 @@ export type DashboardPageMeta = {
 };
 
 const FLEET_META: Record<
-  Extract<AppPage, "dashboard" | "vehicles" | "drivers" | "trips" | "income" | "expenses" | "reports" | "settings">,
+  Extract<AppPage, "dashboard" | "vehicles" | "drivers" | "customers" | "trips" | "income" | "expenses" | "reports" | "settings">,
   DashboardPageMeta
 > = {
   dashboard: { pageTitle: "Dashboard Overview", showPeriodFilter: true },
   vehicles: { pageTitle: "Vehicle Management", showPeriodFilter: false },
   drivers: { pageTitle: "Driver Management", showPeriodFilter: false },
+  customers: { pageTitle: "Customer Management", showPeriodFilter: false },
   trips: { pageTitle: "Trip Management", showPeriodFilter: false },
   income: { pageTitle: "Income Management", showPeriodFilter: false },
   expenses: { pageTitle: "Expense Management", showPeriodFilter: true },

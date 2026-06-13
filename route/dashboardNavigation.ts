@@ -9,6 +9,8 @@ export function appPageToPath(page: AppPage): string {
       return AppRoutesPaths.dashboard.vehicles;
     case "drivers":
       return AppRoutesPaths.dashboard.drivers;
+    case "customers":
+      return AppRoutesPaths.dashboard.customers;
     case "trips":
       return AppRoutesPaths.dashboard.trips;
     case "income":
@@ -93,6 +95,12 @@ export function resolveActiveAppPage(
     path === AppRoutesPaths.dashboard.drivers
   ) {
     return "drivers";
+  }
+  if (
+    path.startsWith(`${AppRoutesPaths.dashboard.customers}/`) ||
+    path === AppRoutesPaths.dashboard.customers
+  ) {
+    return "customers";
   }
   if (
     path.startsWith(`${AppRoutesPaths.dashboard.trips}/`) ||

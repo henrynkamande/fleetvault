@@ -11,6 +11,7 @@ export type UpdateProfilePayload = {
   first_name?: string
   last_name?: string
   phone_number?: string
+  preferred_currency?: string
 }
 
 export async function updateProfile(payload: UpdateProfilePayload): Promise<User> {

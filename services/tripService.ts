@@ -6,8 +6,10 @@ import type {
   ListTripsResponse,
   TripDetailDto,
   TripListDto,
+  TripIncomeStatus,
   UpdateTripPayload,
   UpdateTripResponse,
+  UpdateTripIncomeStatusResponse,
 } from '@/types/trip'
 
 export async function listTrips(params?: {
@@ -44,6 +46,17 @@ export async function updateTrip(tripRef: string, payload: UpdateTripPayload): P
   const res = await tripsApi.patch<UpdateTripResponse>(
     `/${encodeURIComponent(tripRef)}/update/`,
     payload,
+  )
+  return res.data
+}
+
+export async function updateTripIncomeStatus(
+  tripRef: string,
+  incomeStatus: TripIncomeStatus,
+): Promise<UpdateTripIncomeStatusResponse> {
+  const res = await tripsApi.patch<UpdateTripIncomeStatusResponse>(
+    `/${encodeURIComponent(tripRef)}/income-status/`,
+    { income_status: incomeStatus },
   )
   return res.data
 }

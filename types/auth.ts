@@ -11,6 +11,7 @@ export interface FleetOwnerRegisterPayload {
   phone_number: string
   first_name: string
   last_name: string
+  preferred_currency: string
   password: string
   confirm_password: string
 }

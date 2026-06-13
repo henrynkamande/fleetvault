@@ -14,9 +14,10 @@ import {
 } from '@/hooks/queries/useTripMutations'
 import { useCurrentUser } from '@/hooks/queries/useUsers'
 import { getErrorDetail } from '@/lib/apiErrors'
+import { driverPaymentModeLabel } from '@/lib/driverPaymentModes'
 import { formatActualTripTime, formatTripDistanceKm } from '@/lib/tripDisplay'
 import TripProfileEditForm from './TripProfileEditForm'
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
+import { LoadingCard } from "@/components/ui/LoadingSpinner"
 
 function formatWhen(iso: string | null | undefined): string {
   if (!iso) return '—'
@@ -120,7 +121,7 @@ export default function TripProfilePage() {
     isFleetOwner && (trip.status === 'PLANNED' || trip.status === 'DELAYED') && !isEditing
   const canCancel =
     isFleetOwner && trip.status !== 'COMPLETED' && trip.status !== 'CANCELLED'
-  const canDelete = isFleetOwner && trip.status !== 'ONGOING'
+  const canDelete = isFleetOwner && (trip.status === 'PLANNED' || trip.status === 'DELAYED')
 
   async function handleCancelTrip() {
     const confirmed = await fleetConfirm({
@@ -144,16 +145,16 @@ export default function TripProfilePage() {
 
   async function handleDeleteTrip() {
     const confirmed = await fleetConfirm({
-      title: 'Delete this trip?',
-      html: `<p class="text-sm text-slate-600">Trip <strong>${trip.trip_number}</strong> will be permanently removed. This cannot be undone.</p>`,
-      confirmText: 'Yes, delete',
-      cancelText: 'Cancel',
+      title: 'Edit this trip record?',
+      html: `<p class="text-sm text-slate-600">Trip <strong>${trip.trip_number}</strong> can be removed from owner records if it was logged by mistake. Driver effort and payout context stay transparent.</p>`,
+      confirmText: 'Remove from records',
+      cancelText: 'Keep record',
       icon: 'warning',
     })
     if (!confirmed) return
     try {
       const data = await deleteTripMutation.mutateAsync(trip.id)
-      await fleetAlertSuccess('Trip deleted', data.message)
+      await fleetAlertSuccess('Trip record updated', data.message)
       router.push(AppRoutesPaths.dashboard.trips)
     } catch {
       await fleetAlertError('Could not delete trip', 'Please try again or contact support if the problem continues.')
@@ -214,7 +215,7 @@ export default function TripProfilePage() {
               disabled={deleteTripMutation.isPending}
               className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
             >
-              {deleteTripMutation.isPending ? 'Deleting…' : 'Delete trip'}
+              {deleteTripMutation.isPending ? 'Updating…' : 'Edit or remove record'}
             </button>
           ) : null}
 
@@ -275,6 +276,8 @@ export default function TripProfilePage() {
               />
               <DetailRow label="Distance" value={formatTripDistanceKm(trip)} />
               <DetailRow label="Revenue" value={formatMoney(trip.revenue_amount)} />
+              <DetailRow label="Driver pay mode" value={driverPaymentModeLabel(trip.driver_payment_mode)} />
+              <DetailRow label="Driver payout" value={formatMoney(trip.driver_payment)} />
               <DetailRow label="Total expenses" value={formatMoney(trip.total_expenses)} />
               <DetailRow label="Profit" value={formatMoney(trip.profit)} />
               {trip.customer_name ? <DetailRow label="Customer" value={trip.customer_name} /> : null}

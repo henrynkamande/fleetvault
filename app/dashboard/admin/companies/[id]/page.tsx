@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { platformApi } from "@/lib/platformApi";
 import { getErrorDetail } from "@/lib/apiErrors";
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
+import { LoadingState } from "@/components/ui/LoadingSpinner"
 
 export default function AdminCompanyDetailPage() {
   const params = useParams();

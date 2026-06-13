@@ -25,6 +25,8 @@ function slugify(title: string): string {
 
 const emptyForm = {
   title: "",
+  seo_title: "",
+  seo_description: "",
   slug: "",
   excerpt: "",
   body: "",
@@ -61,6 +63,8 @@ export default function AdminBlogForm() {
     if (editing) {
       setForm({
         title: editing.title,
+        seo_title: editing.seo_title ?? "",
+        seo_description: editing.seo_description ?? "",
         slug: editing.slug,
         excerpt: editing.excerpt ?? "",
         body: editing.body,
@@ -108,6 +112,8 @@ export default function AdminBlogForm() {
     const title = form.title.trim();
     const slug = effectiveSlug;
     const body = form.body.trim();
+    const metaTitle = form.seo_title.trim();
+    const metaDescription = form.seo_description.trim();
     if (!title || !slug || !body) {
       toast.error("Title, slug, and body are required.");
       return;
@@ -119,8 +125,8 @@ export default function AdminBlogForm() {
       body,
       excerpt: form.excerpt.trim(),
       status: nextStatus,
-      seo_title: title,
-      seo_description: form.excerpt.trim().slice(0, 500),
+      seo_title: metaTitle || title,
+      seo_description: (metaDescription || form.excerpt.trim()).slice(0, 500),
       ...(cover ? { cover_url: cover } : { cover_url: "" }),
     };
     try {
@@ -210,6 +216,33 @@ export default function AdminBlogForm() {
           />
         </label>
         <label className="block text-sm">
+          <span className="ff-muted">Meta title</span>
+          <input
+            className="ff-dashboard-select mt-1 w-full"
+            value={form.seo_title}
+            onChange={(e) => setForm((f) => ({ ...f, seo_title: e.target.value }))}
+            placeholder={form.title || "Search result/browser title"}
+            maxLength={300}
+          />
+          <span className="mt-1 block text-xs ff-muted">
+            Used for the browser tab and search/social preview title. Falls back to the post title.
+          </span>
+        </label>
+        <label className="block text-sm">
+          <span className="ff-muted">Meta description</span>
+          <textarea
+            className="ff-dashboard-select mt-1 min-h-[72px] w-full"
+            value={form.seo_description}
+            onChange={(e) => setForm((f) => ({ ...f, seo_description: e.target.value }))}
+            placeholder="Short SEO summary for search results and link previews"
+            maxLength={500}
+            rows={2}
+          />
+          <span className="mt-1 block text-xs ff-muted">
+            Keep it clear and specific. Falls back to the excerpt when empty.
+          </span>
+        </label>
+        <label className="block text-sm">
           <span className="ff-muted">URL slug</span>
           <input
             className="ff-dashboard-select mt-1 w-full font-mono text-sm"
@@ -255,11 +288,14 @@ export default function AdminBlogForm() {
             ) : null}
           </div>
           {resolveBlogCoverUrl(form.cover_url) ? (
-            <img
-              src={resolveBlogCoverUrl(form.cover_url)!}
-              alt=""
-              className="mt-3 max-h-40 w-auto rounded-lg border border-slate-200 object-cover dark:border-slate-600"
-            />
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element -- Admin previews should match the backend media URL exactly. */}
+              <img
+                src={resolveBlogCoverUrl(form.cover_url)!}
+                alt=""
+                className="mt-3 max-h-40 w-auto rounded-lg border border-slate-200 object-cover dark:border-slate-600"
+              />
+            </>
           ) : (
             <p className="mt-2 text-xs ff-muted">JPEG, PNG, WebP, or GIF — max 5 MB.</p>
           )}

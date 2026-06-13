@@ -4,16 +4,19 @@ import Link from 'next/link';
 import { useMemo } from 'react'
 import { useDashboardPeriod } from '@/context/DashboardPeriodContext'
 import { useDashboardOverviewQuery } from '@/hooks/queries/useDashboardOverview'
+import { useCurrentUser } from '@/hooks/queries/useUsers'
 import { getErrorDetail } from '@/lib/apiErrors'
+import { normalizeCurrency } from '@/lib/currencies'
 import { AppRoutesPaths } from '@/route/paths'
 import type {
   DashboardExpenseSegmentDto,
+  DriverPayoutModeSummary,
   DashboardOngoingTripDto,
   DashboardTopDriverDto,
   DashboardTopVehicleDto,
   DashboardTripDisplayStatus,
 } from '@/types/finance'
-import { formatDeltaPct, formatUsd } from './finance/financeFormat'
+import { formatCurrency, formatDeltaPct } from './finance/financeFormat'
 
 type Trend = 'positive' | 'negative'
 
@@ -56,7 +59,9 @@ type ChartSegment = {
 type ChartCardProps = {
   revenueValue: string
   expenseSegments: ChartSegment[]
+  payoutModes: DriverPayoutModeSummary[]
   revenueRatio: number
+  currency: string
 }
 
 type LeaderboardListProps = {
@@ -160,7 +165,7 @@ function toneClasses(tone: ChartSegment['tone']): string {
   return 'bg-rose-500'
 }
 
-function ChartCard({ revenueValue, expenseSegments, revenueRatio }: ChartCardProps) {
+function ChartCard({ revenueValue, expenseSegments, payoutModes, revenueRatio, currency }: ChartCardProps) {
   return (
     <article className="ff-card">
       <h2 className="text-lg font-semibold text-slate-900">P&amp;L Breakdown</h2>
@@ -185,6 +190,20 @@ function ChartCard({ revenueValue, expenseSegments, revenueRatio }: ChartCardPro
             </div>
           ))}
         </div>
+        {payoutModes.length > 0 ? (
+          <div className="mt-5 rounded-xl border border-slate-200 bg-white p-3">
+            <p className="text-sm font-semibold text-slate-900">Driver payouts by mode</p>
+            <p className="text-xs text-slate-500">Secure your earnings: every mode is tracked clearly.</p>
+            <div className="mt-3 space-y-2">
+              {payoutModes.map((mode) => (
+                <div key={mode.mode} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="text-slate-600">{mode.label}</span>
+                  <span className="font-semibold text-slate-900">{formatCurrency(mode.total, currency)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
     </article>
   )
@@ -235,19 +254,19 @@ function mapDrivers(drivers: DashboardTopDriverDto[]): DriverEntry[] {
   }))
 }
 
-function mapVehicles(vehicles: DashboardTopVehicleDto[]): VehicleEntry[] {
+function mapVehicles(vehicles: DashboardTopVehicleDto[], currency: string): VehicleEntry[] {
   return vehicles.map((v, i) => ({
     rank: i + 1,
     name: v.name,
     meta: `${v.registration} • ${v.distance_km.toLocaleString()} km this period`,
     distance: `${v.distance_km.toLocaleString()} km`,
-    netProfit: formatUsd(v.net_profit),
+    netProfit: formatCurrency(v.net_profit, currency),
   }))
 }
 
-function vehicleInsightMeta(vehicle: DashboardTopVehicleDto | null): string {
+function vehicleInsightMeta(vehicle: DashboardTopVehicleDto | null, currency: string): string {
   if (!vehicle) return 'No vehicle performance data yet'
-  return `${vehicle.registration} • ${vehicle.distance_km.toLocaleString()} km • ${formatUsd(vehicle.net_profit)} net`
+  return `${vehicle.registration} • ${vehicle.distance_km.toLocaleString()} km • ${formatCurrency(vehicle.net_profit, currency)} net`
 }
 
 function trendFromPct(pct: number | null | undefined, invert = false): Trend {
@@ -271,6 +290,8 @@ function DashboardSkeleton() {
 export default function Dashboard() {
   const { period } = useDashboardPeriod()
   const overviewQuery = useDashboardOverviewQuery({ period })
+  const userQuery = useCurrentUser()
+  const currency = normalizeCurrency(userQuery.data?.preferred_currency)
 
   const view = useMemo(() => {
     const data = overviewQuery.data
@@ -282,7 +303,7 @@ export default function Dashboard() {
         : 0
     const expenseSegments: ChartSegment[] = data.expense_breakdown.map((s) => ({
       label: s.label,
-      value: formatUsd(s.amount),
+      value: formatCurrency(s.amount, currency),
       ratio: s.ratio,
       tone: s.tone,
     }))
@@ -290,7 +311,8 @@ export default function Dashboard() {
       revenueRatio,
       expenseSegments,
       topDrivers: mapDrivers(data.top_drivers),
-      topVehicles: mapVehicles(data.top_vehicles),
+      topVehicles: mapVehicles(data.top_vehicles, currency),
+      payoutModes: data.driver_payouts_by_mode ?? [],
       mostProfitableVehicle: data.most_profitable_vehicle,
       worstPerformingVehicle: data.worst_performing_vehicle,
       activeTripCount: data.active_trip_count,
@@ -298,7 +320,7 @@ export default function Dashboard() {
       ongoing: data.ongoing_trips,
       tripCountDelta: data.trip_count_change,
     }
-  }, [overviewQuery.data])
+  }, [currency, overviewQuery.data])
 
   if (overviewQuery.isLoading) {
     return <DashboardSkeleton />
@@ -327,7 +349,7 @@ export default function Dashboard() {
       <div className="xl:col-span-3">
         <KpiCard
           title="Revenue (Current)"
-          value={formatUsd(summary.revenue_total)}
+          value={formatCurrency(summary.revenue_total, currency)}
           delta={formatDeltaPct(summary.revenue_change_pct)}
           trend={trendFromPct(summary.revenue_change_pct)}
         />
@@ -335,7 +357,7 @@ export default function Dashboard() {
       <div className="xl:col-span-3">
         <KpiCard
           title="Total Income"
-          value={formatUsd(summary.collected)}
+          value={formatCurrency(summary.collected, currency)}
           delta={formatDeltaPct(summary.profit_change_pct)}
           trend={trendFromPct(summary.profit_change_pct)}
         />
@@ -343,7 +365,7 @@ export default function Dashboard() {
       <div className="xl:col-span-3">
         <KpiCard
           title="Expenses"
-          value={formatUsd(summary.expenses_total)}
+          value={formatCurrency(summary.expenses_total, currency)}
           delta={formatDeltaPct(summary.expenses_change_pct)}
           trend={trendFromPct(summary.expenses_change_pct, true)}
         />
@@ -361,7 +383,7 @@ export default function Dashboard() {
         <InsightCard
           title="Most Profitable Vehicle"
           value={view.mostProfitableVehicle?.name ?? 'No vehicle data'}
-          meta={vehicleInsightMeta(view.mostProfitableVehicle)}
+          meta={vehicleInsightMeta(view.mostProfitableVehicle, currency)}
           tone="positive"
         />
       </div>
@@ -369,7 +391,7 @@ export default function Dashboard() {
         <InsightCard
           title="Worst Performing Vehicle"
           value={view.worstPerformingVehicle?.name ?? 'No vehicle data'}
-          meta={vehicleInsightMeta(view.worstPerformingVehicle)}
+          meta={vehicleInsightMeta(view.worstPerformingVehicle, currency)}
           tone="negative"
         />
       </div>
@@ -387,9 +409,11 @@ export default function Dashboard() {
       </div>
       <div className="xl:col-span-4">
         <ChartCard
-          revenueValue={formatUsd(summary.revenue_total)}
+          revenueValue={formatCurrency(summary.revenue_total, currency)}
           expenseSegments={view.expenseSegments}
+          payoutModes={view.payoutModes}
           revenueRatio={view.revenueRatio}
+          currency={currency}
         />
       </div>
       <div className="xl:col-span-6">

@@ -17,7 +17,7 @@ import { formatDriverEmailForDisplay } from '@/lib/userDisplay'
 import { toast } from 'react-toastify'
 import type { TripListDto } from '@/types/trip'
 import type { User } from '@/types/user'
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
+import { LoadingCard } from "@/components/ui/LoadingSpinner"
 
 function parseDecimal(value: string | null | undefined): number {
   if (value === null || value === undefined || value === '') return 0
@@ -95,7 +95,7 @@ export default function DriverProfilePage() {
     return `${v.make} ${v.model} (${v.registration_number})`
   }, [user, vehiclesQuery.data?.vehicles])
 
-  const trips = tripsQuery.data?.trips ?? []
+  const trips = useMemo(() => tripsQuery.data?.trips ?? [], [tripsQuery.data?.trips])
   const displayEmail = user ? formatDriverEmailForDisplay(user.email) : null
 
   const overview = useMemo(() => {

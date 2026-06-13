@@ -5,7 +5,7 @@ import { useState } from "react";
 import { usePlatformCompanies } from "@/hooks/queries/usePlatformCompanies";
 import { getErrorDetail } from "@/lib/apiErrors";
 import { AppRoutesPaths } from "@/route/paths";
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
+import { LoadingState } from "@/components/ui/LoadingSpinner"
 
 export default function AdminCompanies() {
   const [search, setSearch] = useState("");

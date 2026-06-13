@@ -14,8 +14,8 @@ export default function PricingPlans({ variant = 'compact' }: PricingPlansProps)
   const { data } = useBillingConfig()
   const pricing = data?.pricing
   const trialDays = pricing?.trial_days ?? 7
-  const unitLabel = pricing?.unit_amount_display ?? '$4.00'
-  const perVehicle = pricing?.per_vehicle_label ?? '$4 USD per vehicle / month'
+  const unitLabel = pricing?.unit_amount_display ?? '$10.00'
+  const perVehicle = pricing?.per_vehicle_label ?? '$10 USD per vehicle / month'
   const isDetailed = variant === 'detailed'
 
   const detailedExtras = [
@@ -35,7 +35,7 @@ export default function PricingPlans({ variant = 'compact' }: PricingPlansProps)
         <p className="mx-auto mt-3 max-w-xl text-center text-gray-600">
           {perVehicle}. Start with a {trialDays}-day free trial — add a payment method to unlock {APP_NAME}. No charge until the trial ends.
         </p>
-        <p className="mt-2 text-center text-xs text-gray-500">{pricing?.note ?? 'USD pricing (converted from KES 500 per vehicle).'}</p>
+        <p className="mt-2 text-center text-xs text-gray-500">{pricing?.note ?? 'USD pricing per vehicle after the free trial.'}</p>
 
         <ul className={`mx-auto mt-8 gap-2 text-sm text-gray-700 ${isDetailed ? 'grid max-w-2xl sm:grid-cols-2' : 'grid max-w-md'}`}>
           <li className="flex gap-2">

@@ -26,6 +26,7 @@ export default function BlogPostCard({ post, linkLabel = "Read article" }: BlogP
     <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:border-[#2f5aab]/30 hover:shadow-md">
       {cover ? (
         <Link href={href} className="block aspect-[16/9] w-full overflow-hidden bg-gray-100">
+          {/* eslint-disable-next-line @next/next/no-img-element -- Blog covers can come from API media or absolute CMS URLs. */}
           <img
             src={cover}
             alt=""

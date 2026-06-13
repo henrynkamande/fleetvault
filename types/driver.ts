@@ -1,4 +1,5 @@
 import type { User } from './user'
+import type { DriverPaymentMode } from './trip'
 
 export interface DriverProfileDto {
   user: User
@@ -14,7 +15,7 @@ export interface DriverProfileDto {
   date_hired: string | null
   employee_id: string | null
   payment_rate: string
-  payment_type: string
+  payment_type: DriverPaymentMode
   bank_account_number: string | null
   bank_name: string | null
   max_daily_hours: string

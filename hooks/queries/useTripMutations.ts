@@ -1,6 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { cancelTrip, deleteTrip, updateTrip } from '@/services/tripService'
-import type { ListTripsResponse, TripDetailDto, TripListDto, UpdateTripPayload } from '@/types/trip'
+import { cancelTrip, deleteTrip, updateTrip, updateTripIncomeStatus } from '@/services/tripService'
+import type {
+  ListTripsResponse,
+  TripDetailDto,
+  TripIncomeStatus,
+  TripListDto,
+  UpdateTripPayload,
+} from '@/types/trip'
 
 function tripMatchesRef(trip: Pick<TripListDto, 'id' | 'trip_number'>, tripRef: string): boolean {
   return trip.id === tripRef || trip.trip_number === tripRef
@@ -151,6 +157,24 @@ export function useDeleteTripMutation() {
       void queryClient.invalidateQueries({ queryKey: ['trips'], refetchType: 'inactive' })
       void queryClient.invalidateQueries({ queryKey: ['finance'] })
       void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export function useUpdateTripIncomeStatusMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ tripRef, incomeStatus }: { tripRef: string; incomeStatus: TripIncomeStatus }) =>
+      updateTripIncomeStatus(tripRef, incomeStatus),
+    onSuccess: (data) => {
+      void queryClient.invalidateQueries({ queryKey: ['trips'] })
+      void queryClient.invalidateQueries({ queryKey: ['finance'] })
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.setQueryData(['trips', 'detail', data.trip.id], data.trip)
+      if (data.trip.trip_number) {
+        queryClient.setQueryData(['trips', 'detail', data.trip.trip_number], data.trip)
+      }
     },
   })
 }

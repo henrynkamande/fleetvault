@@ -1,10 +1,14 @@
-export function formatUsd(value: number, withCents = false): string {
+export function formatCurrency(value: number, currency = 'USD', withCents = false): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency,
     maximumFractionDigits: withCents ? 2 : 0,
     minimumFractionDigits: withCents ? 2 : 0,
   }).format(value)
+}
+
+export function formatUsd(value: number, withCents = false): string {
+  return formatCurrency(value, 'USD', withCents)
 }
 
 export function formatDeltaPct(pct: number | null | undefined): string {

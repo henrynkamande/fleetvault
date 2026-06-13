@@ -36,6 +36,7 @@ export const AppRoutesPaths = {
     drivers: "/dashboard/drivers",
     driverProfile: (driverId: string) =>
       `/dashboard/drivers/${encodeURIComponent(driverId)}`,
+    customers: "/dashboard/customers",
     trips: "/dashboard/trips",
     /** `tripRef` is the trip UUID (preferred) or legacy `trip_number`. */
     tripProfile: (tripRef: string) =>

@@ -12,6 +12,7 @@ import {
   fetchPlReport,
 } from "@/services/financeService";
 import { listCompanyUsers } from "@/services/companyUsersService";
+import { listCustomers } from "@/services/customerService";
 import { listTrips } from "@/services/tripService";
 import { listVehicles } from "@/services/vehicleService";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -77,6 +78,13 @@ export function prefetchDashboardPageData(
         staleTime: listStaleTime.vehicles,
       });
       break;
+    case "customers":
+      void queryClient.prefetchQuery({
+        queryKey: ["customers", "list", "", version],
+        queryFn: () => listCustomers(undefined),
+        staleTime: listStaleTime.customers,
+      });
+      break;
     case "trips":
       void queryClient.prefetchQuery({
         queryKey: ["trips", "list", "all", version],
@@ -128,9 +136,11 @@ export function prefetchDashboardPageData(
       break;
     case "admin-users":
       void queryClient.prefetchQuery({
-        queryKey: ["platform", "users", { page: 1 }],
+        queryKey: ["platform", "users", { page: 1, role: "FLEET_OWNER" }],
         queryFn: async () => {
-          const res = await platformApi.get("/users/", { params: { page: 1 } });
+          const res = await platformApi.get("/users/", {
+            params: { page: 1, role: "FLEET_OWNER" },
+          });
           return res.data;
         },
         staleTime: 60_000,
@@ -212,6 +222,8 @@ export function getNextLikelyDashboardPage(
     case "vehicles":
       return "drivers";
     case "drivers":
+      return "customers";
+    case "customers":
       return "trips";
     case "income":
       return "reports";

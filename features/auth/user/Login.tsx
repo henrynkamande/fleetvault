@@ -58,7 +58,14 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#D2D2D2] to-[#F9F9F9] p-4 md:p-6">
       <div className="mx-auto grid min-h-[90vh] w-full max-w-7xl overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.12)] md:grid-cols-[1fr_1.05fr]">
         <aside className="relative hidden md:block">
-          <Image src={fleetImage} alt={`${APP_NAME} vehicles`} className="h-full w-full object-cover" fill />
+          <Image
+            src={fleetImage}
+            alt={`${APP_NAME} vehicles`}
+            className="h-full w-full object-cover"
+            fill
+            priority
+            sizes="(min-width: 768px) 50vw, 100vw"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/70 via-[#0f172a]/25 to-transparent" />
           <div className="absolute bottom-10 left-10 right-10 text-white">
             <p className="inline-flex rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold uppercase tracking-wide">Welcome back</p>

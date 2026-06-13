@@ -1,5 +1,6 @@
 export type ExpenseScope = "FLEET" | "VEHICLE" | "TRIP" | "PLATFORM";
 export type ExpenseStatus = "PAID" | "PENDING" | "OVERDUE";
+export type DriverPaymentMode = "MONTHLY_FIXED" | "WEEKLY_TRIPS" | "FIXED_DAILY" | "PER_TRIP";
 
 export type ExpenseCategory =
   | "FUEL"
@@ -26,6 +27,7 @@ export interface Expense {
   category: ExpenseCategory;
   status: ExpenseStatus;
   amount: string;
+  driver_payment_mode: DriverPaymentMode | null;
   description: string;
   vendor: string;
   expense_date: string;
@@ -62,6 +64,7 @@ export type ExpenseInput = {
   category: ExpenseCategory;
   status?: ExpenseStatus;
   amount: string | number;
+  driver_payment_mode?: DriverPaymentMode | null;
   description: string;
   vendor?: string;
   expense_date: string;

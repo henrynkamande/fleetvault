@@ -3,14 +3,19 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react'
 import FinanceFiltersBar, { financeFiltersToParams, type FinanceFiltersState } from './finance/FinanceFiltersBar'
-import { formatDeltaPct, formatUsd } from './finance/financeFormat'
+import { formatCurrency, formatDeltaPct } from './finance/financeFormat'
 import { useIncomeReportQuery } from '@/hooks/queries/useFinanceReports'
+import { useUpdateTripIncomeStatusMutation } from '@/hooks/queries/useTripMutations'
+import { useCurrentUser } from '@/hooks/queries/useUsers'
 import { AppRoutesPaths } from '@/route/paths'
 import type { FinanceGranularity } from '@/types/finance'
 import { getErrorDetail } from '@/lib/apiErrors'
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
+import { normalizeCurrency } from '@/lib/currencies'
+import { LoadingState } from "@/components/ui/LoadingSpinner"
+import { toast } from 'react-toastify'
+import type { TripIncomeStatus } from '@/types/trip'
 
-type InvoiceStatus = 'Paid' | 'Pending' | 'Overdue'
+type InvoiceStatus = 'Paid' | 'Pending' | 'Partial' | 'Overdue'
 type TimeView = 'Monthly' | 'Quarterly'
 type SortBy = 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc'
 
@@ -41,12 +46,16 @@ type IncomeChartProps = {
   data: { label: string; amount: number }[]
   timeView: TimeView
   onTimeViewChange: (view: TimeView) => void
+  currency: string
+  onStatusChange: (row: InvoiceRecord, status: InvoiceStatus) => void
+  statusPending: boolean
 }
 
 type TopClientsListProps = {
   clients: { name: string; total: number }[]
   activeClient: string
   onSelectClient: (client: string) => void
+  currency: string
 }
 
 type IncomeTableProps = {
@@ -58,14 +67,7 @@ type IncomeTableProps = {
   page: number
   totalPages: number
   onPageChange: (page: number) => void
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
-}
-
-function formatCurrencyWithCents(value: number): string {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
+  currency: string
 }
 
 function KpiCard({ label, value, delta, positive, active, onClick }: KpiCardProps) {
@@ -84,7 +86,7 @@ function KpiCard({ label, value, delta, positive, active, onClick }: KpiCardProp
   )
 }
 
-function IncomeChart({ data, timeView, onTimeViewChange }: IncomeChartProps) {
+function IncomeChart({ data, timeView, onTimeViewChange, currency }: IncomeChartProps) {
   const max = Math.max(...data.map((d) => d.amount), 1)
 
   return (
@@ -112,8 +114,8 @@ function IncomeChart({ data, timeView, onTimeViewChange }: IncomeChartProps) {
             <div
               className="w-full rounded-t-md bg-emerald-500/80 hover:bg-emerald-500"
               style={{ height: `${Math.max((point.amount / max) * 100, 6)}%` }}
-              title={`${point.label}: ${formatCurrency(point.amount)}`}
-              aria-label={`${point.label} income ${formatCurrency(point.amount)}`}
+              title={`${point.label}: ${formatCurrency(point.amount, currency)}`}
+              aria-label={`${point.label} income ${formatCurrency(point.amount, currency)}`}
             />
             <p className="mt-2 text-xs text-gray-600">{point.label}</p>
           </div>
@@ -123,7 +125,7 @@ function IncomeChart({ data, timeView, onTimeViewChange }: IncomeChartProps) {
   )
 }
 
-function TopClientsList({ clients, activeClient, onSelectClient }: TopClientsListProps) {
+function TopClientsList({ clients, activeClient, onSelectClient, currency }: TopClientsListProps) {
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
@@ -143,7 +145,7 @@ function TopClientsList({ clients, activeClient, onSelectClient }: TopClientsLis
             }`}
           >
             <span className="font-medium text-gray-700">{client.name}</span>
-            <span className="font-semibold text-[#111827]">{formatCurrency(client.total)}</span>
+            <span className="font-semibold text-[#111827]">{formatCurrency(client.total, currency)}</span>
           </button>
         ))}
       </div>
@@ -154,6 +156,7 @@ function TopClientsList({ clients, activeClient, onSelectClient }: TopClientsLis
 function statusBadgeClass(status: InvoiceStatus): string {
   if (status === 'Paid') return 'bg-emerald-100 text-emerald-700 ring-emerald-200'
   if (status === 'Pending') return 'bg-amber-100 text-amber-700 ring-amber-200'
+  if (status === 'Partial') return 'bg-sky-100 text-sky-700 ring-sky-200'
   return 'bg-rose-100 text-rose-700 ring-rose-200'
 }
 
@@ -166,6 +169,9 @@ function IncomeTable({
   page,
   totalPages,
   onPageChange,
+  currency,
+  onStatusChange,
+  statusPending,
 }: IncomeTableProps) {
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -180,6 +186,7 @@ function IncomeTable({
             <option value="All">All Statuses</option>
             <option value="Paid">Paid</option>
             <option value="Pending">Pending</option>
+            <option value="Partial">Partial</option>
             <option value="Overdue">Overdue</option>
           </select>
           <select
@@ -224,14 +231,20 @@ function IncomeTable({
                 <td className="py-3 text-gray-700">
                   {new Date(row.dateIssued).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </td>
-                <td className="py-3 font-semibold text-[#111827]">{formatCurrencyWithCents(row.amount)}</td>
+                <td className="py-3 font-semibold text-[#111827]">{formatCurrency(row.amount, currency, true)}</td>
                 <td className="py-3">
-                  <span
+                  <select
+                    value={row.status}
                     aria-label={`Invoice status ${row.status}`}
-                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${statusBadgeClass(row.status)}`}
+                    disabled={statusPending}
+                    onChange={(event) => onStatusChange(row, event.target.value as InvoiceStatus)}
+                    className={`rounded-full border-0 px-2.5 py-1 text-xs font-semibold ring-1 outline-none ${statusBadgeClass(row.status)}`}
                   >
-                    {row.status}
-                  </span>
+                    <option value="Pending">Pending</option>
+                    <option value="Partial">Partial</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Overdue">Overdue</option>
+                  </select>
                 </td>
                 <td className="py-3">
                   <Link
@@ -291,6 +304,13 @@ function ExportControls() {
   )
 }
 
+const INVOICE_STATUS_TO_API: Record<InvoiceStatus, TripIncomeStatus> = {
+  Pending: 'PENDING',
+  Partial: 'PARTIAL',
+  Paid: 'PAID',
+  Overdue: 'OVERDUE',
+}
+
 export default function Income() {
   const [filters, setFilters] = useState<FinanceFiltersState>({ period: '90d', vehicle: '', driver: '' })
   const [timeView, setTimeView] = useState<TimeView>('Monthly')
@@ -300,6 +320,8 @@ export default function Income() {
   const [sortBy, setSortBy] = useState<SortBy>('date_desc')
   const [page, setPage] = useState(1)
   const pageSize = 8
+  const userQuery = useCurrentUser()
+  const currency = normalizeCurrency(userQuery.data?.preferred_currency)
 
   const granularity: FinanceGranularity =
     timeView === 'Quarterly' ? 'quarterly' : 'monthly'
@@ -308,15 +330,16 @@ export default function Income() {
     ...financeFiltersToParams(filters),
     granularity,
   })
+  const updateIncomeStatusMutation = useUpdateTripIncomeStatusMutation()
 
   const summary = reportQuery.data?.summary
   const kpis: KpiMetric[] = useMemo(() => {
     if (!summary) {
       return [
         { key: 'totalRevenue', label: 'Trip revenue', value: '—', delta: '—', positive: true },
-        { key: 'collected', label: 'Collected (completed)', value: '—', delta: '—', positive: true },
+        { key: 'collected', label: 'Collected (admin paid)', value: '—', delta: '—', positive: true },
         { key: 'outstanding', label: 'Outstanding', value: '—', delta: '—', positive: true },
-        { key: 'overdue', label: 'Flagged / overdue', value: '—', delta: '—', positive: false },
+        { key: 'overdue', label: 'Overdue', value: '—', delta: '—', positive: false },
       ]
     }
     const revDelta = formatDeltaPct(summary.revenue_change_pct)
@@ -324,33 +347,33 @@ export default function Income() {
       {
         key: 'totalRevenue',
         label: 'Trip revenue',
-        value: formatUsd(summary.revenue_total),
+        value: formatCurrency(summary.revenue_total, currency),
         delta: revDelta,
         positive: (summary.revenue_change_pct ?? 0) >= 0,
       },
       {
         key: 'collected',
-        label: 'Collected (completed)',
-        value: formatUsd(summary.collected),
+        label: 'Collected (admin paid)',
+        value: formatCurrency(summary.collected, currency),
         delta: `${summary.trip_count} trips in range`,
         positive: true,
       },
       {
         key: 'outstanding',
         label: 'Outstanding',
-        value: formatUsd(summary.outstanding),
-        delta: 'Planned / ongoing',
+        value: formatCurrency(summary.outstanding, currency),
+        delta: 'Pending / partial',
         positive: true,
       },
       {
         key: 'overdue',
-        label: 'Flagged / overdue',
-        value: formatUsd(summary.overdue),
+        label: 'Overdue',
+        value: formatCurrency(summary.overdue, currency),
         delta: revDelta,
         positive: false,
       },
     ]
-  }, [summary])
+  }, [currency, summary])
 
   const topClients = reportQuery.data?.top_clients ?? []
 
@@ -381,7 +404,7 @@ export default function Income() {
     if (activeKpi === 'overdue') {
       rows = rows.filter((row) => row.status === 'Overdue')
     } else if (activeKpi === 'outstanding') {
-      rows = rows.filter((row) => row.status === 'Pending' || row.status === 'Overdue')
+      rows = rows.filter((row) => row.status === 'Pending' || row.status === 'Partial')
     } else if (activeKpi === 'collected') {
       rows = rows.filter((row) => row.status === 'Paid')
     }
@@ -406,6 +429,16 @@ export default function Income() {
     const start = (safePage - 1) * pageSize
     return computedRows.slice(start, start + pageSize)
   }, [computedRows, page, totalPages])
+
+  function handleIncomeStatusChange(row: InvoiceRecord, nextStatus: InvoiceStatus) {
+    updateIncomeStatusMutation.mutate(
+      { tripRef: row.tripId, incomeStatus: INVOICE_STATUS_TO_API[nextStatus] },
+      {
+        onSuccess: (data) => toast.success(data.message || 'Income status updated.'),
+        onError: (err) => toast.error(getErrorDetail(err) ?? 'Could not update income status.'),
+      },
+    )
+  }
 
   if (reportQuery.isError) {
     return (
@@ -441,10 +474,11 @@ export default function Income() {
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
-          <IncomeChart data={chartData} timeView={timeView} onTimeViewChange={setTimeView} />
+          <IncomeChart data={chartData} timeView={timeView} onTimeViewChange={setTimeView} currency={currency} />
           <TopClientsList
             clients={topClients}
             activeClient={activeClient}
+            currency={currency}
             onSelectClient={(client) => {
               setActiveClient(client)
               setPage(1)
@@ -467,6 +501,9 @@ export default function Income() {
           page={Math.min(page, totalPages)}
           totalPages={totalPages}
           onPageChange={setPage}
+          currency={currency}
+          onStatusChange={handleIncomeStatusChange}
+          statusPending={updateIncomeStatusMutation.isPending}
         />
       </section>
 )

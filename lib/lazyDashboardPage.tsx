@@ -17,6 +17,10 @@ export const LazyDrivers = dynamic(
   () => import("@/features/dashboard/user/Drivers"),
   { loading },
 );
+export const LazyCustomers = dynamic(
+  () => import("@/features/dashboard/user/Customers"),
+  { loading },
+);
 export const LazyTrips = dynamic(
   () => import("@/features/dashboard/user/Trips"),
   { loading },

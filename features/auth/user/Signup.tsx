@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image'
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { toast } from 'react-toastify'
 import { AppRoutesPaths } from '@/route/paths'
 import fleetImage from '@/assets/6.png'
@@ -18,6 +18,7 @@ import { toastApiError } from '@/lib/toastApiError'
 import type { FleetOwnerRegisterPayload } from '@/types/auth'
 import { APP_NAME } from '@/lib/constants'
 import { resolvePostAuthPath } from '@/lib/authNavigation'
+import { getCurrencyOptions } from '@/lib/currencies'
 
 const OtpModal = dynamic(() => import('./OtpModal'), { ssr: false })
 
@@ -33,11 +34,13 @@ export default function SignupPage() {
     last_name: '',
     email: '',
     phone_number: '',
+    preferred_currency: 'USD',
     password: '',
     confirm_password: '',
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const currencyOptions = useMemo(() => getCurrencyOptions(), [])
 
   function handleChange(event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = event.target
@@ -50,6 +53,7 @@ export default function SignupPage() {
       ...formData,
       email: formData.email.trim().toLowerCase(),
       phone_number: formData.phone_number.trim(),
+      preferred_currency: formData.preferred_currency.trim().toUpperCase(),
     }
     registerMutation.mutate(payload, {
       onSuccess: (data) => {
@@ -79,7 +83,14 @@ export default function SignupPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#D2D2D2] to-[#F9F9F9] p-4 md:p-6">
       <div className="mx-auto grid min-h-[90vh] w-full max-w-7xl overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.12)] md:grid-cols-[1fr_1.05fr]">
         <aside className="relative hidden md:block">
-          <Image src={fleetImage} alt={`${APP_NAME} vehicles`} className="h-full w-full object-cover" fill />
+          <Image
+            src={fleetImage}
+            alt={`${APP_NAME} vehicles`}
+            className="h-full w-full object-cover"
+            fill
+            priority
+            sizes="(min-width: 768px) 50vw, 100vw"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/70 via-[#0f172a]/25 to-transparent" />
           <div className="absolute bottom-10 left-10 right-10 text-white">
             <p className="inline-flex rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold uppercase tracking-wide">{APP_NAME}</p>
@@ -154,6 +165,24 @@ export default function SignupPage() {
                 placeholder="+254712345678"
                 className="w-full rounded-xl border border-gray-300 bg-[#f9fafb] px-4 py-3.5 text-lg text-gray-700 outline-none transition focus:border-[#fbbd26] focus:bg-white focus:ring-2 focus:ring-[#fbbd26]/30"
               />
+            </label>
+
+            <label className="block space-y-1">
+              <span className="text-lg font-semibold text-gray-700">Currency</span>
+              <select
+                name="preferred_currency"
+                value={formData.preferred_currency}
+                onChange={handleChange}
+                required
+                autoComplete="transaction-currency"
+                className="w-full rounded-xl border border-gray-300 bg-[#f9fafb] px-4 py-3.5 text-lg text-gray-700 outline-none transition focus:border-[#fbbd26] focus:bg-white focus:ring-2 focus:ring-[#fbbd26]/30"
+              >
+                {currencyOptions.map((currency) => (
+                  <option key={currency.code} value={currency.code}>
+                    {currency.code} - {currency.label}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <div className="grid gap-4 md:grid-cols-2">

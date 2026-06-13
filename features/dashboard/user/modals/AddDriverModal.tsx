@@ -5,6 +5,7 @@ import { toast } from 'react-toastify'
 import { useCreateDriverMutation } from '@/hooks/queries/useCreateDriver'
 import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
 import { flattenFieldErrors, getErrorDetail, getResponseErrorData } from '@/lib/apiErrors'
+import { DRIVER_PAYMENT_MODES, type DriverPaymentMode } from '@/lib/driverPaymentModes'
 import { splitFullName } from '@/services/driverService'
 
 type AddDriverModalProps = {
@@ -18,6 +19,8 @@ type AddDriverForm = {
   licenseNumber: string
   assignVehicle: string
   initialStatus: 'On Duty' | 'Off Duty'
+  paymentType: DriverPaymentMode
+  paymentRate: string
 }
 
 const initialForm: AddDriverForm = {
@@ -26,6 +29,8 @@ const initialForm: AddDriverForm = {
   licenseNumber: '',
   assignVehicle: '',
   initialStatus: 'Off Duty',
+  paymentType: 'PER_TRIP',
+  paymentRate: '',
 }
 
 export default function AddDriverModal({ isOpen, onClose }: AddDriverModalProps) {
@@ -88,6 +93,8 @@ export default function AddDriverModal({ isOpen, onClose }: AddDriverModalProps)
         first_name,
         last_name,
         employment_status,
+        payment_type: form.paymentType,
+        ...(form.paymentRate.trim() ? { payment_rate: Number.parseFloat(form.paymentRate.trim()) } : {}),
         ...(form.licenseNumber.trim()
           ? { drivers_license_number: form.licenseNumber.trim() }
           : {}),
@@ -242,6 +249,45 @@ export default function AddDriverModal({ isOpen, onClose }: AddDriverModalProps)
               </select>
               <span className="text-xs text-gray-500">Stored as employment type on the driver profile.</span>
             </label>
+
+            <section className="rounded-xl border border-[#fbbd26]/30 bg-[#fff8e6] p-3">
+              <p className="text-sm font-semibold text-[#111827]">Secure your earnings</p>
+              <p className="mt-1 text-xs text-gray-600">
+                Choose the pay rhythm that fits this driver. Your effort, your reward.
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <label className="space-y-1 text-sm">
+                  <span className="font-medium text-[#111827]">Payment mode</span>
+                  <select
+                    value={form.paymentType}
+                    onChange={(event) => updateField('paymentType', event.target.value as DriverPaymentMode)}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                  >
+                    {DRIVER_PAYMENT_MODES.map((mode) => (
+                      <option key={mode.value} value={mode.value}>
+                        {mode.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-xs text-gray-500">
+                    {DRIVER_PAYMENT_MODES.find((mode) => mode.value === form.paymentType)?.framing}
+                  </span>
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-medium text-[#111827]">Pay rate</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={form.paymentRate}
+                    onChange={(event) => updateField('paymentRate', event.target.value)}
+                    placeholder="e.g. 40000"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                  />
+                  <span className="text-xs text-gray-500">Monthly salary, daily rate, or per-trip amount.</span>
+                </label>
+              </div>
+            </section>
 
             <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
               <button

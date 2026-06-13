@@ -6,7 +6,7 @@ import {
   usePlatformVehicles,
 } from "@/hooks/queries/usePlatformVehicles";
 import { getErrorDetail } from "@/lib/apiErrors";
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
+import { LoadingState } from "@/components/ui/LoadingSpinner"
 
 function StatCard({ title, value }: { title: string; value: number }) {
   return (

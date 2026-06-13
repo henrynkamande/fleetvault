@@ -7,12 +7,15 @@ import { fleetAlertError, fleetAlertSuccess } from '@/lib/fleetAlert'
 import { AppRoutesPaths } from '@/route/paths'
 import { useCompanyDriversQuery } from '@/hooks/queries/useCompanyDrivers'
 import { useCreateTripMutation } from '@/hooks/queries/useCreateTrip'
+import { useCreateCustomerMutation, useCustomersQuery } from '@/hooks/queries/useCustomers'
 import { useCurrentUser } from '@/hooks/queries/useUsers'
 import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
 import { flattenFieldErrors, getErrorDetail, getResponseErrorData } from '@/lib/apiErrors'
+import { DRIVER_PAYMENT_MODES, type DriverPaymentMode } from '@/lib/driverPaymentModes'
 import { formatOdometerKm } from '@/lib/vehicleDisplay'
 import { getDriverSelectLabel } from '@/lib/userDisplay'
 import type { TripRevenueModel } from '@/types/trip'
+import type { CustomerDto } from '@/types/customer'
 
 type RevenueModelUi = 'Fixed Rate' | 'Per km' | 'Per delivery' | 'Contract'
 
@@ -36,11 +39,14 @@ type LogTripForm = {
   driverProfileId: string
   plannedDeparture: string
   plannedArrival: string
+  customerId: string
   customerName: string
   revenueModel: RevenueModelUi
   expectedRevenue: string
   fuelCost: string
   driverPayment: string
+  driverPaymentMode: DriverPaymentMode
+  driverPaymentRate: string
   tollCost: string
   otherExpenses: string
   cargoDescription: string
@@ -63,6 +69,14 @@ type FleetDriverFormProps = RouteInfoFormProps & {
 }
 
 type ScheduleFinancialFormProps = RouteInfoFormProps
+  & {
+    customers: CustomerDto[]
+    customersLoading: boolean
+    newCustomerName: string
+    onNewCustomerNameChange: (value: string) => void
+    onCreateCustomer: () => void
+    creatingCustomer: boolean
+  }
 
 type ModalActionsProps = {
   onClose: () => void
@@ -77,11 +91,14 @@ const initialForm: LogTripForm = {
   driverProfileId: '',
   plannedDeparture: '',
   plannedArrival: '',
+  customerId: '',
   customerName: '',
   revenueModel: 'Fixed Rate',
   expectedRevenue: '',
   fuelCost: '0',
   driverPayment: '0',
+  driverPaymentMode: 'PER_TRIP',
+  driverPaymentRate: '',
   tollCost: '0',
   otherExpenses: '0',
   cargoDescription: '',
@@ -95,6 +112,7 @@ const API_FIELD_TO_FORM: Partial<Record<string, keyof LogTripForm>> = {
   vehicle: 'vehicleId',
   driver: 'driverProfileId',
   planned_departure_time: 'plannedDeparture',
+  customer: 'customerId',
   customer_name: 'customerName',
   revenue_model: 'revenueModel',
   revenue_amount: 'expectedRevenue',
@@ -206,7 +224,18 @@ function FleetDriverForm({
   )
 }
 
-function ScheduleFinancialForm({ form, onFieldChange, errors }: ScheduleFinancialFormProps) {
+function ScheduleFinancialForm({
+  form,
+  onFieldChange,
+  errors,
+  customers,
+  customersLoading,
+  newCustomerName,
+  onNewCustomerNameChange,
+  onCreateCustomer,
+  creatingCustomer,
+}: ScheduleFinancialFormProps) {
+  const selectedCustomer = customers.find((customer) => customer.id === form.customerId)
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Schedule &amp; Financials</h3>
@@ -231,13 +260,49 @@ function ScheduleFinancialForm({ form, onFieldChange, errors }: ScheduleFinancia
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Customer / client (optional)</label>
-          <input
-            value={form.customerName}
-            onChange={(event) => onFieldChange('customerName', event.target.value)}
-            placeholder="Company or contact name"
-            className={fieldClass()}
-          />
+          <label className="mb-1 block text-xs font-medium text-gray-600">Customer / client</label>
+          <select
+            value={form.customerId}
+            onChange={(event) => {
+              const value = event.target.value
+              onFieldChange('customerId', value)
+              if (value && value !== '__new__') {
+                const customer = customers.find((item) => item.id === value)
+                onFieldChange('customerName', customer?.name ?? '')
+              }
+            }}
+            disabled={customersLoading}
+            className={fieldClass(errors.customerId)}
+          >
+            <option value="">{customersLoading ? 'Loading customers...' : 'Select customer'}</option>
+            {customers.map((customer) => (
+              <option key={customer.id} value={customer.id}>
+                {customer.name}{customer.is_default ? ' (default)' : ''}
+              </option>
+            ))}
+            <option value="__new__">+ Create new customer</option>
+          </select>
+          {form.customerId === '__new__' ? (
+            <div className="mt-2 flex gap-2">
+              <input
+                value={newCustomerName}
+                onChange={(event) => onNewCustomerNameChange(event.target.value)}
+                placeholder="New customer name"
+                className={fieldClass()}
+              />
+              <button
+                type="button"
+                onClick={onCreateCustomer}
+                disabled={creatingCustomer || !newCustomerName.trim()}
+                className="rounded-lg border border-[#fbbd26]/70 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-[#fff8e6] disabled:opacity-50"
+              >
+                Add
+              </button>
+            </div>
+          ) : null}
+          {selectedCustomer?.phone || selectedCustomer?.email ? (
+            <p className="mt-1 text-xs text-gray-500">{selectedCustomer.phone || selectedCustomer.email}</p>
+          ) : null}
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">Revenue model</label>
@@ -277,7 +342,7 @@ function ScheduleFinancialForm({ form, onFieldChange, errors }: ScheduleFinancia
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Driver payment</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600">Driver payout estimate</label>
           <input
             type="number"
             step="0.01"
@@ -287,6 +352,36 @@ function ScheduleFinancialForm({ form, onFieldChange, errors }: ScheduleFinancia
             className={fieldClass(errors.driverPayment)}
           />
           {errors.driverPayment ? <p className="mt-1 text-xs text-rose-600">{errors.driverPayment}</p> : null}
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-600">Payment mode</label>
+          <select
+            value={form.driverPaymentMode}
+            onChange={(event) => onFieldChange('driverPaymentMode', event.target.value as DriverPaymentMode)}
+            className={fieldClass()}
+          >
+            {DRIVER_PAYMENT_MODES.map((mode) => (
+              <option key={mode.value} value={mode.value}>
+                {mode.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            {DRIVER_PAYMENT_MODES.find((mode) => mode.value === form.driverPaymentMode)?.framing}
+          </p>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-600">Payment rate</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={form.driverPaymentRate}
+            onChange={(event) => onFieldChange('driverPaymentRate', event.target.value)}
+            placeholder="Use driver default if empty"
+            className={fieldClass()}
+          />
+          <p className="mt-1 text-xs text-gray-500">Your effort, your reward — used for automatic payout calculation.</p>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">Toll expenses</label>
@@ -361,13 +456,16 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
   const router = useRouter()
   const [form, setForm] = useState<LogTripForm>(initialForm)
   const [errors, setErrors] = useState<Partial<Record<keyof LogTripForm, string>>>({})
+  const [newCustomerName, setNewCustomerName] = useState('')
   const overlayRef = useRef<HTMLDivElement>(null)
   const wasOpenRef = useRef(isOpen)
 
   const userQuery = useCurrentUser()
   const vehiclesQuery = useVehiclesQuery(undefined)
   const driversQuery = useCompanyDriversQuery(isOpen)
+  const customersQuery = useCustomersQuery('', isOpen)
   const createMutation = useCreateTripMutation()
+  const createCustomerMutation = useCreateCustomerMutation()
 
   const isFleetOwner = userQuery.data?.role === 'FLEET_OWNER'
 
@@ -395,6 +493,23 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
     return v ? formatOdometerKm(v.odometer) : ''
   }, [form.vehicleId, vehicleOptions])
 
+  const defaultCustomerId = useMemo(() => {
+    return customersQuery.data?.customers.find((customer) => customer.is_default)?.id ?? ''
+  }, [customersQuery.data?.customers])
+
+  useEffect(() => {
+    if (!isOpen || form.customerId || !defaultCustomerId) return
+    const customer = customersQuery.data?.customers.find((item) => item.id === defaultCustomerId)
+    const timer = window.setTimeout(() => {
+      setForm((prev) => ({
+        ...prev,
+        customerId: defaultCustomerId,
+        customerName: customer?.name ?? 'Cash Payment',
+      }))
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [customersQuery.data?.customers, defaultCustomerId, form.customerId, isOpen])
+
   useEffect(() => {
     if (isOpen) {
       wasOpenRef.current = true
@@ -405,6 +520,7 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
     wasOpenRef.current = false
     setForm(initialForm)
     setErrors({})
+    setNewCustomerName('')
     createMutation.reset()
   }, [isOpen, createMutation])
 
@@ -435,6 +551,8 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
     if (!form.pickupLocation.trim()) nextErrors.pickupLocation = 'Pickup location is required.'
     if (!form.destination.trim()) nextErrors.destination = 'Destination is required.'
     if (!form.vehicleId) nextErrors.vehicleId = 'Vehicle assignment is required.'
+    if (!form.customerId) nextErrors.customerId = 'Customer assignment is required.'
+    if (form.customerId === '__new__') nextErrors.customerId = 'Create the customer or choose an existing one.'
     if (!form.plannedDeparture) nextErrors.plannedDeparture = 'Planned departure is required.'
     const rev = form.expectedRevenue.trim()
     if (!rev) nextErrors.expectedRevenue = 'Expected revenue is required.'
@@ -470,11 +588,22 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
       revenue_model: REVENUE_UI_TO_API[form.revenueModel],
       revenue_amount: Number.parseFloat(form.expectedRevenue.trim()),
       fuel_cost: Number.parseFloat(form.fuelCost.trim() || '0'),
-      driver_payment: Number.parseFloat(form.driverPayment.trim() || '0'),
+      driver_payment_mode: form.driverPaymentMode,
+      driver_payment_auto_calculated: true,
       toll_cost: Number.parseFloat(form.tollCost.trim() || '0'),
       other_expenses: Number.parseFloat(form.otherExpenses.trim() || '0'),
+      ...(form.driverPaymentRate.trim()
+        ? { driver_payment_rate: Number.parseFloat(form.driverPaymentRate.trim()) }
+        : {}),
+      ...(form.driverPayment.trim() && Number.parseFloat(form.driverPayment.trim()) > 0
+        ? {
+            driver_payment: Number.parseFloat(form.driverPayment.trim()),
+            driver_payment_auto_calculated: false,
+          }
+        : {}),
       ...(form.driverProfileId ? { driver: form.driverProfileId } : {}),
-      ...(form.customerName.trim() ? { customer_name: form.customerName.trim() } : {}),
+      customer: form.customerId,
+      customer_name: form.customerName.trim() || undefined,
       ...(form.cargoDescription.trim() ? { cargo_description: form.cargoDescription.trim() } : {}),
       ...(form.managerNotes.trim() ? { manager_notes: form.managerNotes.trim() } : {}),
       ...(form.estimatedDistanceKm.trim()
@@ -492,6 +621,27 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
         await fleetAlertError('Could not create trip', 'Review the highlighted fields or try again in a moment.')
       },
     })
+  }
+
+  function handleCreateCustomer() {
+    const name = newCustomerName.trim()
+    if (!name) return
+    createCustomerMutation.mutate(
+      { name },
+      {
+        onSuccess: (data) => {
+          setForm((prev) => ({
+            ...prev,
+            customerId: data.customer.id,
+            customerName: data.customer.name,
+          }))
+          setNewCustomerName('')
+        },
+        onError: async () => {
+          await fleetAlertError('Could not create customer', 'Try again or create the customer from the Customers page.')
+        },
+      },
+    )
   }
 
   const permissionError = axios.isAxiosError(createMutation.error) && createMutation.error.response?.status === 403
@@ -570,7 +720,17 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
               driversLoading={driversQuery.isLoading}
               driversError={driversQuery.isError}
             />
-            <ScheduleFinancialForm form={form} onFieldChange={onFieldChange} errors={mergedFieldErrors} />
+            <ScheduleFinancialForm
+              form={form}
+              onFieldChange={onFieldChange}
+              errors={mergedFieldErrors}
+              customers={customersQuery.data?.customers ?? []}
+              customersLoading={customersQuery.isLoading}
+              newCustomerName={newCustomerName}
+              onNewCustomerNameChange={setNewCustomerName}
+              onCreateCustomer={handleCreateCustomer}
+              creatingCustomer={createCustomerMutation.isPending}
+            />
             <ModalActions onClose={onClose} isPending={createMutation.isPending} />
           </form>
         </div>

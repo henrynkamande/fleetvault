@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import FinanceFiltersBar, { financeFiltersToParams, type FinanceFiltersState } from './finance/FinanceFiltersBar'
-import { formatDeltaPct, formatUsd } from './finance/financeFormat'
+import { formatCurrency, formatDeltaPct } from './finance/financeFormat'
 import { usePlReportQuery } from '@/hooks/queries/useFinanceReports'
+import { useCurrentUser } from '@/hooks/queries/useUsers'
 import type { FinanceGranularity } from '@/types/finance'
 import { getErrorDetail } from '@/lib/apiErrors'
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
+import { normalizeCurrency } from '@/lib/currencies'
+import { LoadingState } from "@/components/ui/LoadingSpinner"
 
 type TimeMode = 'Monthly' | 'Quarterly' | 'Yearly'
 
@@ -36,27 +38,12 @@ type TrendChartProps = {
   data: TrendDatum[]
   mode: TimeMode
   onModeChange: (mode: TimeMode) => void
+  currency: string
 }
 
 type StatementTableProps = {
   rows: StatementRow[]
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(value)
-}
-
-function formatCurrencyWithCents(value: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value)
+  currency: string
 }
 
 function KpiCard({ label, value, delta, tone }: KpiCardProps) {
@@ -71,7 +58,7 @@ function KpiCard({ label, value, delta, tone }: KpiCardProps) {
   )
 }
 
-function TrendChart({ data, mode, onModeChange }: TrendChartProps) {
+function TrendChart({ data, mode, onModeChange, currency }: TrendChartProps) {
   const max = Math.max(...data.map((item) => Math.max(item.revenue, item.expenses)), 1)
 
   return (
@@ -113,12 +100,12 @@ function TrendChart({ data, mode, onModeChange }: TrendChartProps) {
                 <div
                   className="rounded-t-md bg-emerald-500/85 hover:bg-emerald-500"
                   style={{ height: `${revenueHeight}%` }}
-                  title={`${datum.period} Revenue: ${formatCurrency(datum.revenue)}`}
+                  title={`${datum.period} Revenue: ${formatCurrency(datum.revenue, currency)}`}
                 />
                 <div
                   className="rounded-t-md bg-rose-400/85 hover:bg-rose-400"
                   style={{ height: `${expensesHeight}%` }}
-                  title={`${datum.period} Expenses: ${formatCurrency(datum.expenses)}`}
+                  title={`${datum.period} Expenses: ${formatCurrency(datum.expenses, currency)}`}
                 />
               </div>
               <p className="text-xs text-gray-600">{datum.period}</p>
@@ -130,7 +117,7 @@ function TrendChart({ data, mode, onModeChange }: TrendChartProps) {
   )
 }
 
-function StatementTable({ rows }: StatementTableProps) {
+function StatementTable({ rows, currency }: StatementTableProps) {
   const grouped = useMemo(() => {
     const income = rows.filter((row) => row.section === 'Income')
     const expenses = rows.filter((row) => row.section === 'Expenses')
@@ -165,7 +152,7 @@ function StatementTable({ rows }: StatementTableProps) {
           <thead className="text-gray-500">
             <tr className="border-b border-gray-100">
               <th className="pb-3 font-medium">Account / Category</th>
-              <th className="pb-3 font-medium">Amount (USD)</th>
+              <th className="pb-3 font-medium">Amount ({currency})</th>
               <th className="pb-3 font-medium">% of Revenue</th>
             </tr>
           </thead>
@@ -178,7 +165,7 @@ function StatementTable({ rows }: StatementTableProps) {
             {grouped.income.map((row) => (
               <tr key={`income-${row.account}`} className="border-b border-gray-100">
                 <td className="py-3 text-gray-700">{row.account}</td>
-                <td className="py-3 font-semibold text-[#111827]">{formatCurrencyWithCents(row.amount)}</td>
+                <td className="py-3 font-semibold text-[#111827]">{formatCurrency(row.amount, currency, true)}</td>
                 <td className="py-3 text-gray-700">{row.percentOfRevenue.toFixed(1)}%</td>
               </tr>
             ))}
@@ -190,7 +177,7 @@ function StatementTable({ rows }: StatementTableProps) {
             {grouped.expenses.map((row) => (
               <tr key={`expense-${row.account}`} className="border-b border-gray-100">
                 <td className="py-3 text-gray-700">{row.account}</td>
-                <td className="py-3 font-semibold text-[#111827]">{formatCurrencyWithCents(row.amount)}</td>
+                <td className="py-3 font-semibold text-[#111827]">{formatCurrency(row.amount, currency, true)}</td>
                 <td className="py-3 text-gray-700">{row.percentOfRevenue.toFixed(1)}%</td>
               </tr>
             ))}
@@ -214,6 +201,8 @@ const statementSeed: StatementRow[] = [
 export default function PLReports() {
   const [filters, setFilters] = useState<FinanceFiltersState>({ period: 'ytd', vehicle: '', driver: '' })
   const [timeMode, setTimeMode] = useState<TimeMode>('Quarterly')
+  const userQuery = useCurrentUser()
+  const currency = normalizeCurrency(userQuery.data?.preferred_currency)
 
   const granularity: FinanceGranularity =
     timeMode === 'Yearly' ? 'yearly' : timeMode === 'Monthly' ? 'monthly' : 'quarterly'
@@ -250,12 +239,12 @@ export default function PLReports() {
     }
     const margin = summary.revenue_total > 0 ? (summary.profit_total / summary.revenue_total) * 100 : 0
     return [
-      { label: 'Total Revenue', value: formatUsd(summary.revenue_total), delta: formatDeltaPct(summary.revenue_change_pct), tone: 'positive' },
-      { label: 'Total Expenses', value: formatUsd(summary.expenses_total), delta: formatDeltaPct(summary.expenses_change_pct), tone: 'negative' },
-      { label: 'Net Profit', value: formatUsd(summary.profit_total), delta: formatDeltaPct(summary.profit_change_pct), tone: summary.profit_total >= 0 ? 'positive' : 'negative' },
+      { label: 'Total Revenue', value: formatCurrency(summary.revenue_total, currency), delta: formatDeltaPct(summary.revenue_change_pct), tone: 'positive' },
+      { label: 'Total Expenses', value: formatCurrency(summary.expenses_total, currency), delta: formatDeltaPct(summary.expenses_change_pct), tone: 'negative' },
+      { label: 'Net Profit', value: formatCurrency(summary.profit_total, currency), delta: formatDeltaPct(summary.profit_change_pct), tone: summary.profit_total >= 0 ? 'positive' : 'negative' },
       { label: 'Profit Margin', value: `${margin.toFixed(1)}%`, delta: `${summary.trip_count} trips`, tone: margin >= 0 ? 'positive' : 'negative' },
     ]
-  }, [summary])
+  }, [currency, summary])
 
   if (reportQuery.isError) {
     return (
@@ -275,8 +264,8 @@ export default function PLReports() {
           ))}
         </div>
 
-        <TrendChart data={trendData} mode={timeMode} onModeChange={setTimeMode} />
-        <StatementTable rows={statementRows.length ? statementRows : statementSeed} />
+        <TrendChart data={trendData} mode={timeMode} onModeChange={setTimeMode} currency={currency} />
+        <StatementTable rows={statementRows.length ? statementRows : statementSeed} currency={currency} />
       </section>
 )
 }

@@ -204,7 +204,10 @@ function NavUserMenu({ user }: NavUserMenuProps) {
         className="ff-dashboard-user-chip max-w-[14rem] text-left transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 dark:hover:border-slate-600 dark:hover:bg-slate-800"
       >
         {user.avatar_url ? (
-          <img src={user.avatar_url} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element -- Avatar URLs are served by the backend media API. */}
+            <img src={user.avatar_url} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+          </>
         ) : (
           <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">
             {getUserInitials(user.full_name)}
@@ -497,6 +500,7 @@ export default function DashboardLayout({
           items: [
             { label: 'Vehicles', page: 'vehicles', icon: HiOutlineTruck, active: resolvedActiveItem === 'vehicles', onNavigate: handleSidebarNav },
             { label: 'Drivers', page: 'drivers', icon: HiOutlineUserGroup, active: resolvedActiveItem === 'drivers', onNavigate: handleSidebarNav },
+            { label: 'Customers', page: 'customers', icon: HiOutlineUsers, active: resolvedActiveItem === 'customers', onNavigate: handleSidebarNav },
             { label: 'Trips (GPS-Free)', page: 'trips', icon: HiOutlineMap, active: resolvedActiveItem === 'trips', onNavigate: handleSidebarNav },
           ],
         },

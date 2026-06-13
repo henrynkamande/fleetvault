@@ -18,6 +18,7 @@ export interface User {
   fleet_owner_id?: string | null
   company_id: string | null
   company_name: string | null
+  preferred_currency: string
   has_company: boolean
   /** Present for users with role DRIVER; use when assigning `Trip.driver` (DriverProfile PK). */
   driver_profile_id?: string | null

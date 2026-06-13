@@ -3,11 +3,14 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { toast } from 'react-toastify'
 import FinanceFiltersBar, { financeFiltersToParams, type FinanceFiltersState } from './finance/FinanceFiltersBar'
-import { formatDeltaPct, formatUsd } from './finance/financeFormat'
+import { formatCurrency, formatDeltaPct } from './finance/financeFormat'
 import { useExpenseMutations, useExpenses } from '@/hooks/queries/useExpenses'
 import { useExpensesReportQuery } from '@/hooks/queries/useFinanceReports'
-import type { FinanceGranularity } from '@/types/finance'
+import { useCurrentUser } from '@/hooks/queries/useUsers'
+import type { DriverPayoutModeSummary, FinanceGranularity } from '@/types/finance'
 import { flattenFieldErrors, getErrorDetail, getResponseErrorData } from '@/lib/apiErrors'
+import { normalizeCurrency } from '@/lib/currencies'
+import { DRIVER_PAYMENT_MODES, type DriverPaymentMode } from '@/lib/driverPaymentModes'
 import { LoadingState } from "@/components/ui/LoadingSpinner"
 import { useTripsListQuery } from '@/hooks/queries/useTripsList'
 import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
@@ -46,12 +49,14 @@ type ExpenseChartProps = {
   onAggregationChange: (value: Aggregation) => void
   onBarClick: (period: string) => void
   selectedPeriod: string
+  currency: string
 }
 
 type CategoryListProps = {
   items: { category: string; total: number }[]
   selectedCategory: string
   onSelect: (category: string) => void
+  currency: string
 }
 
 type ExpenseTableProps = {
@@ -70,6 +75,7 @@ type ExpenseTableProps = {
   totalPages: number
   pageSize: number
   onPageChange: (page: number) => void
+  currency: string
 }
 
 type ExpenseFormState = {
@@ -77,6 +83,7 @@ type ExpenseFormState = {
   category: ExpenseCategory
   status: ApiExpenseStatus
   amount: string
+  driver_payment_mode: DriverPaymentMode
   description: string
   vendor: string
   expense_date: string
@@ -89,6 +96,11 @@ type ExpenseFormState = {
 type CreateExpenseModalProps = {
   open: boolean
   onClose: () => void
+}
+
+type DriverPayoutModesProps = {
+  items: DriverPayoutModeSummary[]
+  currency: string
 }
 
 const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
@@ -107,6 +119,7 @@ const initialExpenseForm = (): ExpenseFormState => ({
   category: 'FUEL',
   status: 'PENDING',
   amount: '',
+  driver_payment_mode: 'PER_TRIP',
   description: '',
   vendor: '',
   expense_date: new Date().toISOString().slice(0, 10),
@@ -115,15 +128,6 @@ const initialExpenseForm = (): ExpenseFormState => ({
   odometer_reading: '',
   notes: '',
 })
-
-function formatCurrency(value: number, withCents = false): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: withCents ? 2 : 0,
-    minimumFractionDigits: withCents ? 2 : 0,
-  }).format(value)
-}
 
 function statusLabel(status: ExpenseStatus): string {
   if (status === 'paid') return 'Paid'
@@ -173,7 +177,7 @@ function KpiCard({ label, value, delta, tone, active, onClick }: KpiCardProps) {
   )
 }
 
-function ExpenseChart({ data, aggregation, onAggregationChange, onBarClick, selectedPeriod }: ExpenseChartProps) {
+function ExpenseChart({ data, aggregation, onAggregationChange, onBarClick, selectedPeriod, currency }: ExpenseChartProps) {
   const max = Math.max(...data.map((item) => item.total), 1)
 
   return (
@@ -202,7 +206,7 @@ function ExpenseChart({ data, aggregation, onAggregationChange, onBarClick, sele
             type="button"
             onClick={() => onBarClick(point.period)}
             className="group flex h-full flex-col items-center justify-end"
-            title={`${point.period}: ${formatCurrency(point.total)}`}
+            title={`${point.period}: ${formatCurrency(point.total, currency)}`}
             aria-label={`Filter by ${point.period}`}
           >
             <div
@@ -221,7 +225,7 @@ function ExpenseChart({ data, aggregation, onAggregationChange, onBarClick, sele
   )
 }
 
-function CategoryList({ items, selectedCategory, onSelect }: CategoryListProps) {
+function CategoryList({ items, selectedCategory, onSelect, currency }: CategoryListProps) {
   const total = items.reduce((sum, item) => sum + item.total, 0)
 
   return (
@@ -247,7 +251,7 @@ function CategoryList({ items, selectedCategory, onSelect }: CategoryListProps) 
             >
               <div className="mb-1 flex items-center justify-between">
                 <span className="font-medium text-gray-700">{item.category}</span>
-                <span className="font-semibold text-[#111827]">{formatCurrency(item.total)}</span>
+                <span className="font-semibold text-[#111827]">{formatCurrency(item.total, currency)}</span>
               </div>
               <div className="h-1.5 rounded-full bg-gray-200">
                 <div className="h-1.5 rounded-full bg-orange-400" style={{ width: `${pct}%` }} />
@@ -331,6 +335,7 @@ function CreateExpenseModal({ open, onClose }: CreateExpenseModalProps) {
       category: form.category,
       status: form.status,
       amount: Number(form.amount),
+      driver_payment_mode: form.category === 'DRIVER_WAGES' ? form.driver_payment_mode : null,
       description: form.description.trim(),
       vendor: form.vendor.trim(),
       expense_date: form.expense_date,
@@ -397,6 +402,24 @@ function CreateExpenseModal({ open, onClose }: CreateExpenseModalProps) {
               </select>
             </label>
           </div>
+
+          {form.category === 'DRIVER_WAGES' ? (
+            <label className="block space-y-1">
+              <span className="text-sm font-semibold text-slate-700">Driver payment mode</span>
+              <select
+                value={form.driver_payment_mode}
+                onChange={(event) => update('driver_payment_mode', event.target.value as DriverPaymentMode)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+              >
+                {DRIVER_PAYMENT_MODES.map((mode) => (
+                  <option key={mode.value} value={mode.value}>
+                    {mode.label}
+                  </option>
+                ))}
+              </select>
+              <span className="text-xs text-slate-500">Clear pay context builds trust for drivers.</span>
+            </label>
+          ) : null}
 
           {form.scope === 'VEHICLE' ? (
             <label className="block space-y-1">
@@ -544,6 +567,7 @@ function ExpenseTable({
   totalPages,
   pageSize,
   onPageChange,
+  currency,
 }: ExpenseTableProps) {
   const startRow = totalRows === 0 ? 0 : (page - 1) * pageSize + 1
   const endRow = Math.min(totalRows, (page - 1) * pageSize + rows.length)
@@ -636,7 +660,7 @@ function ExpenseTable({
                       year: 'numeric',
                     })}
                   </td>
-                  <td className="px-4 py-4 text-right font-semibold text-[#111827]">{formatCurrency(row.amount, true)}</td>
+                  <td className="px-4 py-4 text-right font-semibold text-[#111827]">{formatCurrency(row.amount, currency, true)}</td>
                   <td className="px-4 py-4">
                     <span
                       aria-label={`Expense status ${statusLabel(row.status)}`}
@@ -693,6 +717,27 @@ function QuickActions({ onCreateExpense }: { onCreateExpense: () => void }) {
   )
 }
 
+function DriverPayoutModes({ items, currency }: DriverPayoutModesProps) {
+  if (items.length === 0) return null
+  return (
+    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div>
+        <h3 className="text-lg font-semibold text-[#111827]">Driver payouts by mode</h3>
+        <p className="text-xs text-gray-600">Control and transparency for every earning style.</p>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {items.map((item) => (
+          <article key={item.mode} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-sm font-semibold text-[#111827]">{item.label}</p>
+            <p className="mt-1 text-xl font-bold text-[#111827]">{formatCurrency(item.total, currency)}</p>
+            <p className="mt-1 text-xs text-gray-500">{item.trip_count} trips tracked</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export default function Expenses() {
   const [filters, setFilters] = useState<FinanceFiltersState>({ period: '90d', vehicle: '', driver: '' })
   const [aggregation, setAggregation] = useState<Aggregation>('Monthly')
@@ -705,6 +750,8 @@ export default function Expenses() {
   const pageSize = 8
   const [activeKpi, setActiveKpi] = useState<'none' | 'pending' | 'overdue' | 'total' | 'month'>('none')
   const [createExpenseOpen, setCreateExpenseOpen] = useState(false)
+  const userQuery = useCurrentUser()
+  const currency = normalizeCurrency(userQuery.data?.preferred_currency)
 
   const granularity: FinanceGranularity = aggregation === 'Quarterly' ? 'quarterly' : 'monthly'
   const reportQuery = useExpensesReportQuery({ ...financeFiltersToParams(filters), granularity })
@@ -727,18 +774,18 @@ export default function Expenses() {
       ]
     }
     return [
-      { key: 'total' as const, label: 'Trip expenses', value: formatUsd(summary.expenses_total), delta: formatDeltaPct(summary.expenses_change_pct), tone: 'negative' as const },
+      { key: 'total' as const, label: 'Trip expenses', value: formatCurrency(summary.expenses_total, currency), delta: formatDeltaPct(summary.expenses_change_pct), tone: 'negative' as const },
       {
         key: 'month' as const,
         label: 'Net profit',
-        value: formatUsd(summary.profit_total),
+        value: formatCurrency(summary.profit_total, currency),
         delta: formatDeltaPct(summary.profit_change_pct),
         tone: summary.profit_total >= 0 ? ('positive' as const) : ('negative' as const),
       },
-      { key: 'pending' as const, label: 'Trip revenue', value: formatUsd(summary.revenue_total), delta: `${summary.trip_count} trips`, tone: 'neutral' as const },
-      { key: 'overdue' as const, label: 'Top category', value: topCategory, delta: categoryTotals[0] ? formatUsd(categoryTotals[0].total) : '—', tone: 'neutral' as const },
+      { key: 'pending' as const, label: 'Trip revenue', value: formatCurrency(summary.revenue_total, currency), delta: `${summary.trip_count} trips`, tone: 'neutral' as const },
+      { key: 'overdue' as const, label: 'Top category', value: topCategory, delta: categoryTotals[0] ? formatCurrency(categoryTotals[0].total, currency) : '—', tone: 'neutral' as const },
     ]
-  }, [summary, categoryTotals, topCategory])
+  }, [currency, summary, categoryTotals, topCategory])
 
   const chartData = useMemo(() => {
     return (reportQuery.data?.trend ?? []).map((t) => ({ period: t.period, total: t.total ?? 0 }))
@@ -881,16 +928,20 @@ export default function Expenses() {
               setSelectedPeriod((prev) => (prev === period ? 'All' : period))
               setPage(1)
             }}
+            currency={currency}
           />
           <CategoryList
             items={categoryTotals}
             selectedCategory={selectedCategory}
+            currency={currency}
             onSelect={(category) => {
               setSelectedCategory(category)
               setPage(1)
             }}
           />
         </div>
+
+        <DriverPayoutModes items={reportQuery.data?.driver_payouts_by_mode ?? []} currency={currency} />
 
         <ExpenseTable
           rows={currentRows}
@@ -920,6 +971,7 @@ export default function Expenses() {
           totalPages={totalPages}
           pageSize={pageSize}
           onPageChange={setPage}
+          currency={currency}
         />
         <CreateExpenseModal open={createExpenseOpen} onClose={() => setCreateExpenseOpen(false)} />
       </section>

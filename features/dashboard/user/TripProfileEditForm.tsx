@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useCompanyDriversQuery } from '@/hooks/queries/useCompanyDrivers'
+import { useCreateCustomerMutation, useCustomersQuery } from '@/hooks/queries/useCustomers'
 import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
 import { flattenFieldErrors, getErrorDetail, getResponseErrorData } from '@/lib/apiErrors'
 import { fleetConfirm } from '@/lib/fleetAlert'
+import { DRIVER_PAYMENT_MODES, type DriverPaymentMode } from '@/lib/driverPaymentModes'
 import { formatOdometerKm } from '@/lib/vehicleDisplay'
 import { getDriverSelectLabel } from '@/lib/userDisplay'
 import type { TripDetailDto, TripRevenueModel, UpdateTripPayload } from '@/types/trip'
+import type { CustomerDto } from '@/types/customer'
 
 type RevenueModelUi = 'Fixed Rate' | 'Per km' | 'Per delivery' | 'Contract'
 
@@ -34,12 +37,15 @@ export type TripEditFormState = {
   driverProfileId: string
   plannedDeparture: string
   plannedArrival: string
+  customerId: string
   customerName: string
   cargoDescription: string
   revenueModel: RevenueModelUi
   expectedRevenue: string
   fuelCost: string
   driverPayment: string
+  driverPaymentMode: DriverPaymentMode
+  driverPaymentRate: string
   tollCost: string
   otherExpenses: string
   managerNotes: string
@@ -68,12 +74,15 @@ export function tripToEditForm(trip: TripDetailDto): TripEditFormState {
     driverProfileId: trip.driver ?? '',
     plannedDeparture: toDatetimeLocalValue(trip.planned_departure_time),
     plannedArrival: toDatetimeLocalValue(trip.planned_arrival_time),
+    customerId: trip.customer ?? '',
     customerName: trip.customer_name ?? '',
     cargoDescription: trip.cargo_description ?? '',
     revenueModel: model,
     expectedRevenue: trip.revenue_amount != null ? String(trip.revenue_amount) : '',
     fuelCost: trip.fuel_cost != null ? String(trip.fuel_cost) : '0',
     driverPayment: trip.driver_payment != null ? String(trip.driver_payment) : '0',
+    driverPaymentMode: trip.driver_payment_mode ?? 'PER_TRIP',
+    driverPaymentRate: trip.driver_payment_rate != null ? String(trip.driver_payment_rate) : '',
     tollCost: trip.toll_cost != null ? String(trip.toll_cost) : '0',
     otherExpenses: trip.other_expenses != null ? String(trip.other_expenses) : '0',
     managerNotes: trip.manager_notes ?? '',
@@ -95,9 +104,13 @@ export function editFormToPayload(form: TripEditFormState): UpdateTripPayload {
     revenue_model: REVENUE_UI_TO_API[form.revenueModel],
     revenue_amount: Number.parseFloat(form.expectedRevenue.trim()),
     driver: form.driverProfileId || null,
+    customer: form.customerId || null,
     customer_name: form.customerName.trim() || null,
     cargo_description: form.cargoDescription.trim() || null,
     fuel_cost: Number.parseFloat(form.fuelCost.trim() || '0'),
+    driver_payment_mode: form.driverPaymentMode,
+    driver_payment_rate: Number.parseFloat(form.driverPaymentRate.trim() || '0'),
+    driver_payment_auto_calculated: false,
     driver_payment: Number.parseFloat(form.driverPayment.trim() || '0'),
     toll_cost: Number.parseFloat(form.tollCost.trim() || '0'),
     other_expenses: Number.parseFloat(form.otherExpenses.trim() || '0'),
@@ -121,6 +134,77 @@ function fieldClass(error?: string): string {
   }`
 }
 
+function CustomerSelect({
+  form,
+  customers,
+  customersLoading,
+  error,
+  newCustomerName,
+  creatingCustomer,
+  onFieldChange,
+  onNewCustomerNameChange,
+  onCreateCustomer,
+}: {
+  form: TripEditFormState
+  customers: CustomerDto[]
+  customersLoading: boolean
+  error?: string
+  newCustomerName: string
+  creatingCustomer: boolean
+  onFieldChange: <K extends keyof TripEditFormState>(field: K, value: TripEditFormState[K]) => void
+  onNewCustomerNameChange: (value: string) => void
+  onCreateCustomer: () => void
+}) {
+  const selectedCustomer = customers.find((customer) => customer.id === form.customerId)
+  return (
+    <div>
+      <label className="mb-1 block text-xs font-medium text-gray-600">Customer</label>
+      <select
+        value={form.customerId}
+        onChange={(e) => {
+          const value = e.target.value
+          onFieldChange('customerId', value)
+          if (value && value !== '__new__') {
+            const customer = customers.find((item) => item.id === value)
+            onFieldChange('customerName', customer?.name ?? '')
+          }
+        }}
+        disabled={customersLoading}
+        className={fieldClass(error)}
+      >
+        <option value="">{customersLoading ? 'Loading customers...' : 'Select customer'}</option>
+        {customers.map((customer) => (
+          <option key={customer.id} value={customer.id}>
+            {customer.name}{customer.is_default ? ' (default)' : ''}
+          </option>
+        ))}
+        <option value="__new__">+ Create new customer</option>
+      </select>
+      {form.customerId === '__new__' ? (
+        <div className="mt-2 flex gap-2">
+          <input
+            value={newCustomerName}
+            onChange={(e) => onNewCustomerNameChange(e.target.value)}
+            placeholder="New customer name"
+            className={fieldClass()}
+          />
+          <button
+            type="button"
+            onClick={onCreateCustomer}
+            disabled={creatingCustomer || !newCustomerName.trim()}
+            className="rounded-lg border border-[#fbbd26]/70 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-[#fff8e6] disabled:opacity-50"
+          >
+            Add
+          </button>
+        </div>
+      ) : null}
+      {selectedCustomer?.phone || selectedCustomer?.email ? (
+        <p className="mt-1 text-xs text-gray-500">{selectedCustomer.phone || selectedCustomer.email}</p>
+      ) : null}
+    </div>
+  )
+}
+
 export default function TripProfileEditForm({
   trip,
   isPending,
@@ -130,14 +214,18 @@ export default function TripProfileEditForm({
 }: TripProfileEditFormProps) {
   const [form, setForm] = useState<TripEditFormState>(() => tripToEditForm(trip))
   const [errors, setErrors] = useState<Partial<Record<keyof TripEditFormState, string>>>({})
+  const [newCustomerName, setNewCustomerName] = useState('')
 
   const vehiclesQuery = useVehiclesQuery(undefined)
   const driversQuery = useCompanyDriversQuery(true)
+  const customersQuery = useCustomersQuery('')
+  const createCustomerMutation = useCreateCustomerMutation()
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setForm(tripToEditForm(trip))
       setErrors({})
+      setNewCustomerName('')
     }, 0)
     return () => window.clearTimeout(timer)
   }, [trip])
@@ -166,6 +254,23 @@ export default function TripProfileEditForm({
       }))
   }, [driversQuery.data?.drivers])
 
+  const defaultCustomerId = useMemo(() => {
+    return customersQuery.data?.customers.find((customer) => customer.is_default)?.id ?? ''
+  }, [customersQuery.data?.customers])
+
+  useEffect(() => {
+    if (form.customerId || !defaultCustomerId) return
+    const customer = customersQuery.data?.customers.find((item) => item.id === defaultCustomerId)
+    const timer = window.setTimeout(() => {
+      setForm((prev) => ({
+        ...prev,
+        customerId: defaultCustomerId,
+        customerName: prev.customerName || customer?.name || 'Cash Payment',
+      }))
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [customersQuery.data?.customers, defaultCustomerId, form.customerId])
+
   const apiErrors = error ? flattenFieldErrors(getResponseErrorData(error)) : {}
   const generalError =
     error && Object.keys(apiErrors).length === 0 ? getErrorDetail(error) : null
@@ -180,6 +285,8 @@ export default function TripProfileEditForm({
     if (!form.pickupLocation.trim()) next.pickupLocation = 'Required'
     if (!form.destination.trim()) next.destination = 'Required'
     if (!form.vehicleId) next.vehicleId = 'Required'
+    if (!form.customerId) next.customerId = 'Required'
+    if (form.customerId === '__new__') next.customerId = 'Create the customer or choose an existing one'
     if (!form.plannedDeparture) next.plannedDeparture = 'Required'
     if (!form.expectedRevenue.trim() || Number.isNaN(Number.parseFloat(form.expectedRevenue))) {
       next.expectedRevenue = 'Enter a valid amount'
@@ -190,6 +297,24 @@ export default function TripProfileEditForm({
     }
     setErrors(next)
     return Object.keys(next).length === 0
+  }
+
+  function handleCreateCustomer() {
+    const name = newCustomerName.trim()
+    if (!name) return
+    createCustomerMutation.mutate(
+      { name },
+      {
+        onSuccess: (data) => {
+          setForm((prev) => ({
+            ...prev,
+            customerId: data.customer.id,
+            customerName: data.customer.name,
+          }))
+          setNewCustomerName('')
+        },
+      },
+    )
   }
 
   function handleSubmit(event: FormEvent) {
@@ -311,14 +436,17 @@ export default function TripProfileEditForm({
             className={fieldClass(errors.expectedRevenue)}
           />
         </div>
-        <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Customer (optional)</label>
-          <input
-            value={form.customerName}
-            onChange={(e) => onFieldChange('customerName', e.target.value)}
-            className={fieldClass()}
-          />
-        </div>
+        <CustomerSelect
+          form={form}
+          customers={customersQuery.data?.customers ?? []}
+          customersLoading={customersQuery.isLoading}
+          error={errors.customerId}
+          newCustomerName={newCustomerName}
+          creatingCustomer={createCustomerMutation.isPending}
+          onFieldChange={onFieldChange}
+          onNewCustomerNameChange={setNewCustomerName}
+          onCreateCustomer={handleCreateCustomer}
+        />
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">Fuel cost</label>
           <input
@@ -341,6 +469,35 @@ export default function TripProfileEditForm({
             className={fieldClass(errors.driverPayment)}
           />
           {errors.driverPayment ? <p className="mt-1 text-xs text-rose-600">{errors.driverPayment}</p> : null}
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-600">Payment mode</label>
+          <select
+            value={form.driverPaymentMode}
+            onChange={(e) => onFieldChange('driverPaymentMode', e.target.value as DriverPaymentMode)}
+            className={fieldClass()}
+          >
+            {DRIVER_PAYMENT_MODES.map((mode) => (
+              <option key={mode.value} value={mode.value}>
+                {mode.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            {DRIVER_PAYMENT_MODES.find((mode) => mode.value === form.driverPaymentMode)?.framing}
+          </p>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-600">Payment rate</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={form.driverPaymentRate}
+            onChange={(e) => onFieldChange('driverPaymentRate', e.target.value)}
+            className={fieldClass()}
+          />
+          <p className="mt-1 text-xs text-gray-500">Secure your earnings with a clear rate.</p>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">Toll expenses</label>

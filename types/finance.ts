@@ -15,6 +15,13 @@ export interface FinanceSummary {
   profit_change_pct: number | null
 }
 
+export interface DriverPayoutModeSummary {
+  mode: 'MONTHLY_FIXED' | 'WEEKLY_TRIPS' | 'FIXED_DAILY' | 'PER_TRIP'
+  label: string
+  total: number
+  trip_count: number
+}
+
 export interface FinanceTrendPoint {
   period: string
   period_key: string
@@ -34,7 +41,7 @@ export interface IncomeRecordDto {
   vehicle_registration: string | null
   date: string
   amount: number
-  status: 'Paid' | 'Pending' | 'Overdue'
+  status: 'Paid' | 'Pending' | 'Partial' | 'Overdue'
   trip_status: string
 }
 
@@ -61,6 +68,7 @@ export interface ExpensesReportResponse {
   summary: FinanceSummary
   trend: FinanceTrendPoint[]
   by_category: { category: string; total: number }[]
+  driver_payouts_by_mode: DriverPayoutModeSummary[]
   records: ExpenseRecordDto[]
 }
 
@@ -75,6 +83,7 @@ export interface PlReportResponse {
   summary: FinanceSummary
   trend: FinanceTrendPoint[]
   statement: PlStatementRowDto[]
+  driver_payouts_by_mode: DriverPayoutModeSummary[]
 }
 
 export interface FinanceQueryParams {
@@ -125,6 +134,7 @@ export interface DashboardOverviewResponse {
   active_trip_count: number
   ongoing_trips: DashboardOngoingTripDto[]
   expense_breakdown: DashboardExpenseSegmentDto[]
+  driver_payouts_by_mode: DriverPayoutModeSummary[]
   expense_total: number
   top_drivers: DashboardTopDriverDto[]
   top_vehicles: DashboardTopVehicleDto[]

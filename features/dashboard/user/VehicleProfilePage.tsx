@@ -20,7 +20,7 @@ import {
   vehicleTypeLabel,
 } from '@/lib/vehicleDisplay'
 import type { VehicleApiStatus } from '@/types/vehicle'
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
+import { LoadingCard } from "@/components/ui/LoadingSpinner"
 
 type TripFilterStatus = 'All' | TripListDto['status']
 
@@ -104,7 +104,7 @@ export default function VehicleProfilePage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<TripFilterStatus>('All')
 
-  const trips = tripsQuery.data?.trips ?? []
+  const trips = useMemo(() => tripsQuery.data?.trips ?? [], [tripsQuery.data?.trips])
 
   const overview = useMemo(() => {
     const totalIncome = trips.reduce((acc, t) => acc + parseDecimal(t.revenue_amount), 0)
@@ -228,11 +228,14 @@ export default function VehicleProfilePage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
               {imgUrl ? (
-                <img
-                  src={imgUrl}
-                  alt=""
-                  className="h-28 w-40 shrink-0 rounded-xl border border-gray-100 object-cover"
-                />
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- Vehicle photos are served from backend media URLs. */}
+                  <img
+                    src={imgUrl}
+                    alt=""
+                    className="h-28 w-40 shrink-0 rounded-xl border border-gray-100 object-cover"
+                  />
+                </>
               ) : null}
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Vehicle profile</p>

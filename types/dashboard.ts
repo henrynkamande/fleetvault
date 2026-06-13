@@ -2,6 +2,7 @@ export type FleetAppPage =
   | "dashboard"
   | "vehicles"
   | "drivers"
+  | "customers"
   | "trips"
   | "income"
   | "expenses"

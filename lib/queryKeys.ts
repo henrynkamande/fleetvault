@@ -14,6 +14,7 @@ export const queryKeys = {
   },
   fleet: {
     trips: () => ["trips"] as const,
+    customers: () => ["customers"] as const,
     vehicles: () => ["vehicles"] as const,
     companyUsers: () => ["companyUsers"] as const,
     companyDrivers: () => ["companyDrivers"] as const,
@@ -25,6 +26,7 @@ export const queryKeys = {
 export const listStaleTime = {
   vehicles: 1000 * 60 * 5,
   drivers: 1000 * 60 * 5,
+  customers: 1000 * 60 * 5,
   trips: 1000 * 60 * 5,
   settings: 1000 * 60 * 10,
 } as const;

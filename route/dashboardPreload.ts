@@ -24,6 +24,9 @@ export function preloadDashboardPage(
     case "drivers":
       void import("@/features/dashboard/user/Drivers");
       break;
+    case "customers":
+      void import("@/features/dashboard/user/Customers");
+      break;
     case "trips":
       void import("@/features/dashboard/user/Trips");
       break;

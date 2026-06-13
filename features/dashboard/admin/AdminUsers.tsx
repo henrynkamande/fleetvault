@@ -8,7 +8,7 @@ import {
 import { getErrorDetail } from "@/lib/apiErrors";
 import { formatPlatformRole } from "@/types/platform";
 import type { PlatformUserListItem } from "@/types/platform";
-import { LoadingCard, LoadingSpinner, LoadingState } from "@/components/ui/LoadingSpinner"
+import { LoadingState } from "@/components/ui/LoadingSpinner"
 
 function StatusBadge({ active }: { active: boolean }) {
   return (
@@ -26,7 +26,6 @@ function StatusBadge({ active }: { active: boolean }) {
 
 export default function AdminUsers() {
   const [search, setSearch] = useState("");
-  const [role, setRole] = useState("");
   const [status, setStatus] = useState<"" | "active" | "suspended">("");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<PlatformUserListItem | null>(null);
@@ -35,11 +34,11 @@ export default function AdminUsers() {
     () => ({
       page,
       search: search || undefined,
-      role: role || undefined,
+      role: "FLEET_OWNER",
       is_active:
         status === "active" ? true : status === "suspended" ? false : undefined,
     }),
-    [page, search, role, status],
+    [page, search, status],
   );
 
   const { data, isLoading, isError, error } = usePlatformUsers(queryParams);
@@ -60,18 +59,6 @@ export default function AdminUsers() {
         />
         <select
           className="ff-dashboard-select"
-          value={role}
-          onChange={(e) => {
-            setRole(e.target.value);
-            setPage(1);
-          }}
-        >
-          <option value="">All roles</option>
-          <option value="FLEET_OWNER">Fleet owner</option>
-          <option value="DRIVER">Driver</option>
-        </select>
-        <select
-          className="ff-dashboard-select"
           value={status}
           onChange={(e) => {
             setStatus(e.target.value as "" | "active" | "suspended");
@@ -90,7 +77,7 @@ export default function AdminUsers() {
         <p className="text-rose-600">{getErrorDetail(error)}</p>
       ) : (
         <>
-          <p className="text-sm ff-muted">{data?.count ?? 0} users</p>
+          <p className="text-sm ff-muted">{data?.count ?? 0} vehicle owners</p>
           <div className="overflow-x-auto ff-card p-0">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-slate-50 text-slate-600 dark:bg-slate-800/80 dark:text-slate-400">
