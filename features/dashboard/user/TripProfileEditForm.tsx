@@ -127,10 +127,10 @@ type TripProfileEditFormProps = {
 }
 
 function fieldClass(error?: string): string {
-  return `w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:ring-2 ${
+  return `w-full rounded-lg border bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 outline-none focus:ring-2 ${
     error
       ? 'border-rose-300 focus:ring-rose-200'
-      : 'border-gray-300 focus:border-[#fbbd26] focus:ring-[#fbbd26]/30'
+      : 'border-slate-300 dark:border-slate-700 focus:border-[#fbbd26] focus:ring-[#fbbd26]/30'
   }`
 }
 
@@ -158,7 +158,7 @@ function CustomerSelect({
   const selectedCustomer = customers.find((customer) => customer.id === form.customerId)
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-gray-600">Customer</label>
+      <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Customer</label>
       <select
         value={form.customerId}
         onChange={(e) => {
@@ -192,14 +192,14 @@ function CustomerSelect({
             type="button"
             onClick={onCreateCustomer}
             disabled={creatingCustomer || !newCustomerName.trim()}
-            className="rounded-lg border border-[#fbbd26]/70 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-[#fff8e6] disabled:opacity-50"
+            className="rounded-lg border border-[#fbbd26]/70 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-[#fff8e6] disabled:opacity-50"
           >
             Add
           </button>
         </div>
       ) : null}
       {selectedCustomer?.phone || selectedCustomer?.email ? (
-        <p className="mt-1 text-xs text-gray-500">{selectedCustomer.phone || selectedCustomer.email}</p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{selectedCustomer.phone || selectedCustomer.email}</p>
       ) : null}
     </div>
   )
@@ -332,7 +332,7 @@ export default function TripProfileEditForm({
       ) : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Pickup</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Pickup</label>
           <input
             value={form.pickupLocation}
             onChange={(e) => onFieldChange('pickupLocation', e.target.value)}
@@ -340,7 +340,7 @@ export default function TripProfileEditForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Destination</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Destination</label>
           <input
             value={form.destination}
             onChange={(e) => onFieldChange('destination', e.target.value)}
@@ -348,7 +348,7 @@ export default function TripProfileEditForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Estimated distance (km)</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Estimated distance (km)</label>
           <input
             type="number"
             min="0"
@@ -359,7 +359,7 @@ export default function TripProfileEditForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Vehicle</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Vehicle</label>
           <select
             value={form.vehicleId}
             onChange={(e) => onFieldChange('vehicleId', e.target.value)}
@@ -372,7 +372,7 @@ export default function TripProfileEditForm({
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-gray-600">
+          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
             Vehicle odometer (latest):{' '}
             <span className="font-semibold text-[#111827]">
               {vehicleOdometerLabel || 'Select a vehicle'}
@@ -380,7 +380,7 @@ export default function TripProfileEditForm({
           </p>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Driver (optional)</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Driver (optional)</label>
           <select
             value={form.driverProfileId}
             onChange={(e) => onFieldChange('driverProfileId', e.target.value)}
@@ -395,7 +395,7 @@ export default function TripProfileEditForm({
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Planned departure</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Planned departure</label>
           <input
             type="datetime-local"
             value={form.plannedDeparture}
@@ -404,7 +404,7 @@ export default function TripProfileEditForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Planned arrival (optional)</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Planned arrival (optional)</label>
           <input
             type="datetime-local"
             value={form.plannedArrival}
@@ -413,7 +413,7 @@ export default function TripProfileEditForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Revenue model</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Revenue model</label>
           <select
             value={form.revenueModel}
             onChange={(e) => onFieldChange('revenueModel', e.target.value as RevenueModelUi)}
@@ -426,7 +426,7 @@ export default function TripProfileEditForm({
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Expected revenue</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Expected revenue</label>
           <input
             type="number"
             step="0.01"
@@ -448,7 +448,7 @@ export default function TripProfileEditForm({
           onCreateCustomer={handleCreateCustomer}
         />
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Fuel cost</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Fuel cost</label>
           <input
             type="number"
             step="0.01"
@@ -459,7 +459,7 @@ export default function TripProfileEditForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Driver payment</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Driver payment</label>
           <input
             type="number"
             step="0.01"
@@ -471,7 +471,7 @@ export default function TripProfileEditForm({
           {errors.driverPayment ? <p className="mt-1 text-xs text-rose-600">{errors.driverPayment}</p> : null}
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Payment mode</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Payment mode</label>
           <select
             value={form.driverPaymentMode}
             onChange={(e) => onFieldChange('driverPaymentMode', e.target.value as DriverPaymentMode)}
@@ -483,12 +483,12 @@ export default function TripProfileEditForm({
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             {DRIVER_PAYMENT_MODES.find((mode) => mode.value === form.driverPaymentMode)?.framing}
           </p>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Payment rate</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Payment rate</label>
           <input
             type="number"
             step="0.01"
@@ -497,10 +497,10 @@ export default function TripProfileEditForm({
             onChange={(e) => onFieldChange('driverPaymentRate', e.target.value)}
             className={fieldClass()}
           />
-          <p className="mt-1 text-xs text-gray-500">Secure your earnings with a clear rate.</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Secure your earnings with a clear rate.</p>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Toll expenses</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Toll expenses</label>
           <input
             type="number"
             step="0.01"
@@ -511,7 +511,7 @@ export default function TripProfileEditForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Other expenses</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Other expenses</label>
           <input
             type="number"
             step="0.01"
@@ -520,12 +520,12 @@ export default function TripProfileEditForm({
             onChange={(e) => onFieldChange('otherExpenses', e.target.value)}
             className={fieldClass()}
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Parking, loading/unloading, permits, repairs, meals, or other trip-specific costs.
           </p>
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-medium text-gray-600">Cargo description (optional)</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Cargo description (optional)</label>
           <textarea
             value={form.cargoDescription}
             onChange={(e) => onFieldChange('cargoDescription', e.target.value)}
@@ -534,7 +534,7 @@ export default function TripProfileEditForm({
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-medium text-gray-600">Manager notes</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Manager notes</label>
           <textarea
             value={form.managerNotes}
             onChange={(e) => onFieldChange('managerNotes', e.target.value)}
@@ -556,7 +556,7 @@ export default function TripProfileEditForm({
             })
             if (confirmed) onCancel()
           }}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+          className="rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800/60"
         >
           Discard
         </button>

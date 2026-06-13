@@ -136,9 +136,9 @@ function statusLabel(status: ExpenseStatus): string {
 }
 
 function statusBadgeClass(status: ExpenseStatus): string {
-  if (status === 'paid') return 'bg-emerald-100 text-emerald-700 ring-emerald-200'
-  if (status === 'pending') return 'bg-amber-100 text-amber-700 ring-amber-200'
-  return 'bg-rose-100 text-rose-700 ring-rose-200'
+  if (status === 'paid') return 'bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-900'
+  if (status === 'pending') return 'bg-amber-100 text-amber-700 ring-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-900'
+  return 'bg-rose-100 text-rose-700 ring-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:ring-rose-900'
 }
 
 function normalizeExpenseStatus(status: string): ExpenseStatus {
@@ -166,12 +166,12 @@ function KpiCard({ label, value, delta, tone, active, onClick }: KpiCardProps) {
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:shadow-md ${
-        active ? 'border-[#fbbd26] ring-2 ring-[#fbbd26]/35' : 'border-gray-200'
+      className={`rounded-2xl border bg-white dark:bg-slate-900 p-4 text-left shadow-sm transition hover:shadow-md ${
+        active ? 'border-[#fbbd26] ring-2 ring-[#fbbd26]/35' : 'border-slate-200 dark:border-slate-700'
       }`}
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-[#111827]">{value}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide ff-muted">{label}</p>
+      <p className="mt-2 text-3xl font-semibold ff-heading">{value}</p>
       <p className={`mt-1 text-sm font-medium ${deltaToneClass(tone)}`}>{delta}</p>
     </button>
   )
@@ -181,17 +181,17 @@ function ExpenseChart({ data, aggregation, onAggregationChange, onBarClick, sele
   const max = Math.max(...data.map((item) => item.total), 1)
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <section className="ff-card">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="text-lg font-semibold text-[#111827]">Expense Trend</h3>
-        <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 text-xs">
+        <h3 className="text-lg font-semibold ff-heading">Expense Trend</h3>
+        <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1 text-xs dark:border-slate-700 dark:bg-slate-800/60">
           {(['Monthly', 'Quarterly'] as Aggregation[]).map((item) => (
             <button
               key={item}
               type="button"
               onClick={() => onAggregationChange(item)}
               className={`rounded-md px-3 py-1 font-semibold transition ${
-                aggregation === item ? 'bg-white text-[#111827] shadow-sm' : 'text-gray-600'
+                aggregation === item ? 'bg-white text-[#111827] shadow-sm dark:bg-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-300'
               }`}
             >
               {item}
@@ -217,7 +217,7 @@ function ExpenseChart({ data, aggregation, onAggregationChange, onBarClick, sele
               }`}
               style={{ height: `${Math.max((point.total / max) * 100, 8)}%` }}
             />
-            <p className="mt-2 text-xs text-gray-600">{point.period}</p>
+            <p className="mt-2 text-xs ff-muted">{point.period}</p>
           </button>
         ))}
       </div>
@@ -229,10 +229,10 @@ function CategoryList({ items, selectedCategory, onSelect, currency }: CategoryL
   const total = items.reduce((sum, item) => sum + item.total, 0)
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <section className="ff-card">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-[#111827]">By Category</h3>
-        <button type="button" className="text-sm font-semibold text-[#111827] hover:text-[#f4b20a]" onClick={() => onSelect('All')}>
+        <h3 className="text-lg font-semibold ff-heading">By Category</h3>
+        <button type="button" className="text-sm font-semibold ff-heading hover:text-[#f4b20a]" onClick={() => onSelect('All')}>
           View All
         </button>
       </div>
@@ -246,14 +246,14 @@ function CategoryList({ items, selectedCategory, onSelect, currency }: CategoryL
               type="button"
               onClick={() => onSelect(item.category)}
               className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                isActive ? 'bg-[#fff8e6] ring-1 ring-[#fbbd26]/45' : 'hover:bg-gray-50'
+                isActive ? 'bg-[#fff8e6] ring-1 ring-[#fbbd26]/45 dark:bg-amber-950/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
               }`}
             >
               <div className="mb-1 flex items-center justify-between">
-                <span className="font-medium text-gray-700">{item.category}</span>
-                <span className="font-semibold text-[#111827]">{formatCurrency(item.total, currency)}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">{item.category}</span>
+                <span className="font-semibold ff-heading">{formatCurrency(item.total, currency)}</span>
               </div>
-              <div className="h-1.5 rounded-full bg-gray-200">
+              <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-700">
                 <div className="h-1.5 rounded-full bg-orange-400" style={{ width: `${pct}%` }} />
               </div>
             </button>
@@ -359,16 +359,16 @@ function CreateExpenseModal({ open, onClose }: CreateExpenseModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/45 px-4 py-8">
-      <div className="mx-auto w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl">
-        <div className="flex items-start justify-between border-b border-slate-100 px-6 py-4">
+      <div className="mx-auto w-full max-w-2xl rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 shadow-2xl dark:border-slate-700">
+        <div className="flex items-start justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
           <div>
-            <h2 className="text-xl font-semibold text-[#111827]">Create Expense</h2>
-            <p className="mt-1 text-sm text-slate-600">Add a fleet, vehicle, or trip cost to your expense ledger.</p>
+            <h2 className="text-xl font-semibold ff-heading">Create Expense</h2>
+            <p className="mt-1 text-sm ff-muted">Add a fleet, vehicle, or trip cost to your expense ledger.</p>
           </div>
           <button
             type="button"
             onClick={closeAndReset}
-            className="rounded-lg px-2 py-1 text-xl leading-none text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+            className="rounded-lg px-2 py-1 text-xl leading-none text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
             aria-label="Close create expense"
           >
             ×
@@ -378,11 +378,11 @@ function CreateExpenseModal({ open, onClose }: CreateExpenseModalProps) {
         <form onSubmit={handleSubmit} className="space-y-5 px-6 py-5">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-1">
-              <span className="text-sm font-semibold text-slate-700">Scope</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Scope</span>
               <select
                 value={form.scope}
                 onChange={(event) => update('scope', event.target.value as ExpenseScope)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className="ff-field w-full rounded-xl py-2.5"
               >
                 <option value="FLEET">Fleet expense</option>
                 <option value="VEHICLE">Vehicle expense</option>
@@ -390,11 +390,11 @@ function CreateExpenseModal({ open, onClose }: CreateExpenseModalProps) {
               </select>
             </label>
             <label className="space-y-1">
-              <span className="text-sm font-semibold text-slate-700">Category</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Category</span>
               <select
                 value={form.category}
                 onChange={(event) => update('category', event.target.value as ExpenseCategory)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className="ff-field w-full rounded-xl py-2.5"
               >
                 {EXPENSE_CATEGORIES.map((category) => (
                   <option key={category.value} value={category.value}>{category.label}</option>
@@ -405,11 +405,11 @@ function CreateExpenseModal({ open, onClose }: CreateExpenseModalProps) {
 
           {form.category === 'DRIVER_WAGES' ? (
             <label className="block space-y-1">
-              <span className="text-sm font-semibold text-slate-700">Driver payment mode</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Driver payment mode</span>
               <select
                 value={form.driver_payment_mode}
                 onChange={(event) => update('driver_payment_mode', event.target.value as DriverPaymentMode)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className="ff-field w-full rounded-xl py-2.5"
               >
                 {DRIVER_PAYMENT_MODES.map((mode) => (
                   <option key={mode.value} value={mode.value}>
@@ -417,17 +417,17 @@ function CreateExpenseModal({ open, onClose }: CreateExpenseModalProps) {
                   </option>
                 ))}
               </select>
-              <span className="text-xs text-slate-500">Clear pay context builds trust for drivers.</span>
+              <span className="text-xs ff-muted">Clear pay context builds trust for drivers.</span>
             </label>
           ) : null}
 
           {form.scope === 'VEHICLE' ? (
             <label className="block space-y-1">
-              <span className="text-sm font-semibold text-slate-700">Vehicle</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Vehicle</span>
               <select
                 value={form.vehicle}
                 onChange={(event) => update('vehicle', event.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className="ff-field w-full rounded-xl py-2.5"
               >
                 <option value="">{vehiclesQuery.isLoading ? 'Loading vehicles...' : 'Select vehicle'}</option>
                 {vehicleOptions.map((vehicle) => (
@@ -442,11 +442,11 @@ function CreateExpenseModal({ open, onClose }: CreateExpenseModalProps) {
 
           {form.scope === 'TRIP' ? (
             <label className="block space-y-1">
-              <span className="text-sm font-semibold text-slate-700">Trip</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Trip</span>
               <select
                 value={form.trip}
                 onChange={(event) => update('trip', event.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className="ff-field w-full rounded-xl py-2.5"
               >
                 <option value="">{tripsQuery.isLoading ? 'Loading trips...' : 'Select trip'}</option>
                 {tripOptions.map((trip) => (
@@ -461,24 +461,24 @@ function CreateExpenseModal({ open, onClose }: CreateExpenseModalProps) {
 
           <div className="grid gap-4 md:grid-cols-3">
             <label className="space-y-1 md:col-span-2">
-              <span className="text-sm font-semibold text-slate-700">Description</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Description</span>
               <input
                 value={form.description}
                 onChange={(event) => update('description', event.target.value)}
                 placeholder="e.g. Diesel refill, parking fee, garage repair"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className="ff-field w-full rounded-xl py-2.5"
               />
               {fieldErrors.description ? <span className="text-xs text-rose-600">{fieldErrors.description}</span> : null}
             </label>
             <label className="space-y-1">
-              <span className="text-sm font-semibold text-slate-700">Amount</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Amount</span>
               <input
                 type="number"
                 min="0"
                 step="0.01"
                 value={form.amount}
                 onChange={(event) => update('amount', event.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className="ff-field w-full rounded-xl py-2.5"
               />
               {fieldErrors.amount ? <span className="text-xs text-rose-600">{fieldErrors.amount}</span> : null}
             </label>
@@ -486,21 +486,21 @@ function CreateExpenseModal({ open, onClose }: CreateExpenseModalProps) {
 
           <div className="grid gap-4 md:grid-cols-3">
             <label className="space-y-1">
-              <span className="text-sm font-semibold text-slate-700">Date</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Date</span>
               <input
                 type="date"
                 value={form.expense_date}
                 onChange={(event) => update('expense_date', event.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className="ff-field w-full rounded-xl py-2.5"
               />
               {fieldErrors.expense_date ? <span className="text-xs text-rose-600">{fieldErrors.expense_date}</span> : null}
             </label>
             <label className="space-y-1">
-              <span className="text-sm font-semibold text-slate-700">Status</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Status</span>
               <select
                 value={form.status}
                 onChange={(event) => update('status', event.target.value as ApiExpenseStatus)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className="ff-field w-full rounded-xl py-2.5"
               >
                 <option value="PENDING">Pending</option>
                 <option value="PAID">Paid</option>
@@ -508,32 +508,32 @@ function CreateExpenseModal({ open, onClose }: CreateExpenseModalProps) {
               </select>
             </label>
             <label className="space-y-1">
-              <span className="text-sm font-semibold text-slate-700">Vendor</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Vendor</span>
               <input
                 value={form.vendor}
                 onChange={(event) => update('vendor', event.target.value)}
                 placeholder="Optional"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className="ff-field w-full rounded-xl py-2.5"
               />
             </label>
           </div>
 
           <label className="block space-y-1">
-            <span className="text-sm font-semibold text-slate-700">Notes</span>
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Notes</span>
             <textarea
               value={form.notes}
               onChange={(event) => update('notes', event.target.value)}
               rows={3}
               placeholder="Optional internal notes"
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+              className="ff-field w-full rounded-xl py-2.5"
             />
           </label>
 
-          <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+          <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
             <button
               type="button"
               onClick={closeAndReset}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="ff-secondary-btn rounded-xl px-4"
             >
               Cancel
             </button>
@@ -573,12 +573,12 @@ function ExpenseTable({
   const endRow = Math.min(totalRows, (page - 1) * pageSize + rows.length)
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 bg-slate-50/70 p-4">
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 shadow-sm dark:border-slate-700">
+      <div className="border-b border-slate-100 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-800/60">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-[#111827]">Recent Expense Records</h3>
-            <p className="mt-1 text-sm text-slate-500">Track fleet, vehicle, and trip costs in one ledger.</p>
+            <h3 className="text-lg font-semibold ff-heading">Recent Expense Records</h3>
+            <p className="mt-1 text-sm ff-muted">Track fleet, vehicle, and trip costs in one ledger.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
           <input
@@ -586,12 +586,12 @@ function ExpenseTable({
             value={searchTerm}
             onChange={(event) => onSearchTermChange(event.target.value)}
             placeholder="Search expense, category, or reference..."
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            className="ff-field"
           />
           <select
             value={statusFilter}
             onChange={(event) => onStatusFilterChange(event.target.value as 'all' | ExpenseStatus)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            className="ff-field"
           >
             <option value="all">All statuses</option>
             <option value="paid">Paid</option>
@@ -601,7 +601,7 @@ function ExpenseTable({
           <select
             value={categoryFilter}
             onChange={(event) => onCategoryFilterChange(event.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            className="ff-field"
           >
             <option value="All">All categories</option>
             {categoryOptions.map((category) => (
@@ -611,7 +611,7 @@ function ExpenseTable({
           <select
             value={sortBy}
             onChange={(event) => onSortByChange(event.target.value as SortBy)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            className="ff-field"
           >
             <option value="date_desc">Newest date</option>
             <option value="date_asc">Oldest date</option>
@@ -624,8 +624,8 @@ function ExpenseTable({
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-white text-xs uppercase tracking-wide text-slate-500">
-            <tr className="border-b border-slate-100">
+          <thead className="bg-white text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+            <tr className="border-b border-slate-100 dark:border-slate-800">
               <th className="px-4 py-3 font-semibold">Expense</th>
               <th className="px-4 py-3 font-semibold">Category</th>
               <th className="px-4 py-3 font-semibold">Reference</th>
@@ -638,29 +638,29 @@ function ExpenseTable({
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-12 text-center">
-                  <p className="text-sm font-medium text-[#111827]">No expense records found.</p>
-                  <p className="mt-1 text-xs text-gray-600">Try adjusting filters or add your first expense entry.</p>
+                  <p className="text-sm font-medium ff-heading">No expense records found.</p>
+                  <p className="mt-1 text-xs ff-muted">Try adjusting filters or add your first expense entry.</p>
                 </td>
               </tr>
             ) : (
               rows.map((row) => (
-                <tr key={row.id} className="border-b border-slate-100 transition hover:bg-slate-50/70 last:border-none">
+                <tr key={row.id} className="border-b border-slate-100 transition hover:bg-slate-50/70 last:border-none dark:border-slate-800 dark:hover:bg-slate-800/60">
                   <td className="px-4 py-4">
-                    <p className="max-w-[18rem] truncate font-semibold text-[#111827]">{expenseTitle(row)}</p>
+                    <p className="max-w-[18rem] truncate font-semibold ff-heading">{expenseTitle(row)}</p>
                     {expenseSubtitle(row) ? (
-                      <p className="mt-1 max-w-[18rem] truncate text-xs text-slate-500">{expenseSubtitle(row)}</p>
+                      <p className="mt-1 max-w-[18rem] truncate text-xs ff-muted">{expenseSubtitle(row)}</p>
                     ) : null}
                   </td>
-                  <td className="px-4 py-4 text-slate-700">{row.category}</td>
-                  <td className="px-4 py-4 text-slate-700">{referenceText(row.reference)}</td>
-                  <td className="px-4 py-4 text-slate-700">
+                  <td className="px-4 py-4 text-slate-700 dark:text-slate-300">{row.category}</td>
+                  <td className="px-4 py-4 text-slate-700 dark:text-slate-300">{referenceText(row.reference)}</td>
+                  <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
                     {new Date(row.dateIssued).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
                     })}
                   </td>
-                  <td className="px-4 py-4 text-right font-semibold text-[#111827]">{formatCurrency(row.amount, currency, true)}</td>
+                  <td className="px-4 py-4 text-right font-semibold ff-heading">{formatCurrency(row.amount, currency, true)}</td>
                   <td className="px-4 py-4">
                     <span
                       aria-label={`Expense status ${statusLabel(row.status)}`}
@@ -676,8 +676,8 @@ function ExpenseTable({
         </table>
       </div>
 
-      <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-        <p className="text-sm text-gray-600">
+      <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 dark:border-slate-800">
+        <p className="text-sm ff-muted">
           {totalRows === 0 ? 'No records' : `Showing ${startRow}-${endRow} of ${totalRows}`} · Page {page} of {totalPages}
         </p>
         <div className="flex gap-2">
@@ -685,7 +685,7 @@ function ExpenseTable({
             type="button"
             onClick={() => onPageChange(Math.max(1, page - 1))}
             disabled={page === 1}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="ff-secondary-btn px-3 py-1.5"
           >
             Previous
           </button>
@@ -693,7 +693,7 @@ function ExpenseTable({
             type="button"
             onClick={() => onPageChange(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="ff-secondary-btn px-3 py-1.5"
           >
             Next
           </button>
@@ -720,17 +720,17 @@ function QuickActions({ onCreateExpense }: { onCreateExpense: () => void }) {
 function DriverPayoutModes({ items, currency }: DriverPayoutModesProps) {
   if (items.length === 0) return null
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <section className="ff-card">
       <div>
-        <h3 className="text-lg font-semibold text-[#111827]">Driver payouts by mode</h3>
-        <p className="text-xs text-gray-600">Control and transparency for every earning style.</p>
+        <h3 className="text-lg font-semibold ff-heading">Driver payouts by mode</h3>
+        <p className="text-xs ff-muted">Control and transparency for every earning style.</p>
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {items.map((item) => (
-          <article key={item.mode} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-sm font-semibold text-[#111827]">{item.label}</p>
-            <p className="mt-1 text-xl font-bold text-[#111827]">{formatCurrency(item.total, currency)}</p>
-            <p className="mt-1 text-xs text-gray-500">{item.trip_count} trips tracked</p>
+          <article key={item.mode} className="ff-panel">
+            <p className="text-sm font-semibold ff-heading">{item.label}</p>
+            <p className="mt-1 text-xl font-bold ff-heading">{formatCurrency(item.total, currency)}</p>
+            <p className="mt-1 text-xs ff-muted">{item.trip_count} trips tracked</p>
           </article>
         ))}
       </div>
@@ -879,7 +879,7 @@ export default function Expenses() {
 
   if (reportQuery.isError || ledgerQuery.isError) {
     return (
-      <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-800">
+      <section className="ff-alert-danger p-6">
         Could not load expenses: {getErrorDetail(reportQuery.error ?? ledgerQuery.error)}
       </section>
     )
@@ -894,7 +894,7 @@ export default function Expenses() {
           <select
             value={aggregation}
             onChange={(event) => setAggregation(event.target.value as Aggregation)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            className="ff-field"
           >
             <option value="Monthly">Period: This Month</option>
             <option value="Quarterly">Period: This Quarter</option>

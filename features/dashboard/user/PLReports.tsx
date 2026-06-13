@@ -50,9 +50,9 @@ function KpiCard({ label, value, delta, tone }: KpiCardProps) {
   const toneClass =
     tone === 'positive' ? 'text-emerald-600' : tone === 'negative' ? 'text-rose-600' : 'text-slate-500'
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-[#111827]">{value}</p>
+    <article className="ff-card">
+      <p className="text-xs font-semibold uppercase tracking-wide ff-muted">{label}</p>
+      <p className="mt-2 text-3xl font-semibold ff-heading">{value}</p>
       <p className={`mt-1 text-sm font-medium ${toneClass}`}>{delta}</p>
     </article>
   )
@@ -62,14 +62,14 @@ function TrendChart({ data, mode, onModeChange, currency }: TrendChartProps) {
   const max = Math.max(...data.map((item) => Math.max(item.revenue, item.expenses)), 1)
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <section className="ff-card">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-[#111827]">Revenue vs Expenses Trend</h3>
-          <p className="text-xs text-gray-600">Monthly breakdown of profitability</p>
+          <h3 className="text-lg font-semibold ff-heading">Revenue vs Expenses Trend</h3>
+          <p className="text-xs ff-muted">Monthly breakdown of profitability</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="inline-flex items-center gap-3 text-xs text-gray-600">
+          <div className="inline-flex items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
             <span className="inline-flex items-center gap-1">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               Revenue
@@ -82,7 +82,7 @@ function TrendChart({ data, mode, onModeChange, currency }: TrendChartProps) {
           <select
             value={mode}
             onChange={(event) => onModeChange(event.target.value as TimeMode)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            className="ff-field py-1.5"
           >
             <option value="Monthly">Monthly</option>
             <option value="Quarterly">Quarterly</option>
@@ -108,7 +108,7 @@ function TrendChart({ data, mode, onModeChange, currency }: TrendChartProps) {
                   title={`${datum.period} Expenses: ${formatCurrency(datum.expenses, currency)}`}
                 />
               </div>
-              <p className="text-xs text-gray-600">{datum.period}</p>
+              <p className="text-xs ff-muted">{datum.period}</p>
             </div>
           )
         })}
@@ -125,16 +125,16 @@ function StatementTable({ rows, currency }: StatementTableProps) {
   }, [rows])
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <section className="ff-card">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-[#111827]">Detailed Profit &amp; Loss Statement</h3>
-          <p className="text-xs text-gray-600">Consolidated summary for the selected period</p>
+          <h3 className="text-lg font-semibold ff-heading">Detailed Profit &amp; Loss Statement</h3>
+          <p className="text-xs ff-muted">Consolidated summary for the selected period</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+            className="ff-secondary-btn"
           >
             Print
           </button>
@@ -149,36 +149,36 @@ function StatementTable({ rows, currency }: StatementTableProps) {
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
-          <thead className="text-gray-500">
-            <tr className="border-b border-gray-100">
+          <thead className="text-slate-500 dark:text-slate-400">
+            <tr className="border-b border-slate-100 dark:border-slate-800">
               <th className="pb-3 font-medium">Account / Category</th>
               <th className="pb-3 font-medium">Amount ({currency})</th>
               <th className="pb-3 font-medium">% of Revenue</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="bg-gray-50">
-              <td className="py-2 font-semibold text-[#111827]">Income</td>
+            <tr className="bg-slate-50 dark:bg-slate-800/60">
+              <td className="py-2 font-semibold ff-heading">Income</td>
               <td />
               <td />
             </tr>
             {grouped.income.map((row) => (
-              <tr key={`income-${row.account}`} className="border-b border-gray-100">
-                <td className="py-3 text-gray-700">{row.account}</td>
-                <td className="py-3 font-semibold text-[#111827]">{formatCurrency(row.amount, currency, true)}</td>
-                <td className="py-3 text-gray-700">{row.percentOfRevenue.toFixed(1)}%</td>
+              <tr key={`income-${row.account}`} className="border-b border-slate-100 dark:border-slate-800">
+                <td className="py-3 text-slate-700 dark:text-slate-300">{row.account}</td>
+                <td className="py-3 font-semibold ff-heading">{formatCurrency(row.amount, currency, true)}</td>
+                <td className="py-3 text-slate-700 dark:text-slate-300">{row.percentOfRevenue.toFixed(1)}%</td>
               </tr>
             ))}
-            <tr className="bg-gray-50">
-              <td className="py-2 font-semibold text-[#111827]">Expenses</td>
+            <tr className="bg-slate-50 dark:bg-slate-800/60">
+              <td className="py-2 font-semibold ff-heading">Expenses</td>
               <td />
               <td />
             </tr>
             {grouped.expenses.map((row) => (
-              <tr key={`expense-${row.account}`} className="border-b border-gray-100">
-                <td className="py-3 text-gray-700">{row.account}</td>
-                <td className="py-3 font-semibold text-[#111827]">{formatCurrency(row.amount, currency, true)}</td>
-                <td className="py-3 text-gray-700">{row.percentOfRevenue.toFixed(1)}%</td>
+              <tr key={`expense-${row.account}`} className="border-b border-slate-100 dark:border-slate-800">
+                <td className="py-3 text-slate-700 dark:text-slate-300">{row.account}</td>
+                <td className="py-3 font-semibold ff-heading">{formatCurrency(row.amount, currency, true)}</td>
+                <td className="py-3 text-slate-700 dark:text-slate-300">{row.percentOfRevenue.toFixed(1)}%</td>
               </tr>
             ))}
           </tbody>
@@ -248,7 +248,7 @@ export default function PLReports() {
 
   if (reportQuery.isError) {
     return (
-      <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-800">
+      <section className="ff-alert-danger p-6">
         Could not load P&amp;L report: {getErrorDetail(reportQuery.error)}
       </section>
     )

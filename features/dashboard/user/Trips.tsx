@@ -74,8 +74,8 @@ function summaryTone(statusColor: TripSummary['statusColor']): string {
 
 function TripSummaryCard({ label, value, statusColor }: TripSummaryCardProps) {
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400">{label}</p>
+    <article className="ff-card">
+      <p className="text-xs font-medium uppercase tracking-wide ff-muted">{label}</p>
       <p className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-2xl font-semibold ring-1 ${summaryTone(statusColor)}`}>
         {value}
       </p>
@@ -110,7 +110,7 @@ function TripCard({
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-[#fbbd26]/50 hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
+    <article className="ff-card transition hover:border-[#fbbd26]/50 hover:shadow-md">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${statusBadge(status)}`}>
@@ -122,16 +122,16 @@ function TripCard({
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Trip actions"
-            className="grid h-9 w-9 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-[#111827]"
+            className="grid h-9 w-9 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-[#111827] dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             <HiEllipsisVertical className="h-5 w-5" />
           </button>
           {menuOpen ? (
-            <div className="absolute right-0 top-10 z-10 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-xl">
+            <div className="absolute right-0 top-10 z-10 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white dark:bg-slate-900 py-1 text-sm shadow-xl dark:border-slate-700 dark:bg-slate-900">
               <Link
                 href={detailHref}
                 prefetch
-                className="block px-3 py-2 font-semibold text-[#111827] hover:bg-slate-50"
+                className="block px-3 py-2 font-semibold ff-heading hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 Edit trip details
               </Link>
@@ -143,7 +143,7 @@ function TripCard({
                     onDelete()
                   }}
                   disabled={deletePending}
-                  className="block w-full px-3 py-2 text-left font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  className="block w-full px-3 py-2 text-left font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   Edit or remove record
                 </button>
@@ -153,42 +153,42 @@ function TripCard({
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-gray-700 dark:text-slate-300 md:grid-cols-4">
+      <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-slate-700 dark:text-slate-300 md:grid-cols-4">
         <div>
-          <p className="text-xs text-gray-500 dark:text-slate-400">Start Location</p>
-          <p className="font-semibold text-[#111827] dark:text-slate-100">{start}</p>
+          <p className="text-xs ff-muted">Start Location</p>
+          <p className="font-semibold ff-heading">{start}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-slate-400">Destination</p>
-          <p className="font-semibold text-[#111827] dark:text-slate-100">{destination}</p>
+          <p className="text-xs ff-muted">Destination</p>
+          <p className="font-semibold ff-heading">{destination}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-slate-400">Driver</p>
-          <p className="font-semibold text-[#111827] dark:text-slate-100">{driver}</p>
+          <p className="text-xs ff-muted">Driver</p>
+          <p className="font-semibold ff-heading">{driver}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-slate-400">Vehicle</p>
-          <p className="font-semibold text-[#111827] dark:text-slate-100">{vehicle}</p>
+          <p className="text-xs ff-muted">Vehicle</p>
+          <p className="font-semibold ff-heading">{vehicle}</p>
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-[#f8fafc] p-3 dark:bg-slate-800/50 md:grid-cols-4">
+      <div className="ff-panel mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         <div>
-          <p className="text-xs text-gray-500 dark:text-slate-400">Distance</p>
-          <p className="font-semibold text-[#111827] dark:text-slate-100">{distance}</p>
+          <p className="text-xs ff-muted">Distance</p>
+          <p className="font-semibold ff-heading">{distance}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-slate-400">Income</p>
+          <p className="text-xs ff-muted">Income</p>
           <p className="font-semibold text-emerald-600 dark:text-emerald-400">{income}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-slate-400">Driver pay</p>
-          <p className="font-semibold text-[#111827] dark:text-slate-100">{paymentMode}</p>
+          <p className="text-xs ff-muted">Driver pay</p>
+          <p className="font-semibold ff-heading">{paymentMode}</p>
         </div>
       </div>
 
       {status === 'Flagged' && flagReason ? (
-        <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 ring-1 ring-rose-100">
+        <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 ring-1 ring-rose-100 dark:bg-rose-950/40 dark:text-rose-200 dark:ring-rose-900/60">
           {flagReason}
         </p>
       ) : null}
@@ -200,7 +200,7 @@ function TripList({ trips, onDeleteTrip, deletePending }: TripListProps) {
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">Trip List</h3>
+        <h3 className="text-lg font-semibold ff-heading">Trip List</h3>
       </div>
       <div className="max-h-[32rem] space-y-3 overflow-y-auto pr-1">
         {trips.map((trip) => (
@@ -231,7 +231,7 @@ function TripsPageHeader({
   return (
     <section className="space-y-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-xl font-semibold text-[#111827] dark:text-slate-100">Trips (GPS-Free)</h2>
+        <h2 className="text-xl font-semibold ff-heading">Trips (GPS-Free)</h2>
         <button
           type="button"
           onClick={onOpenLogTrip}
@@ -248,12 +248,12 @@ function TripsPageHeader({
           value={searchTerm}
           onChange={(event) => onSearchTermChange(event.target.value)}
           placeholder="Search trip number or driver..."
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500 sm:max-w-sm"
+          className="ff-field w-full sm:max-w-sm"
         />
         <select
           value={statusFilter}
           onChange={(event) => onStatusFilterChange(event.target.value as 'All' | TripStatusUi)}
-          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 sm:w-52"
+          className="ff-field sm:w-52"
         >
           <option value="All">Status: All</option>
           <option value="Planned">Status: Planned</option>
@@ -410,7 +410,7 @@ export default function Trips() {
     <>
     <section className="space-y-4 rounded-2xl p-4">
         {!token ? (
-          <p className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="ff-alert-warning">
             Sign in to view and manage trips.
           </p>
         ) : null}
@@ -420,13 +420,13 @@ export default function Trips() {
         ) : null}
 
         {token && tripsQuery.isError ? (
-          <p className="rounded-lg border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">
+          <p className="ff-alert-danger" role="alert">
             {getErrorDetail(tripsQuery.error)}
           </p>
         ) : null}
 
         {token && tripsQuery.isSuccess && tripsQuery.data.trips.length === 0 ? (
-          <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300">
             No trips yet. Log your first trip to see it here.
           </p>
         ) : null}

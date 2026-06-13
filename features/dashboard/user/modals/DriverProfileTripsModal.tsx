@@ -68,10 +68,10 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
           role="dialog"
           aria-modal="true"
           aria-labelledby="driver-profile-title"
-          className="mt-0 w-full max-w-4xl max-h-[min(92vh,92dvh)] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white shadow-2xl scroll-mt-4"
+          className="mt-0 w-full max-w-4xl max-h-[min(92vh,92dvh)] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 shadow-2xl scroll-mt-4"
           onMouseDown={(e) => e.stopPropagation()}
         >
-          <div className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 bg-white px-6 py-4">
+          <div className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 bg-white dark:bg-slate-900 px-6 py-4">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Driver profile</p>
               {userQuery.isLoading ? (
@@ -87,7 +87,7 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
                   <h2 id="driver-profile-title" className="mt-1 truncate text-xl font-semibold text-[#111827]">
                     {user.full_name}
                   </h2>
-                  <p className="mt-1 truncate text-sm text-gray-700">
+                  <p className="mt-1 truncate text-sm text-slate-700 dark:text-slate-300">
                     {user.email} · <span className="font-mono text-xs">{user.id}</span>
                   </p>
                 </>
@@ -121,7 +121,7 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
               <button
                 type="button"
                 onClick={onClose}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 transition hover:text-[#111827]"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:text-[#111827]"
               >
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600">
                   <HiArrowLeft className="h-4 w-4" />
@@ -130,13 +130,13 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
               </button>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <section className="rounded-xl border border-gray-200 bg-[#f8fafc] p-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Contact</h3>
+                <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-[#f8fafc] p-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Contact</h3>
                   <p className="mt-2 text-sm font-medium text-[#111827]">{user.email}</p>
-                  <p className="mt-1 text-sm text-gray-700">{user.phone_number || '—'}</p>
+                  <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{user.phone_number || '—'}</p>
                 </section>
-                <section className="rounded-xl border border-gray-200 bg-[#f8fafc] p-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Assigned vehicle</h3>
+                <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-[#f8fafc] p-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Assigned vehicle</h3>
                   <p className="mt-2 text-sm font-medium text-[#111827]">{assignedVehicleLabel}</p>
                   {vehiclesQuery.isLoading ? (
                     <div className="mt-2">
@@ -152,7 +152,7 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-[#111827]">Completed trips</h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   Trips with status completed in the selected period (by planned departure date).
                 </p>
               </div>
@@ -163,7 +163,7 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
                     type="button"
                     onClick={() => setPeriod(key)}
                     className={`rounded-md px-3 py-1.5 capitalize transition ${
-                      period === key ? 'bg-[#fbbd26] text-[#111827]' : 'text-gray-700 hover:bg-white'
+                      period === key ? 'bg-[#fbbd26] text-[#111827]' : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900'
                     }`}
                   >
                     {key}
@@ -179,7 +179,7 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
                 Could not load trips for this driver.
               </p>
             ) : (tripsQuery.data?.trips.length ?? 0) === 0 ? (
-              <p className="rounded-lg border border-gray-200 bg-[#f8fafc] px-4 py-8 text-center text-sm text-gray-600">
+              <p className="rounded-lg border border-slate-200 dark:border-slate-700 bg-[#f8fafc] px-4 py-8 text-center text-sm text-slate-600 dark:text-slate-400">
                 No completed trips in this {period === 'weekly' ? 'week' : 'month'}.
               </p>
             ) : (
@@ -187,7 +187,7 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
                 {tripsQuery.data!.trips.map((trip) => (
                   <li
                     key={trip.id}
-                    className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+                    className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <p className="font-semibold text-[#111827]">{trip.trip_number}</p>
@@ -195,31 +195,31 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
                         Completed
                       </span>
                     </div>
-                    <p className="mt-2 text-sm text-gray-700">
+                    <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
                       <span className="font-medium text-[#111827]">Route:</span> {trip.pickup_location} →{' '}
                       {trip.destination}
                     </p>
-                    <div className="mt-3 grid gap-2 text-sm text-gray-700 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="mt-3 grid gap-2 text-sm text-slate-700 dark:text-slate-300 sm:grid-cols-2 lg:grid-cols-3">
                       <p>
-                        <span className="text-gray-500">When:</span> {tripWhenLabel(trip)}
+                        <span className="text-slate-500 dark:text-slate-400">When:</span> {tripWhenLabel(trip)}
                       </p>
                       {trip.distance_km != null ? (
                         <p>
-                          <span className="text-gray-500">Distance:</span> {trip.distance_km} km
+                          <span className="text-slate-500 dark:text-slate-400">Distance:</span> {trip.distance_km} km
                         </p>
                       ) : null}
                       <p>
-                        <span className="text-gray-500">Revenue:</span>{' '}
+                        <span className="text-slate-500 dark:text-slate-400">Revenue:</span>{' '}
                         <span className="font-medium text-emerald-700">
                           {formatMoney(parseDecimal(trip.revenue_amount))}
                         </span>
                       </p>
                       <p>
-                        <span className="text-gray-500">Expenses:</span>{' '}
+                        <span className="text-slate-500 dark:text-slate-400">Expenses:</span>{' '}
                         {formatMoney(parseDecimal(trip.total_expenses))}
                       </p>
                       <p>
-                        <span className="text-gray-500">Profit:</span>{' '}
+                        <span className="text-slate-500 dark:text-slate-400">Profit:</span>{' '}
                         <span
                           className={
                             parseDecimal(trip.profit) >= 0 ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'

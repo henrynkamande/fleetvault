@@ -52,7 +52,7 @@ function DriverProfileHeader({
     <div className="flex items-start justify-between border-b border-slate-100 px-6 py-4">
       <div>
         <h2 className="text-xl font-semibold text-[#111827]">{name}</h2>
-        <p className="text-sm text-gray-700">
+        <p className="text-sm text-slate-700 dark:text-slate-300">
           {driverId} • {role}
         </p>
       </div>
@@ -75,9 +75,9 @@ function DriverProfileHeader({
 
 function DriverContactInfo({ contact }: Pick<DriverProfileData, 'contact'>) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-slate-200 bg-white dark:bg-slate-900 p-4">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Contact Information</h3>
-      <div className="space-y-2 text-sm text-gray-700">
+      <div className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
         <p>{contact.email}</p>
         <p>{contact.phone}</p>
         <p>{contact.address}</p>
@@ -88,19 +88,19 @@ function DriverContactInfo({ contact }: Pick<DriverProfileData, 'contact'>) {
 
 function DriverVehicleInfo({ vehicle }: Pick<DriverProfileData, 'vehicle'>) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-slate-200 bg-white dark:bg-slate-900 p-4">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Assigned Vehicle</h3>
       <p className="text-sm font-semibold text-[#111827]">{vehicle.model}</p>
-      <p className="text-sm text-gray-700">Plate: {vehicle.plate}</p>
+      <p className="text-sm text-slate-700 dark:text-slate-300">Plate: {vehicle.plate}</p>
     </section>
   )
 }
 
 function DriverDocuments({ documents }: Pick<DriverProfileData, 'documents'>) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-slate-200 bg-white dark:bg-slate-900 p-4">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">KYC &amp; Documents</h3>
-      <div className="space-y-3 text-sm text-gray-700">
+      <div className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
         <div>
           <p className="font-semibold text-[#111827]">Driver&apos;s License</p>
           <p>No: {documents.licenseNo}</p>
@@ -128,7 +128,7 @@ function PerformanceStat({
   positive?: boolean
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3">
+    <div className="rounded-xl border border-slate-200 bg-white dark:bg-slate-900 p-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-[#111827]">{value}</p>
       <p className={`mt-1 text-xs font-medium ${positive === undefined ? 'text-slate-500' : positive ? 'text-emerald-600' : 'text-rose-600'}`}>
@@ -140,7 +140,7 @@ function PerformanceStat({
 
 function DriverPerformanceOverview({ performance }: Pick<DriverProfileData, 'performance'>) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-slate-200 bg-white dark:bg-slate-900 p-4">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Performance Overview (This Week)</h3>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <PerformanceStat
@@ -195,10 +195,10 @@ function DriverTrendsChart({ trends }: Pick<DriverProfileData, 'trends'>) {
   const tripsLine = buildPolyline(tripValues, max, min, chartWidth, chartHeight)
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-slate-200 bg-white dark:bg-slate-900 p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Trips &amp; Profit Trends</h3>
-        <div className="flex gap-3 text-xs text-gray-600">
+        <div className="flex gap-3 text-xs text-slate-600 dark:text-slate-400">
           <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-600" />Net Profit ($)</span>
           <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" />Trips Completed</span>
         </div>
@@ -224,10 +224,10 @@ function DriverTrendsChart({ trends }: Pick<DriverProfileData, 'trends'>) {
 function DriverActions() {
   return (
     <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-6 py-4">
-      <button type="button" className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+      <button type="button" className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:bg-slate-800/60">
         Log New Trip
       </button>
-      <button type="button" className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+      <button type="button" className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:bg-slate-800/60">
         View Full Logbook
       </button>
       <button type="button" className="rounded-lg bg-[#fbbd26] px-4 py-2 text-sm font-semibold text-[#111827] transition hover:bg-[#f4b20a]">
@@ -243,7 +243,7 @@ export default function DriverProfile({ isOpen, onClose, driver }: DriverProfile
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-900/45 p-4">
       <div className="w-full max-w-6xl rounded-2xl bg-gradient-to-b from-[#D2D2D2] to-[#F9F9F9] p-4 shadow-2xl">
-        <div className="rounded-2xl border border-slate-200 bg-white">
+        <div className="rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
           <DriverProfileHeader
             name={driver.name}
             role={driver.role}

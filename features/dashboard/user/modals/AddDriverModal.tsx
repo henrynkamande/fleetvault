@@ -33,6 +33,10 @@ const initialForm: AddDriverForm = {
   paymentRate: '',
 }
 
+function fieldClass(): string {
+  return 'w-full rounded-lg border border-slate-300 bg-white dark:bg-slate-900 px-3 py-2 text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500'
+}
+
 export default function AddDriverModal({ isOpen, onClose }: AddDriverModalProps) {
   const [form, setForm] = useState<AddDriverForm>(initialForm)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -146,21 +150,21 @@ export default function AddDriverModal({ isOpen, onClose }: AddDriverModalProps)
           role="dialog"
           aria-modal="true"
           aria-labelledby="add-driver-title"
-          className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl"
+          className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 shadow-2xl dark:border-slate-700"
         >
-          <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-6 py-4">
+          <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
             <div>
-              <h2 id="add-driver-title" className="text-xl font-semibold text-[#111827]">
+              <h2 id="add-driver-title" className="text-xl font-semibold ff-heading">
                 Add New Driver
               </h2>
-              <p className="text-sm text-gray-700">Create a driver profile and optionally assign a vehicle.</p>
+              <p className="text-sm ff-muted">Create a driver profile and optionally assign a vehicle.</p>
             </div>
             <button
               type="button"
               onClick={onClose}
               disabled={pending}
               aria-label="Close modal"
-              className="rounded-md px-2 py-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
+              className="rounded-md px-2 py-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
             >
               ×
             </button>
@@ -168,28 +172,28 @@ export default function AddDriverModal({ isOpen, onClose }: AddDriverModalProps)
 
           <form onSubmit={handleSave} className="space-y-4 px-6 py-5" noValidate>
             {fieldErrors.non_field_errors ? (
-              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200" role="alert">
                 {fieldErrors.non_field_errors}
               </p>
             ) : null}
 
             <label className="block space-y-1 text-sm">
-              <span className="font-medium text-[#111827]">Full Name</span>
+              <span className="font-medium ff-heading">Full Name</span>
               <input
                 value={form.fullName}
                 onChange={(event) => updateField('fullName', event.target.value)}
                 placeholder="e.g. John Doe"
                 required
                 autoComplete="name"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className={fieldClass()}
               />
               {fieldErrors.fullName ? (
-                <span className="text-xs text-red-600">{fieldErrors.fullName}</span>
+                <span className="text-xs text-red-600 dark:text-red-300">{fieldErrors.fullName}</span>
               ) : null}
             </label>
 
             <label className="block space-y-1 text-sm">
-              <span className="font-medium text-[#111827]">Phone</span>
+              <span className="font-medium ff-heading">Phone</span>
               <input
                 type="tel"
                 value={form.phone}
@@ -197,31 +201,31 @@ export default function AddDriverModal({ isOpen, onClose }: AddDriverModalProps)
                 placeholder="+1 …"
                 required
                 autoComplete="tel"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className={fieldClass()}
               />
-              {fieldErrors.phone ? <span className="text-xs text-red-600">{fieldErrors.phone}</span> : null}
+              {fieldErrors.phone ? <span className="text-xs text-red-600 dark:text-red-300">{fieldErrors.phone}</span> : null}
             </label>
 
             <label className="block space-y-1 text-sm">
-              <span className="font-medium text-[#111827]">License Number</span>
+              <span className="font-medium ff-heading">License Number</span>
               <input
                 value={form.licenseNumber}
                 onChange={(event) => updateField('licenseNumber', event.target.value)}
                 placeholder="e.g. DL-982341"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className={fieldClass()}
               />
               {fieldErrors.licenseNumber ? (
-                <span className="text-xs text-red-600">{fieldErrors.licenseNumber}</span>
+                <span className="text-xs text-red-600 dark:text-red-300">{fieldErrors.licenseNumber}</span>
               ) : null}
             </label>
 
             <label className="block space-y-1 text-sm">
-              <span className="font-medium text-[#111827]">Assign Vehicle (Optional)</span>
+              <span className="font-medium ff-heading">Assign Vehicle (Optional)</span>
               <select
                 value={form.assignVehicle}
                 onChange={(event) => updateField('assignVehicle', event.target.value)}
                 disabled={vehiclesQuery.isPending}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 disabled:opacity-60"
+                className={fieldClass()}
               >
                 <option value="">Unassigned</option>
                 {unassignedVehicles.map((v) => (
@@ -231,37 +235,37 @@ export default function AddDriverModal({ isOpen, onClose }: AddDriverModalProps)
                 ))}
               </select>
               {vehiclesQuery.isSuccess && unassignedVehicles.length === 0 ? (
-                <span className="text-xs text-gray-500">No unassigned vehicles. Add a vehicle first or assign later.</span>
+                <span className="text-xs ff-muted">No unassigned vehicles. Add a vehicle first or assign later.</span>
               ) : null}
             </label>
 
             <label className="block space-y-1 text-sm">
-              <span className="font-medium text-[#111827]">Initial Status</span>
+              <span className="font-medium ff-heading">Initial Status</span>
               <select
                 value={form.initialStatus}
                 onChange={(event) =>
                   updateField('initialStatus', event.target.value as AddDriverForm['initialStatus'])
                 }
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                className={fieldClass()}
               >
                 <option value="Off Duty">Off Duty</option>
                 <option value="On Duty">On Duty</option>
               </select>
-              <span className="text-xs text-gray-500">Stored as employment type on the driver profile.</span>
+              <span className="text-xs ff-muted">Stored as employment type on the driver profile.</span>
             </label>
 
-            <section className="rounded-xl border border-[#fbbd26]/30 bg-[#fff8e6] p-3">
-              <p className="text-sm font-semibold text-[#111827]">Secure your earnings</p>
-              <p className="mt-1 text-xs text-gray-600">
+            <section className="rounded-xl border border-[#fbbd26]/30 bg-[#fff8e6] p-3 dark:bg-amber-950/30">
+              <p className="text-sm font-semibold ff-heading">Secure your earnings</p>
+              <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
                 Choose the pay rhythm that fits this driver. Your effort, your reward.
               </p>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <label className="space-y-1 text-sm">
-                  <span className="font-medium text-[#111827]">Payment mode</span>
+                  <span className="font-medium ff-heading">Payment mode</span>
                   <select
                     value={form.paymentType}
                     onChange={(event) => updateField('paymentType', event.target.value as DriverPaymentMode)}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                    className={fieldClass()}
                   >
                     {DRIVER_PAYMENT_MODES.map((mode) => (
                       <option key={mode.value} value={mode.value}>
@@ -269,12 +273,12 @@ export default function AddDriverModal({ isOpen, onClose }: AddDriverModalProps)
                       </option>
                     ))}
                   </select>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs ff-muted">
                     {DRIVER_PAYMENT_MODES.find((mode) => mode.value === form.paymentType)?.framing}
                   </span>
                 </label>
                 <label className="space-y-1 text-sm">
-                  <span className="font-medium text-[#111827]">Pay rate</span>
+                  <span className="font-medium ff-heading">Pay rate</span>
                   <input
                     type="number"
                     step="0.01"
@@ -282,19 +286,19 @@ export default function AddDriverModal({ isOpen, onClose }: AddDriverModalProps)
                     value={form.paymentRate}
                     onChange={(event) => updateField('paymentRate', event.target.value)}
                     placeholder="e.g. 40000"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                    className={fieldClass()}
                   />
-                  <span className="text-xs text-gray-500">Monthly salary, daily rate, or per-trip amount.</span>
+                  <span className="text-xs ff-muted">Monthly salary, daily rate, or per-trip amount.</span>
                 </label>
               </div>
             </section>
 
-            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={pending}
-                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
+                className="rounded-lg border border-slate-300 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 Cancel
               </button>

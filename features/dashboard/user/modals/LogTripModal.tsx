@@ -120,16 +120,16 @@ const API_FIELD_TO_FORM: Partial<Record<string, keyof LogTripForm>> = {
 }
 
 function fieldClass(error?: string): string {
-  return `w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:ring-2 ${
+  return `w-full rounded-lg border bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:ring-2 dark:text-slate-200 dark:placeholder:text-slate-500 ${
     error
-      ? 'border-rose-300 focus:border-rose-300 focus:ring-rose-200'
-      : 'border-gray-300 focus:border-[#fbbd26] focus:ring-[#fbbd26]/30'
+      ? 'border-rose-300 focus:border-rose-300 focus:ring-rose-200 dark:focus:ring-rose-900/40'
+      : 'border-slate-300 focus:border-[#fbbd26] focus:ring-[#fbbd26]/30 dark:border-slate-700'
   }`
 }
 
 function RouteInfoForm({ form, onFieldChange, errors }: RouteInfoFormProps) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-slate-200 bg-white dark:bg-slate-900 p-4 dark:border-slate-700">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Route Information</h3>
       <div className="grid gap-3 md:grid-cols-2">
         <div>
@@ -158,7 +158,7 @@ function RouteInfoForm({ form, onFieldChange, errors }: RouteInfoFormProps) {
             placeholder="Estimated Distance (km) — optional note"
             className={fieldClass()}
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs ff-muted">
             Saved on the trip until odometer readings replace it after the driver completes the run.
           </p>
         </div>
@@ -179,7 +179,7 @@ function FleetDriverForm({
   driversError,
 }: FleetDriverFormProps) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-slate-200 bg-white dark:bg-slate-900 p-4 dark:border-slate-700">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Fleet &amp; Driver Assignments</h3>
       <div className="grid gap-3 md:grid-cols-2">
         <div>
@@ -217,8 +217,8 @@ function FleetDriverForm({
           ) : null}
         </div>
       </div>
-      <p className="mt-2 text-xs text-gray-600">
-        Vehicle odometer (latest): <span className="font-semibold text-[#111827]">{startingOdometer || 'Select a vehicle'}</span>
+      <p className="mt-2 text-xs ff-muted">
+        Vehicle odometer (latest): <span className="font-semibold ff-heading">{startingOdometer || 'Select a vehicle'}</span>
       </p>
     </section>
   )
@@ -237,11 +237,11 @@ function ScheduleFinancialForm({
 }: ScheduleFinancialFormProps) {
   const selectedCustomer = customers.find((customer) => customer.id === form.customerId)
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-slate-200 bg-white dark:bg-slate-900 p-4 dark:border-slate-700">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Schedule &amp; Financials</h3>
       <div className="grid gap-3 md:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Planned departure</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Planned departure</label>
           <input
             type="datetime-local"
             value={form.plannedDeparture}
@@ -251,7 +251,7 @@ function ScheduleFinancialForm({
           {errors.plannedDeparture ? <p className="mt-1 text-xs text-rose-600">{errors.plannedDeparture}</p> : null}
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Planned arrival (optional)</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Planned arrival (optional)</label>
           <input
             type="datetime-local"
             value={form.plannedArrival}
@@ -260,7 +260,7 @@ function ScheduleFinancialForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Customer / client</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Customer / client</label>
           <select
             value={form.customerId}
             onChange={(event) => {
@@ -294,18 +294,18 @@ function ScheduleFinancialForm({
                 type="button"
                 onClick={onCreateCustomer}
                 disabled={creatingCustomer || !newCustomerName.trim()}
-                className="rounded-lg border border-[#fbbd26]/70 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-[#fff8e6] disabled:opacity-50"
+                className="rounded-lg border border-[#fbbd26]/70 bg-white dark:bg-slate-900 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-[#fff8e6] disabled:opacity-50 dark:text-slate-200 dark:hover:bg-amber-950/30"
               >
                 Add
               </button>
             </div>
           ) : null}
           {selectedCustomer?.phone || selectedCustomer?.email ? (
-            <p className="mt-1 text-xs text-gray-500">{selectedCustomer.phone || selectedCustomer.email}</p>
+            <p className="mt-1 text-xs ff-muted">{selectedCustomer.phone || selectedCustomer.email}</p>
           ) : null}
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Revenue model</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Revenue model</label>
           <select
             value={form.revenueModel}
             onChange={(event) => onFieldChange('revenueModel', event.target.value as RevenueModelUi)}
@@ -318,7 +318,7 @@ function ScheduleFinancialForm({
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Expected revenue</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Expected revenue</label>
           <input
             type="number"
             step="0.01"
@@ -331,7 +331,7 @@ function ScheduleFinancialForm({
           {errors.expectedRevenue ? <p className="mt-1 text-xs text-rose-600">{errors.expectedRevenue}</p> : null}
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Fuel cost</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Fuel cost</label>
           <input
             type="number"
             step="0.01"
@@ -342,7 +342,7 @@ function ScheduleFinancialForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Driver payout estimate</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Driver payout estimate</label>
           <input
             type="number"
             step="0.01"
@@ -354,7 +354,7 @@ function ScheduleFinancialForm({
           {errors.driverPayment ? <p className="mt-1 text-xs text-rose-600">{errors.driverPayment}</p> : null}
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Payment mode</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Payment mode</label>
           <select
             value={form.driverPaymentMode}
             onChange={(event) => onFieldChange('driverPaymentMode', event.target.value as DriverPaymentMode)}
@@ -366,12 +366,12 @@ function ScheduleFinancialForm({
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs ff-muted">
             {DRIVER_PAYMENT_MODES.find((mode) => mode.value === form.driverPaymentMode)?.framing}
           </p>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Payment rate</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Payment rate</label>
           <input
             type="number"
             step="0.01"
@@ -381,10 +381,10 @@ function ScheduleFinancialForm({
             placeholder="Use driver default if empty"
             className={fieldClass()}
           />
-          <p className="mt-1 text-xs text-gray-500">Your effort, your reward — used for automatic payout calculation.</p>
+          <p className="mt-1 text-xs ff-muted">Your effort, your reward — used for automatic payout calculation.</p>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Toll expenses</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Toll expenses</label>
           <input
             type="number"
             step="0.01"
@@ -395,7 +395,7 @@ function ScheduleFinancialForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Other expenses</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Other expenses</label>
           <input
             type="number"
             step="0.01"
@@ -404,12 +404,12 @@ function ScheduleFinancialForm({
             onChange={(event) => onFieldChange('otherExpenses', event.target.value)}
             className={fieldClass()}
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs ff-muted">
             Parking, loading or unloading fees, permits, repairs, meals, or other trip-specific costs.
           </p>
         </div>
         <div className="md:col-span-2">
-          <label className="mb-1 block text-xs font-medium text-gray-600">Cargo description (optional)</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Cargo description (optional)</label>
           <textarea
             value={form.cargoDescription}
             onChange={(event) => onFieldChange('cargoDescription', event.target.value)}
@@ -418,7 +418,7 @@ function ScheduleFinancialForm({
           />
         </div>
         <div className="md:col-span-2">
-          <label className="mb-1 block text-xs font-medium text-gray-600">Manager notes (optional)</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Manager notes (optional)</label>
           <textarea
             value={form.managerNotes}
             onChange={(event) => onFieldChange('managerNotes', event.target.value)}
@@ -433,11 +433,11 @@ function ScheduleFinancialForm({
 
 function ModalActions({ onClose, isPending }: ModalActionsProps) {
   return (
-    <div className="flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
+    <div className="flex justify-end gap-2 border-t border-slate-100 px-6 py-4 dark:border-slate-800">
       <button
         type="button"
         onClick={onClose}
-        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+        className="ff-secondary-btn px-4"
       >
         Cancel
       </button>
@@ -672,14 +672,14 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
           role="dialog"
           aria-modal="true"
           aria-labelledby="log-trip-title"
-          className="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white shadow-2xl"
+          className="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 shadow-2xl dark:border-slate-700"
         >
-          <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-6 py-4">
+          <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
             <div>
-              <h2 id="log-trip-title" className="text-xl font-semibold text-[#111827]">
+              <h2 id="log-trip-title" className="text-xl font-semibold ff-heading">
                 Log New Trip
               </h2>
-              <p className="text-sm text-gray-700">Create a new trip record for manual tracking.</p>
+              <p className="text-sm ff-muted">Create a new trip record for manual tracking.</p>
             </div>
             <button
               type="button"
@@ -692,17 +692,17 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
           </div>
 
           {!isFleetOwner ? (
-            <p className="border-b border-amber-100 bg-amber-50 px-6 py-3 text-sm text-amber-900">
+            <p className="border-b border-amber-100 bg-amber-50 px-6 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
               Only vehicle owners can create trips. Ask your fleet administrator to log this trip.
             </p>
           ) : null}
           {permissionError ? (
-            <p className="border-b border-amber-100 bg-amber-50 px-6 py-3 text-sm text-amber-900">
+            <p className="border-b border-amber-100 bg-amber-50 px-6 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
               You do not have permission to create trips.
             </p>
           ) : null}
           {generalError ? (
-            <p className="border-b border-rose-100 bg-rose-50 px-6 py-3 text-sm text-rose-800" role="alert">
+            <p className="border-b border-rose-100 bg-rose-50 px-6 py-3 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200" role="alert">
               {generalError}
             </p>
           ) : null}

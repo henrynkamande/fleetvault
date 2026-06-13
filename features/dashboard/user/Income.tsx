@@ -75,12 +75,12 @@ function KpiCard({ label, value, delta, positive, active, onClick }: KpiCardProp
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:shadow-md ${
-        active ? 'border-[#fbbd26] ring-2 ring-[#fbbd26]/35' : 'border-gray-200'
+      className={`rounded-2xl border bg-white dark:bg-slate-900 p-4 text-left shadow-sm transition hover:shadow-md ${
+        active ? 'border-[#fbbd26] ring-2 ring-[#fbbd26]/35' : 'border-slate-200 dark:border-slate-700'
       }`}
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-[#111827]">{value}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide ff-muted">{label}</p>
+      <p className="mt-2 text-3xl font-semibold ff-heading">{value}</p>
       <p className={`mt-1 text-sm font-medium ${positive ? 'text-emerald-600' : 'text-rose-600'}`}>{delta}</p>
     </button>
   )
@@ -90,17 +90,17 @@ function IncomeChart({ data, timeView, onTimeViewChange, currency }: IncomeChart
   const max = Math.max(...data.map((d) => d.amount), 1)
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <section className="ff-card">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-[#111827]">Income Trend</h3>
-        <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 text-xs">
+        <h3 className="text-lg font-semibold ff-heading">Income Trend</h3>
+        <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1 text-xs dark:border-slate-700 dark:bg-slate-800/60">
           {(['Monthly', 'Quarterly'] as TimeView[]).map((view) => (
             <button
               key={view}
               type="button"
               onClick={() => onTimeViewChange(view)}
               className={`rounded-md px-3 py-1 font-semibold transition ${
-                timeView === view ? 'bg-white text-[#111827] shadow-sm' : 'text-gray-600'
+                timeView === view ? 'bg-white text-[#111827] shadow-sm dark:bg-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-300'
               }`}
             >
               {view}
@@ -117,7 +117,7 @@ function IncomeChart({ data, timeView, onTimeViewChange, currency }: IncomeChart
               title={`${point.label}: ${formatCurrency(point.amount, currency)}`}
               aria-label={`${point.label} income ${formatCurrency(point.amount, currency)}`}
             />
-            <p className="mt-2 text-xs text-gray-600">{point.label}</p>
+            <p className="mt-2 text-xs ff-muted">{point.label}</p>
           </div>
         ))}
       </div>
@@ -127,10 +127,10 @@ function IncomeChart({ data, timeView, onTimeViewChange, currency }: IncomeChart
 
 function TopClientsList({ clients, activeClient, onSelectClient, currency }: TopClientsListProps) {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <section className="ff-card">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-[#111827]">Top Clients</h3>
-        <button type="button" onClick={() => onSelectClient('All')} className="text-sm font-semibold text-[#111827] hover:text-[#f4b20a]">
+        <h3 className="text-lg font-semibold ff-heading">Top Clients</h3>
+        <button type="button" onClick={() => onSelectClient('All')} className="text-sm font-semibold ff-heading hover:text-[#f4b20a]">
           View All
         </button>
       </div>
@@ -141,11 +141,11 @@ function TopClientsList({ clients, activeClient, onSelectClient, currency }: Top
             type="button"
             onClick={() => onSelectClient(client.name)}
             className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
-              activeClient === client.name ? 'bg-[#fff8e6] ring-1 ring-[#fbbd26]/50' : 'hover:bg-gray-50'
+              activeClient === client.name ? 'bg-[#fff8e6] ring-1 ring-[#fbbd26]/50 dark:bg-amber-950/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
             }`}
           >
-            <span className="font-medium text-gray-700">{client.name}</span>
-            <span className="font-semibold text-[#111827]">{formatCurrency(client.total, currency)}</span>
+            <span className="font-medium text-slate-700 dark:text-slate-300">{client.name}</span>
+            <span className="font-semibold ff-heading">{formatCurrency(client.total, currency)}</span>
           </button>
         ))}
       </div>
@@ -154,10 +154,10 @@ function TopClientsList({ clients, activeClient, onSelectClient, currency }: Top
 }
 
 function statusBadgeClass(status: InvoiceStatus): string {
-  if (status === 'Paid') return 'bg-emerald-100 text-emerald-700 ring-emerald-200'
-  if (status === 'Pending') return 'bg-amber-100 text-amber-700 ring-amber-200'
-  if (status === 'Partial') return 'bg-sky-100 text-sky-700 ring-sky-200'
-  return 'bg-rose-100 text-rose-700 ring-rose-200'
+  if (status === 'Paid') return 'bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-900'
+  if (status === 'Pending') return 'bg-amber-100 text-amber-700 ring-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-900'
+  if (status === 'Partial') return 'bg-sky-100 text-sky-700 ring-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:ring-sky-900'
+  return 'bg-rose-100 text-rose-700 ring-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:ring-rose-900'
 }
 
 function IncomeTable({
@@ -174,14 +174,14 @@ function IncomeTable({
   statusPending,
 }: IncomeTableProps) {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <section className="ff-card">
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <h3 className="text-lg font-semibold text-[#111827]">Recent Income Records</h3>
+        <h3 className="text-lg font-semibold ff-heading">Recent Income Records</h3>
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={statusFilter}
             onChange={(event) => onStatusFilterChange(event.target.value as 'All' | InvoiceStatus)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            className="ff-field"
           >
             <option value="All">All Statuses</option>
             <option value="Paid">Paid</option>
@@ -192,7 +192,7 @@ function IncomeTable({
           <select
             value={sortBy}
             onChange={(event) => onSortByChange(event.target.value as SortBy)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+            className="ff-field"
           >
             <option value="date_desc">Newest date</option>
             <option value="date_asc">Oldest date</option>
@@ -204,8 +204,8 @@ function IncomeTable({
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
-          <thead className="text-gray-500">
-            <tr className="border-b border-gray-100">
+          <thead className="text-slate-500 dark:text-slate-400">
+            <tr className="border-b border-slate-100 dark:border-slate-800">
               <th className="pb-3 font-medium">Invoice ID</th>
               <th className="pb-3 font-medium">Client</th>
               <th className="pb-3 font-medium">Trip Ref</th>
@@ -217,9 +217,9 @@ function IncomeTable({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.invoiceId} className="border-b border-gray-100 last:border-none">
-                <td className="py-3 font-semibold text-[#111827]">{row.invoiceId}</td>
-                <td className="py-3 text-gray-700">{row.client}</td>
+              <tr key={row.invoiceId} className="border-b border-slate-100 last:border-none dark:border-slate-800">
+                <td className="py-3 font-semibold ff-heading">{row.invoiceId}</td>
+                <td className="py-3 text-slate-700 dark:text-slate-300">{row.client}</td>
                 <td className="py-3 font-medium text-emerald-700">
                   <Link
                     href={AppRoutesPaths.dashboard.tripProfile(row.tripId)}
@@ -228,10 +228,10 @@ function IncomeTable({
                     {row.tripRef}
                   </Link>
                 </td>
-                <td className="py-3 text-gray-700">
+                <td className="py-3 text-slate-700 dark:text-slate-300">
                   {new Date(row.dateIssued).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </td>
-                <td className="py-3 font-semibold text-[#111827]">{formatCurrency(row.amount, currency, true)}</td>
+                <td className="py-3 font-semibold ff-heading">{formatCurrency(row.amount, currency, true)}</td>
                 <td className="py-3">
                   <select
                     value={row.status}
@@ -249,7 +249,7 @@ function IncomeTable({
                 <td className="py-3">
                   <Link
                     href={AppRoutesPaths.dashboard.tripProfile(row.tripId)}
-                    className="text-xs font-semibold text-[#111827] hover:text-[#f4b20a]"
+                    className="text-xs font-semibold ff-heading hover:text-[#f4b20a]"
                   >
                     View trip
                   </Link>
@@ -261,13 +261,13 @@ function IncomeTable({
       </div>
 
       <div className="mt-4 flex items-center justify-between">
-        <p className="text-sm text-gray-600">Page {page} of {totalPages}</p>
+        <p className="text-sm ff-muted">Page {page} of {totalPages}</p>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => onPageChange(Math.max(1, page - 1))}
             disabled={page === 1}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="ff-secondary-btn px-3 py-1.5"
           >
             Previous
           </button>
@@ -275,7 +275,7 @@ function IncomeTable({
             type="button"
             onClick={() => onPageChange(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="ff-secondary-btn px-3 py-1.5"
           >
             Next
           </button>
@@ -290,13 +290,13 @@ function ExportControls() {
     <div className="flex items-center gap-2">
       <button
         type="button"
-        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-[#fbbd26]/60 hover:bg-[#fffef8]"
+        className="ff-secondary-btn hover:border-[#fbbd26]/60 dark:hover:border-[#fbbd26]/60"
       >
         Export
       </button>
       <button
         type="button"
-        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-[#fbbd26]/60 hover:bg-[#fffef8]"
+        className="ff-secondary-btn hover:border-[#fbbd26]/60 dark:hover:border-[#fbbd26]/60"
       >
         Share
       </button>
@@ -442,7 +442,7 @@ export default function Income() {
 
   if (reportQuery.isError) {
     return (
-      <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-800">
+      <section className="ff-alert-danger p-6">
         Could not load income report: {getErrorDetail(reportQuery.error)}
       </section>
     )

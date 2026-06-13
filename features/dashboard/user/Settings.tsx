@@ -27,8 +27,8 @@ function TabButton({
       onClick={onClick}
       className={`rounded-md px-0 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#fbbd26]/40 ${
         active
-          ? 'border-b-2 border-[#f4b20a] text-[#111827]'
-          : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700'
+          ? 'border-b-2 border-[#f4b20a] text-[#111827] dark:text-slate-100'
+          : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
       }`}
     >
       {label}
@@ -53,23 +53,23 @@ function EditableField({
 }) {
   return (
     <label className="space-y-1">
-      <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-wide ff-muted">{label}</span>
       <input
         type={type}
         readOnly={readOnly}
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
-        className={`w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 ${
-          readOnly ? 'bg-gray-50 text-gray-600' : 'bg-white'
+        className={`w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 dark:border-slate-700 dark:text-slate-200 ${
+          readOnly ? 'bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-400' : 'bg-white dark:bg-slate-900'
         }`}
       />
-      <p className="text-xs text-gray-500">{helper}</p>
+      <p className="text-xs ff-muted">{helper}</p>
     </label>
   )
 }
 
 function FieldSkeleton() {
-  return <div className="h-10 animate-pulse rounded-lg bg-gray-100" />
+  return <div className="h-10 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
 }
 
 function SettingsSkeletonGrid() {
@@ -181,18 +181,18 @@ export default function Settings() {
 
   return (
     <section className="space-y-4 rounded-2xl p-4 md:p-5">
-      <header className="rounded-2xl border border-gray-200 bg-white p-4 md:p-5">
+      <header className="ff-card md:p-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-2xl font-semibold text-[#111827]">Settings &amp; Preferences</h2>
-            <p className="text-sm text-gray-700">Update your vehicle owner account and billing preferences.</p>
+            <h2 className="text-2xl font-semibold ff-heading">Settings &amp; Preferences</h2>
+            <p className="text-sm text-slate-700 dark:text-slate-300">Update your vehicle owner account and billing preferences.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               disabled={!canSave || isSaving}
               onClick={handleCancel}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#fbbd26]/30 disabled:cursor-not-allowed disabled:opacity-50"
+              className="ff-secondary-btn px-4"
             >
               Cancel
             </button>
@@ -206,43 +206,43 @@ export default function Settings() {
             </button>
           </div>
         </div>
-        <div className="mt-4 flex items-center gap-5 border-b border-gray-200">
+        <div className="mt-4 flex items-center gap-5 border-b border-slate-200 dark:border-slate-800">
           <TabButton label="General" active={activeTab === 'general'} onClick={() => setActiveTab('general')} />
           <TabButton label="Billing & Plans" active={activeTab === 'billing'} onClick={() => setActiveTab('billing')} />
         </div>
       </header>
 
       {saveMessage ? (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">
+        <p className="ff-alert-success rounded-xl" role="status">
           {saveMessage}
         </p>
       ) : null}
 
       {saveError ? (
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">
+        <p className="ff-alert-danger rounded-xl" role="alert">
           {saveError}
         </p>
       ) : null}
 
       {userError ? (
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">
+        <p className="ff-alert-danger rounded-xl" role="alert">
           {userError}
         </p>
       ) : null}
 
       {activeTab === 'billing' && isFleetOwner ? (
-        <section className="rounded-2xl border border-gray-200 bg-white p-4 md:p-5">
-          <h3 className="text-lg font-semibold text-[#111827]">Billing</h3>
-          <p className="mt-1 text-sm text-gray-600">
+        <section className="ff-card md:p-5">
+          <h3 className="text-lg font-semibold ff-heading">Billing</h3>
+          <p className="mt-1 text-sm ff-muted">
             Status:{' '}
-            <span className="font-semibold text-[#111827]">
+            <span className="font-semibold ff-heading">
               {billingStatus.data?.billing_status ?? company?.billing_status ?? '—'}
             </span>
             {company?.trial_ends_at ? (
-              <span className="text-gray-500"> · Trial ends {new Date(company.trial_ends_at).toLocaleDateString()}</span>
+              <span className="ff-muted"> · Trial ends {new Date(company.trial_ends_at).toLocaleDateString()}</span>
             ) : null}
           </p>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm ff-muted">
             Billable vehicles: {billingStatus.data?.vehicle_count ?? company?.total_vehicles ?? 0}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -269,9 +269,9 @@ export default function Settings() {
 
       {activeTab === 'general' ? (
       <div className="space-y-4">
-        <section className="rounded-2xl border border-gray-200 bg-white p-4 md:p-5">
-          <h3 className="mb-1 text-lg font-semibold text-[#111827]">Your account</h3>
-          <p className="mb-4 text-xs text-gray-600">Name and phone can be updated here.</p>
+        <section className="ff-card md:p-5">
+          <h3 className="mb-1 text-lg font-semibold ff-heading">Your account</h3>
+          <p className="mb-4 text-xs ff-muted">Name and phone can be updated here.</p>
           {userQuery.isPending && !user ? (
             <SettingsSkeletonGrid />
           ) : user && profileForm ? (
@@ -299,13 +299,13 @@ export default function Settings() {
               />
               {isFleetOwner ? (
                 <label className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Currency</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide ff-muted">Currency</span>
                   <select
                     value={profileForm.preferred_currency}
                     onChange={(e) =>
                       setProfileForm((p) => (p ? { ...p, preferred_currency: e.target.value } : p))
                     }
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+                    className="ff-field w-full"
                   >
                     {currencyOptions.map((currency) => (
                       <option key={currency.code} value={currency.code}>
@@ -313,7 +313,7 @@ export default function Settings() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500">Used to personalize dashboard financial amounts.</p>
+                  <p className="text-xs ff-muted">Used to personalize dashboard financial amounts.</p>
                 </label>
               ) : null}
               <EditableField

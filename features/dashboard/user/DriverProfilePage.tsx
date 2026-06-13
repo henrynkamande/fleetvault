@@ -3,9 +3,12 @@
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { HiArrowLeft } from 'react-icons/hi2'
 import { AppRoutesPaths } from '@/route/paths'
 import { useCompanyUserQuery } from '@/hooks/queries/useCompanyUser'
+import type { ListCompanyUsersResponse } from '@/services/companyUsersService'
+import type { ListCompanyDriversResponse } from '@/services/driverAssignmentService'
 import { useDriverCompletedTripsQuery } from '@/hooks/queries/useDriverCompletedTrips'
 import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
 import type { TripPeriodFilter } from '@/lib/tripDateRange'
@@ -39,12 +42,31 @@ function tripWhenLabel(t: TripListDto): string {
   }
 }
 
+function findDriverInListCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  driverId: string | undefined,
+): User | null {
+  if (!driverId) return null
+
+  for (const [, data] of queryClient.getQueriesData<ListCompanyUsersResponse>({ queryKey: ['companyUsers'] })) {
+    const match = data?.users.find((item) => item.id === driverId || item.driver_profile_id === driverId)
+    if (match) return match
+  }
+
+  for (const [, data] of queryClient.getQueriesData<ListCompanyDriversResponse>({ queryKey: ['companyDrivers'] })) {
+    const match = data?.drivers.find((item) => item.id === driverId || item.driver_profile_id === driverId)
+    if (match) return match
+  }
+
+  return null
+}
+
 function OverviewCard({ title, value, subtitle }: { title: string; value: string; subtitle?: string }) {
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-medium text-gray-500">{title}</p>
-      <p className="mt-2 text-2xl font-semibold text-[#111827]">{value}</p>
-      {subtitle ? <p className="mt-1 text-sm text-gray-600">{subtitle}</p> : null}
+    <article className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
+      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{title}</p>
+      <p className="mt-2 text-2xl font-semibold ff-heading">{value}</p>
+      {subtitle ? <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{subtitle}</p> : null}
     </article>
   )
 }
@@ -64,7 +86,7 @@ function PeriodToggle({
           type="button"
           onClick={() => onChange(key)}
           className={`rounded-md px-3 py-1.5 capitalize transition ${
-            period === key ? 'bg-[#fbbd26] text-[#111827]' : 'text-gray-700 hover:bg-white'
+            period === key ? 'bg-[#fbbd26] text-[#111827]' : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900'
           }`}
         >
           {key}
@@ -77,13 +99,18 @@ function PeriodToggle({
 export default function DriverProfilePage() {
   const { driverId } = useParams<{ driverId: string }>()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [period, setPeriod] = useState<TripPeriodFilter>('weekly')
 
   const userQuery = useCompanyUserQuery(driverId, !!driverId)
   const currentUserQuery = useCurrentUser()
   const deactivateMutation = useDeactivateDriverMutation()
   const vehiclesQuery = useVehiclesQuery(undefined)
-  const user = userQuery.data
+  const cachedUser = useMemo(
+    () => findDriverInListCache(queryClient, driverId),
+    [queryClient, driverId],
+  )
+  const user = userQuery.data ?? cachedUser
   const driverProfileId = user?.driver_profile_id ?? driverId
   const tripsQuery = useDriverCompletedTripsQuery(driverProfileId, period, !!driverProfileId)
 
@@ -114,13 +141,13 @@ export default function DriverProfilePage() {
     return <DriverNotFound />
   }
 
-  if (userQuery.isLoading) {
+  if (userQuery.isLoading && !user) {
     return (
       <LoadingCard />
     )
   }
 
-  if (userQuery.isError || !user) {
+  if ((userQuery.isError && !user) || !user) {
     return <DriverNotFound />
   }
 
@@ -129,9 +156,9 @@ export default function DriverProfilePage() {
       <button
         type="button"
         onClick={() => router.push(AppRoutesPaths.dashboard.drivers)}
-        className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 transition hover:text-[#111827]"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:text-slate-900 dark:hover:text-slate-100"
       >
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600">
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
           <HiArrowLeft className="h-4 w-4" />
         </span>
         Back to drivers
@@ -166,7 +193,7 @@ export default function DriverProfilePage() {
       />
 
       <div>
-        <h3 className="mb-3 text-lg font-semibold text-[#111827]">Overview</h3>
+        <h3 className="mb-3 text-lg font-semibold ff-heading">Overview</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <OverviewCard
             title={`Completed trips (${period})`}
@@ -185,8 +212,8 @@ export default function DriverProfilePage() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-[#111827]">Completed trips</h3>
-          <p className="text-sm text-gray-600">Routes, timing, and financials for this driver.</p>
+          <h3 className="text-lg font-semibold ff-heading">Completed trips</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400">Routes, timing, and financials for this driver.</p>
         </div>
         <PeriodToggle period={period} onChange={setPeriod} />
       </div>
@@ -194,11 +221,11 @@ export default function DriverProfilePage() {
       {tripsQuery.isLoading ? (
         <LoadingCard />
       ) : tripsQuery.isError ? (
-        <p className="rounded-2xl border border-rose-100 bg-rose-50 p-6 text-center text-rose-800 shadow-sm">
+        <p className="rounded-2xl border border-rose-100 bg-rose-50 p-6 text-center text-rose-800 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
           Could not load trips for this driver.
         </p>
       ) : trips.length === 0 ? (
-        <p className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-600 shadow-sm">
+        <p className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-600 dark:text-slate-400 shadow-sm">
           No completed trips in this {period === 'weekly' ? 'week' : 'month'}.
         </p>
       ) : (
@@ -214,9 +241,9 @@ export default function DriverProfilePage() {
 
 function DriverNotFound() {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
-      <p className="text-lg font-semibold text-[#111827]">Driver not found</p>
-      <p className="mt-2 text-sm text-gray-600">This driver does not exist or you do not have access.</p>
+    <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center shadow-sm">
+      <p className="text-lg font-semibold ff-heading">Driver not found</p>
+      <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">This driver does not exist or you do not have access.</p>
       <Link
         href={AppRoutesPaths.dashboard.drivers}
         className="mt-6 inline-flex items-center gap-2 font-semibold text-indigo-600 hover:text-indigo-700"
@@ -242,20 +269,20 @@ function DriverSummaryCard({
   removePending?: boolean
 }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm md:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Driver profile</p>
-          <h2 className="mt-1 text-2xl font-semibold text-[#111827]">{user.full_name}</h2>
-          <p className="mt-1 text-sm text-gray-700">{user.phone_number || '—'}</p>
-          {displayEmail ? <p className="mt-1 text-sm text-gray-600">{displayEmail}</p> : null}
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Driver profile</p>
+          <h2 className="mt-1 text-2xl font-semibold ff-heading">{user.full_name}</h2>
+          <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{user.phone_number || '—'}</p>
+          {displayEmail ? <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{displayEmail}</p> : null}
         </div>
         <div className="flex flex-col items-end gap-2">
           <span
             className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${
               user.is_active
-                ? 'bg-emerald-100 text-emerald-700 ring-emerald-200'
-                : 'bg-slate-100 text-slate-600 ring-slate-200'
+                ? 'bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-900'
+                : 'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700'
             }`}
           >
             {user.is_active ? 'Active' : 'Inactive'}
@@ -265,7 +292,7 @@ function DriverSummaryCard({
               type="button"
               onClick={() => void onRemove()}
               disabled={removePending}
-              className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-800 hover:bg-rose-100 disabled:opacity-50"
+              className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-950/70"
             >
               {removePending ? 'Removing…' : 'Remove driver'}
             </button>
@@ -280,10 +307,10 @@ function DriverSummaryCard({
 
 function DriverSummaryGrid({ assignedVehicleLabel }: { assignedVehicleLabel: string }) {
   return (
-    <div className="mt-6 grid gap-3 border-t border-gray-100 pt-6 sm:grid-cols-2">
+    <div className="mt-6 grid gap-3 border-t border-slate-100 dark:border-slate-800 pt-6 sm:grid-cols-2">
       <div>
-        <p className="text-xs text-gray-500">Assigned vehicle</p>
-        <p className="mt-1 font-semibold text-[#111827]">{assignedVehicleLabel}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Assigned vehicle</p>
+        <p className="mt-1 font-semibold ff-heading">{assignedVehicleLabel}</p>
       </div>
     </div>
   )
@@ -292,7 +319,7 @@ function DriverSummaryGrid({ assignedVehicleLabel }: { assignedVehicleLabel: str
 function TripListItem({ trip }: { trip: TripListDto }) {
   const profit = parseDecimal(trip.profit)
   return (
-    <li className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <li className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <Link
           href={AppRoutesPaths.dashboard.tripProfile(trip.id)}
@@ -300,35 +327,35 @@ function TripListItem({ trip }: { trip: TripListDto }) {
         >
           {trip.trip_number}
         </Link>
-        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-100">
+        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-900">
           Completed
         </span>
       </div>
-      <p className="mt-2 text-sm text-gray-700">
-        <span className="font-medium text-[#111827]">Route:</span> {trip.pickup_location} → {trip.destination}
+      <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+        <span className="font-medium ff-heading">Route:</span> {trip.pickup_location} → {trip.destination}
       </p>
       {trip.vehicle_registration ? (
-        <p className="mt-1 text-sm text-gray-600">Vehicle: {trip.vehicle_registration}</p>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Vehicle: {trip.vehicle_registration}</p>
       ) : null}
-      <div className="mt-3 grid gap-2 text-sm text-gray-700 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-3 grid gap-2 text-sm text-slate-700 dark:text-slate-300 sm:grid-cols-2 lg:grid-cols-3">
         <p>
-          <span className="text-gray-500">When:</span> {tripWhenLabel(trip)}
+          <span className="text-slate-500 dark:text-slate-400">When:</span> {tripWhenLabel(trip)}
         </p>
         {trip.distance_km != null ? (
           <p>
-            <span className="text-gray-500">Distance:</span> {trip.distance_km} km
+            <span className="text-slate-500 dark:text-slate-400">Distance:</span> {trip.distance_km} km
           </p>
         ) : null}
         <p>
-          <span className="text-gray-500">Revenue:</span>{' '}
-          <span className="font-medium text-emerald-700">{formatMoney(parseDecimal(trip.revenue_amount))}</span>
+          <span className="text-slate-500 dark:text-slate-400">Revenue:</span>{' '}
+          <span className="font-medium text-emerald-700 dark:text-emerald-300">{formatMoney(parseDecimal(trip.revenue_amount))}</span>
         </p>
         <p>
-          <span className="text-gray-500">Expenses:</span> {formatMoney(parseDecimal(trip.total_expenses))}
+          <span className="text-slate-500 dark:text-slate-400">Expenses:</span> {formatMoney(parseDecimal(trip.total_expenses))}
         </p>
         <p>
-          <span className="text-gray-500">Profit:</span>{' '}
-          <span className={profit >= 0 ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
+          <span className="text-slate-500 dark:text-slate-400">Profit:</span>{' '}
+          <span className={profit >= 0 ? 'font-medium text-emerald-700 dark:text-emerald-300' : 'font-medium text-rose-700 dark:text-rose-300'}>
             {formatMoney(profit)}
           </span>
         </p>

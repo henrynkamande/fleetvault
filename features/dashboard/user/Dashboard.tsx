@@ -168,12 +168,12 @@ function toneClasses(tone: ChartSegment['tone']): string {
 function ChartCard({ revenueValue, expenseSegments, payoutModes, revenueRatio, currency }: ChartCardProps) {
   return (
     <article className="ff-card">
-      <h2 className="text-lg font-semibold text-slate-900">P&amp;L Breakdown</h2>
+      <h2 className="text-lg font-semibold ff-heading">P&amp;L Breakdown</h2>
       <div className="mt-4">
-        <div className="rounded-xl bg-slate-50 p-3">
-          <p className="text-sm text-slate-500">Revenue</p>
+        <div className="ff-panel">
+          <p className="text-sm ff-muted">Revenue</p>
           <p className="text-2xl font-semibold text-emerald-600">{revenueValue}</p>
-          <div className="mt-3 h-3 rounded-full bg-slate-200">
+          <div className="mt-3 h-3 rounded-full bg-slate-200 dark:bg-slate-700">
             <div className="h-3 rounded-full bg-emerald-500" style={{ width: `${revenueRatio}%` }} />
           </div>
         </div>
@@ -181,24 +181,24 @@ function ChartCard({ revenueValue, expenseSegments, payoutModes, revenueRatio, c
           {expenseSegments.map((segment) => (
             <div key={segment.label}>
               <div className="mb-1 flex items-center justify-between text-sm">
-                <span className="font-medium text-slate-700">{segment.label}</span>
-                <span className="text-slate-500">{segment.value}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">{segment.label}</span>
+                <span className="ff-muted">{segment.value}</span>
               </div>
-              <div className="h-2 rounded-full bg-slate-200">
+              <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700">
                 <div className={`h-2 rounded-full ${toneClasses(segment.tone)}`} style={{ width: `${segment.ratio}%` }} />
               </div>
             </div>
           ))}
         </div>
         {payoutModes.length > 0 ? (
-          <div className="mt-5 rounded-xl border border-slate-200 bg-white p-3">
-            <p className="text-sm font-semibold text-slate-900">Driver payouts by mode</p>
-            <p className="text-xs text-slate-500">Secure your earnings: every mode is tracked clearly.</p>
+          <div className="ff-panel mt-5">
+            <p className="text-sm font-semibold ff-heading">Driver payouts by mode</p>
+            <p className="text-xs ff-muted">Secure your earnings: every mode is tracked clearly.</p>
             <div className="mt-3 space-y-2">
               {payoutModes.map((mode) => (
                 <div key={mode.mode} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="text-slate-600">{mode.label}</span>
-                  <span className="font-semibold text-slate-900">{formatCurrency(mode.total, currency)}</span>
+                  <span className="text-slate-600 dark:text-slate-300">{mode.label}</span>
+                  <span className="font-semibold ff-heading">{formatCurrency(mode.total, currency)}</span>
                 </div>
               ))}
             </div>
@@ -216,24 +216,24 @@ function isDriverEntry(entry: DriverEntry | VehicleEntry): entry is DriverEntry 
 function LeaderboardList({ title, entries, variant }: LeaderboardListProps) {
   return (
     <article className="ff-card">
-      <h2 className="mb-4 text-lg font-semibold text-slate-900">{title}</h2>
+      <h2 className="mb-4 text-lg font-semibold ff-heading">{title}</h2>
       {entries.length === 0 ? (
-        <p className="text-sm text-slate-500">No data for this period yet.</p>
+        <p className="text-sm ff-muted">No data for this period yet.</p>
       ) : (
       <ol className="space-y-3">
         {entries.map((entry) => (
-          <li key={`${entry.rank}-${entry.name}`} className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
-            <span className="text-sm font-semibold text-slate-500">#{entry.rank}</span>
+          <li key={`${entry.rank}-${entry.name}`} className="flex items-center gap-3 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
+            <span className="text-sm font-semibold ff-muted">#{entry.rank}</span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold text-slate-900">{entry.name}</p>
-              <p className="truncate text-sm text-slate-500">{entry.meta}</p>
+              <p className="truncate font-semibold ff-heading">{entry.name}</p>
+              <p className="truncate text-sm ff-muted">{entry.meta}</p>
             </div>
             {isDriverEntry(entry) ? (
               <p className="text-sm font-semibold text-emerald-700">{entry.score} score</p>
             ) : (
               <div className="text-right">
                 <p className="text-sm font-semibold text-emerald-700">{entry.netProfit}</p>
-                <p className="text-xs text-slate-500">{entry.distance}</p>
+                <p className="text-xs ff-muted">{entry.distance}</p>
               </div>
             )}
             {variant === 'vehicles' ? <span className="text-emerald-600">↗</span> : null}
@@ -328,7 +328,7 @@ export default function Dashboard() {
 
   if (overviewQuery.isError) {
     return (
-      <div className="ff-card border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+      <div className="ff-alert-danger">
         {getErrorDetail(overviewQuery.error) ?? 'Could not load dashboard data.'}
       </div>
     )

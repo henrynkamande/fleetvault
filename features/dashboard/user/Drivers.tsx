@@ -31,8 +31,12 @@ function initialsFromUser(u: User): string {
 }
 
 function statusBadgeClasses(isActive: boolean): string {
-  if (isActive) return 'bg-emerald-100 text-emerald-700 ring-emerald-200'
-  return 'bg-slate-100 text-slate-600 ring-slate-200'
+  if (isActive) return 'bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-900'
+  return 'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700'
+}
+
+function fieldClass(): string {
+  return 'rounded-lg border border-slate-300 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500'
 }
 
 function CarIcon({ className }: { className?: string }) {
@@ -60,16 +64,16 @@ function DriverCard({
   const displayEmail = formatDriverEmailForDisplay(user.email)
 
   return (
-    <article className="group rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-[#fbbd26]/40 hover:shadow-md">
+    <article className="ff-card group transition hover:border-[#fbbd26]/40 hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 gap-3">
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#fff8e6] to-[#fde68a] text-sm font-semibold text-[#111827] ring-2 ring-[#fbbd26]/30">
             {initialsFromUser(user)}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-lg font-semibold text-[#111827]">{user.full_name}</p>
-            <p className="truncate text-sm text-gray-700">{user.phone_number}</p>
-            {displayEmail ? <p className="truncate text-xs text-gray-500">{displayEmail}</p> : null}
+            <p className="truncate text-lg font-semibold ff-heading">{user.full_name}</p>
+            <p className="truncate text-sm text-slate-700 dark:text-slate-300">{user.phone_number}</p>
+            {displayEmail ? <p className="truncate text-xs ff-muted">{displayEmail}</p> : null}
           </div>
         </div>
         <span
@@ -80,11 +84,11 @@ function DriverCard({
       </div>
 
       <div className="mt-4 space-y-3 text-sm">
-        <div className="flex items-start gap-2 text-gray-700">
-          <CarIcon className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" />
+        <div className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
+          <CarIcon className="mt-0.5 h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" />
           <div className="min-w-0 flex-1">
-            <span className="text-gray-500">Assigned vehicle</span>
-            <p className={`font-medium ${isUnassigned ? 'text-slate-500' : 'text-[#111827]'}`}>{assignedVehicle}</p>
+            <span className="ff-muted">Assigned vehicle</span>
+            <p className={`font-medium ${isUnassigned ? 'ff-muted' : 'ff-heading'}`}>{assignedVehicle}</p>
           </div>
         </div>
       </div>
@@ -93,7 +97,7 @@ function DriverCard({
         <button
           type="button"
           onClick={onViewProfile}
-          className="inline-flex flex-1 justify-center rounded-lg border border-[#fbbd26]/70 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-[#fff8e6] hover:text-[#111827]"
+          className="inline-flex flex-1 justify-center rounded-lg border border-[#fbbd26]/70 bg-white dark:bg-slate-900 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#fff8e6] hover:text-[#111827] dark:text-slate-200 dark:hover:bg-amber-950/30 dark:hover:text-slate-100"
         >
           View profile
         </button>
@@ -102,7 +106,7 @@ function DriverCard({
             type="button"
             onClick={() => onDelete(user)}
             disabled={deletePending}
-            className="inline-flex flex-1 justify-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-100 disabled:opacity-50"
+            className="inline-flex flex-1 justify-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-950/70"
           >
             Remove
           </button>
@@ -177,7 +181,7 @@ export default function Drivers() {
     <section className="space-y-4 rounded-2xl p-4">
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <h2 className="text-xl font-semibold text-[#111827]">Drivers</h2>
+            <h2 className="text-xl font-semibold ff-heading">Drivers</h2>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -196,12 +200,12 @@ export default function Drivers() {
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search drivers..."
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 sm:max-w-sm"
+              className={`${fieldClass()} w-full sm:max-w-sm`}
             />
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30 sm:w-44"
+              className={`${fieldClass()} sm:w-44`}
             >
               <option value="All">Status: All</option>
               <option value="Active">Status: Active</option>
@@ -213,7 +217,7 @@ export default function Drivers() {
         {!authReady ? (
           <LoadingCard />
         ) : !hasToken ? (
-          <p className="rounded-2xl border border-gray-200 bg-white py-12 text-center text-sm text-gray-600 shadow-sm">
+          <p className="ff-card py-12 text-center text-sm ff-muted">
             Sign in as a vehicle owner to load drivers.{' '}
             <Link href={AppRoutesPaths.auth.signin} className="font-semibold text-indigo-600 hover:text-indigo-700">
               Sign in
@@ -222,15 +226,15 @@ export default function Drivers() {
         ) : driversQuery.isPending ? (
           <LoadingCard />
         ) : driversQuery.isError ? (
-          <p className="rounded-2xl border border-rose-100 bg-rose-50 py-12 text-center text-sm text-rose-800 shadow-sm">
+          <p className="rounded-2xl border border-rose-100 bg-rose-50 py-12 text-center text-sm text-rose-800 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
             {getErrorDetail(driversQuery.error)}
           </p>
         ) : driversQuery.isSuccess && driversQuery.data.users.length === 0 ? (
-          <p className="rounded-2xl border border-gray-200 bg-white py-12 text-center text-sm text-gray-600 shadow-sm">
+          <p className="ff-card py-12 text-center text-sm ff-muted">
             No drivers in your company yet. Add a driver to get started.
           </p>
         ) : filteredDrivers.length === 0 ? (
-          <p className="rounded-2xl border border-gray-200 bg-white py-12 text-center text-sm text-gray-600 shadow-sm">
+          <p className="ff-card py-12 text-center text-sm ff-muted">
             No drivers match your filters.
           </p>
         ) : (

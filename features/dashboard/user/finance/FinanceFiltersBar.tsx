@@ -26,13 +26,13 @@ export default function FinanceFiltersBar({ value, onChange }: FinanceFiltersBar
   const driversQuery = useCompanyDriversQuery(true)
 
   return (
-    <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="ff-card flex flex-wrap items-end gap-3">
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-600">Period</label>
+        <label className="mb-1 block text-xs font-medium ff-muted">Period</label>
         <select
           value={value.period}
           onChange={(e) => onChange({ ...value, period: e.target.value as FinancePeriodPreset })}
-          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+          className="ff-field"
         >
           <option value="30d">Last 30 days</option>
           <option value="90d">Last 90 days</option>
@@ -40,11 +40,11 @@ export default function FinanceFiltersBar({ value, onChange }: FinanceFiltersBar
         </select>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-600">Vehicle</label>
+        <label className="mb-1 block text-xs font-medium ff-muted">Vehicle</label>
         <select
           value={value.vehicle}
           onChange={(e) => onChange({ ...value, vehicle: e.target.value })}
-          className="min-w-[10rem] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+          className="ff-field min-w-[10rem]"
         >
           <option value="">All vehicles</option>
           {(vehiclesQuery.data?.vehicles ?? []).map((v) => (
@@ -55,11 +55,11 @@ export default function FinanceFiltersBar({ value, onChange }: FinanceFiltersBar
         </select>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-600">Driver</label>
+        <label className="mb-1 block text-xs font-medium ff-muted">Driver</label>
         <select
           value={value.driver}
           onChange={(e) => onChange({ ...value, driver: e.target.value })}
-          className="min-w-[10rem] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#fbbd26] focus:ring-2 focus:ring-[#fbbd26]/30"
+          className="ff-field min-w-[10rem]"
         >
           <option value="">All drivers</option>
           {(driversQuery.data?.drivers ?? [])
@@ -71,7 +71,7 @@ export default function FinanceFiltersBar({ value, onChange }: FinanceFiltersBar
             ))}
         </select>
       </div>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs ff-muted">
         Figures are aggregated from trip revenue and trip expenses (fuel, tolls, other).
       </p>
     </div>
