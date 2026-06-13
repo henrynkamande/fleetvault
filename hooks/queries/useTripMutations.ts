@@ -12,8 +12,8 @@ function tripMatchesRef(trip: Pick<TripListDto, 'id' | 'trip_number'>, tripRef: 
   return trip.id === tripRef || trip.trip_number === tripRef
 }
 
-function moneyPatch(value: string | number | undefined, fallback: string | null): string | null {
-  return value === undefined ? fallback : String(value)
+function moneyPatch(value: string | number | null | undefined, fallback: string | null): string | null {
+  return value === undefined ? fallback : value === null ? null : String(value)
 }
 
 function applyTripListPatch(trip: TripListDto, payload: UpdateTripPayload): TripListDto {
@@ -23,6 +23,7 @@ function applyTripListPatch(trip: TripListDto, payload: UpdateTripPayload): Trip
     revenue_amount: moneyPatch(payload.revenue_amount, trip.revenue_amount),
     fuel_cost: moneyPatch(payload.fuel_cost, trip.fuel_cost),
     driver_payment: moneyPatch(payload.driver_payment, trip.driver_payment),
+    driver_payment_rate: moneyPatch(payload.driver_payment_rate, trip.driver_payment_rate),
     toll_cost: moneyPatch(payload.toll_cost, trip.toll_cost),
     other_expenses: moneyPatch(payload.other_expenses, trip.other_expenses),
   }
@@ -35,6 +36,7 @@ function applyTripDetailPatch(trip: TripDetailDto, payload: UpdateTripPayload): 
     revenue_amount: moneyPatch(payload.revenue_amount, trip.revenue_amount),
     fuel_cost: moneyPatch(payload.fuel_cost, trip.fuel_cost),
     driver_payment: moneyPatch(payload.driver_payment, trip.driver_payment),
+    driver_payment_rate: moneyPatch(payload.driver_payment_rate, trip.driver_payment_rate),
     toll_cost: moneyPatch(payload.toll_cost, trip.toll_cost),
     other_expenses: moneyPatch(payload.other_expenses, trip.other_expenses),
   }

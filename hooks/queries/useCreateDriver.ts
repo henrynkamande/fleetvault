@@ -27,6 +27,7 @@ function makeOptimisticDriver(vars: CreateDriverVariables): User {
     last_login: null,
     company_id: null,
     company_name: null,
+    preferred_currency: 'USD',
     has_company: true,
     driver_profile_id: null,
   }

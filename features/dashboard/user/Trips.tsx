@@ -102,6 +102,7 @@ function TripCard({
   vehicle,
   distance,
   income,
+  paymentMode,
   flagReason,
   onDelete,
   deletePending,

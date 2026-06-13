@@ -18,6 +18,7 @@ export const STATIC_DRIVER_USER: User = {
   last_login: null,
   company_id: '00000000-0000-0000-0000-000000000001',
   company_name: 'Preview Logistics',
+  preferred_currency: 'USD',
   has_company: true,
   driver_profile_id: '00000000-0000-0000-0000-000000000099',
 }
@@ -65,6 +66,15 @@ export const STATIC_DRIVER_DASHBOARD: DriverDashboardResponse = {
 const now = new Date()
 const today = now.toISOString()
 
+const STATIC_TRIP_FINANCE_DEFAULTS = {
+  driver_payment_mode: 'PER_TRIP',
+  driver_payment_mode_label: 'Per trip',
+  driver_payment_rate: null,
+  driver_payment_auto_calculated: false,
+  income_status: 'PENDING',
+  income_status_label: 'Pending',
+} as const
+
 export const STATIC_DRIVER_TRIPS: TripListDto[] = [
   {
     id: '10000000-0000-0000-0000-000000000001',
@@ -85,6 +95,7 @@ export const STATIC_DRIVER_TRIPS: TripListDto[] = [
     revenue_amount: null,
     fuel_cost: null,
     driver_payment: null,
+    ...STATIC_TRIP_FINANCE_DEFAULTS,
     toll_cost: null,
     other_expenses: null,
     total_expenses: null,
@@ -110,6 +121,7 @@ export const STATIC_DRIVER_TRIPS: TripListDto[] = [
     revenue_amount: null,
     fuel_cost: null,
     driver_payment: null,
+    ...STATIC_TRIP_FINANCE_DEFAULTS,
     toll_cost: null,
     other_expenses: null,
     total_expenses: null,
@@ -135,6 +147,7 @@ export const STATIC_DRIVER_TRIPS: TripListDto[] = [
     revenue_amount: null,
     fuel_cost: null,
     driver_payment: null,
+    ...STATIC_TRIP_FINANCE_DEFAULTS,
     toll_cost: null,
     other_expenses: null,
     total_expenses: null,

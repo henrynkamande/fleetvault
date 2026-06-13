@@ -47,8 +47,6 @@ type IncomeChartProps = {
   timeView: TimeView
   onTimeViewChange: (view: TimeView) => void
   currency: string
-  onStatusChange: (row: InvoiceRecord, status: InvoiceStatus) => void
-  statusPending: boolean
 }
 
 type TopClientsListProps = {
@@ -68,6 +66,8 @@ type IncomeTableProps = {
   totalPages: number
   onPageChange: (page: number) => void
   currency: string
+  onStatusChange: (row: InvoiceRecord, status: InvoiceStatus) => void
+  statusPending: boolean
 }
 
 function KpiCard({ label, value, delta, positive, active, onClick }: KpiCardProps) {

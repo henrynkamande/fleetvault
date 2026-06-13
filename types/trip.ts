@@ -40,6 +40,8 @@ export interface TripListDto {
   vehicle_registration: string | null
   driver: string | null
   driver_name: string | null
+  customer?: string | null
+  customer_display_name?: string | null
   planned_departure_time: string | null
   actual_departure_time?: string | null
   actual_arrival_time?: string | null
