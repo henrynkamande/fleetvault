@@ -21,7 +21,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   ready: false,
   version: 0,
   setSession: (tokens) => {
-    setTokens(tokens.access, tokens.refresh);
+    setTokens(tokens.access, tokens.refresh, { resetExpiresAt: true });
     set((s) => ({ version: s.version + 1, ready: true }));
   },
   clearSession: () => {

@@ -4,6 +4,9 @@ export const AppRoutesPaths = {
     pricing: "/pricing",
     about: "/about",
     blog: "/blog",
+    howItWorks: "/how-it-works",
+    privacy: "/privacy",
+    terms: "/terms",
   },
   auth: {
     signin: "/auth/signin",

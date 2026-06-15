@@ -18,7 +18,7 @@ function FleetVaultMark() {
 export default function Footer() {
   return (
     <footer className="bg-white py-16 text-gray-700" id="docs">
-      <div className={`grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 ${MARKETING_CONTAINER}`}>
+      <div className={`grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3 ${MARKETING_CONTAINER}`}>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <FleetVaultMark />
@@ -66,34 +66,8 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link href="/#how-it-works" className="hover:text-[#111827]">
+              <Link href={AppRoutesPaths.marketing.howItWorks} className="hover:text-[#111827]">
                 How It Works
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#111827]">Resources</h4>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <a href="#docs" className="hover:text-[#111827]">
-                Docs
-              </a>
-            </li>
-            <li>
-              <a href="#contact" className="hover:text-[#111827]">
-                Contact
-              </a>
-            </li>
-            <li>
-              <Link href={AppRoutesPaths.auth.signin} className="hover:text-[#111827]">
-                Sign In
-              </Link>
-            </li>
-            <li>
-              <Link href={AppRoutesPaths.auth.signup} className="hover:text-[#111827]">
-                Get {APP_NAME}
               </Link>
             </li>
           </ul>
@@ -103,14 +77,14 @@ export default function Footer() {
           <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#111827]">Legal</h4>
           <ul className="space-y-2 text-sm">
             <li>
-              <a href="#privacy" className="hover:text-[#111827]">
+              <Link href={AppRoutesPaths.marketing.privacy} className="hover:text-[#111827]">
                 Privacy
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#terms" className="hover:text-[#111827]">
+              <Link href={AppRoutesPaths.marketing.terms} className="hover:text-[#111827]">
                 Terms
-              </a>
+              </Link>
             </li>
           </ul>
           <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">

@@ -48,7 +48,7 @@ export default function Navbar() {
             <li key={item.label}>
               <Link
                 href={item.href}
-                className="text-base font-semibold text-gray-700 transition hover:text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#fbbd26]/40 rounded-md px-1"
+                className="rounded-md px-1 text-base font-semibold text-gray-700 transition hover:text-[#111827] focus:outline-none"
               >
                 {item.label}
               </Link>
