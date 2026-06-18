@@ -8,6 +8,9 @@ import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
 import type { TripPeriodFilter } from '@/lib/tripDateRange'
 import { LoadingSpinner, LoadingState } from '@/components/ui/LoadingSpinner'
 import type { TripListDto } from '@/types/trip'
+import { useCurrentUser } from '@/hooks/queries/useUsers'
+import { normalizeCurrency } from '@/lib/currencies'
+import { formatMoneyAmount, parseAmount } from '../finance/financeFormat'
 
 type DriverProfileTripsModalProps = {
   driverId: string
@@ -15,13 +18,7 @@ type DriverProfileTripsModalProps = {
 }
 
 function parseDecimal(value: string | null | undefined): number {
-  if (value === null || value === undefined || value === '') return 0
-  const n = Number.parseFloat(String(value))
-  return Number.isFinite(n) ? n : 0
-}
-
-function formatMoney(n: number): string {
-  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+  return parseAmount(value)
 }
 
 function tripWhenLabel(t: TripListDto): string {
@@ -38,6 +35,8 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
   const overlayRef = useRef<HTMLDivElement>(null)
   const [period, setPeriod] = useState<TripPeriodFilter>('weekly')
 
+  const currentUserQuery = useCurrentUser()
+  const currency = normalizeCurrency(currentUserQuery.data?.preferred_currency)
   const userQuery = useCompanyUserQuery(driverId, true)
   const tripsQuery = useDriverCompletedTripsQuery(driverId, period, true)
   const vehiclesQuery = useVehiclesQuery(undefined)
@@ -211,12 +210,12 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
                       <p>
                         <span className="text-slate-500 dark:text-slate-400">Revenue:</span>{' '}
                         <span className="font-medium text-emerald-700">
-                          {formatMoney(parseDecimal(trip.revenue_amount))}
+                          {formatMoneyAmount(trip.revenue_amount, currency)}
                         </span>
                       </p>
                       <p>
                         <span className="text-slate-500 dark:text-slate-400">Expenses:</span>{' '}
-                        {formatMoney(parseDecimal(trip.total_expenses))}
+                        {formatMoneyAmount(trip.total_expenses, currency)}
                       </p>
                       <p>
                         <span className="text-slate-500 dark:text-slate-400">Profit:</span>{' '}
@@ -225,7 +224,7 @@ export default function DriverProfileTripsModal({ driverId, onClose }: DriverPro
                             parseDecimal(trip.profit) >= 0 ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'
                           }
                         >
-                          {formatMoney(parseDecimal(trip.profit))}
+                          {formatMoneyAmount(trip.profit, currency)}
                         </span>
                       </p>
                     </div>

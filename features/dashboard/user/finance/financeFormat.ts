@@ -1,3 +1,20 @@
+export function parseAmount(value: string | number | null | undefined): number {
+  if (value === null || value === undefined || value === '') return 0
+  const n = typeof value === 'number' ? value : Number.parseFloat(String(value))
+  return Number.isFinite(n) ? n : 0
+}
+
+export function formatMoneyAmount(
+  value: string | number | null | undefined,
+  currency: string,
+  withCents = false,
+): string {
+  if (value === null || value === undefined || value === '') return '—'
+  const n = typeof value === 'number' ? value : Number.parseFloat(String(value))
+  if (!Number.isFinite(n)) return String(value)
+  return formatCurrency(n, currency, withCents)
+}
+
 export function formatCurrency(value: number, currency = 'USD', withCents = false): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

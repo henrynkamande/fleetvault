@@ -15,6 +15,8 @@ import { getAccessToken } from '@/lib/tokenStorage'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { TripListDto } from '@/types/trip'
 import { driverPaymentModeLabel } from '@/lib/driverPaymentModes'
+import { normalizeCurrency } from '@/lib/currencies'
+import { formatMoneyAmount, parseAmount } from './finance/financeFormat'
 import { LoadingCard } from "@/components/ui/LoadingSpinner"
 
 const LogTripModal = dynamic(() => import('./modals/LogTripModal'), {
@@ -269,13 +271,7 @@ function TripsPageHeader({
 }
 
 function parseDecimal(value: string | null | undefined): number {
-  if (value === null || value === undefined || value === '') return 0
-  const n = Number.parseFloat(String(value))
-  return Number.isFinite(n) ? n : 0
-}
-
-function formatMoney(n: number): string {
-  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+  return parseAmount(value)
 }
 
 function toUiStatus(t: TripListDto): TripStatusUi {
@@ -303,7 +299,7 @@ function tripDetailHref(t: TripListDto): string {
   return AppRoutesPaths.dashboard.tripProfile(ref)
 }
 
-function tripToRow(t: TripListDto): TripRow {
+function tripToRow(t: TripListDto, currency: string): TripRow {
   const ui = toUiStatus(t)
   const dist =
     t.distance_km !== null && t.distance_km !== undefined
@@ -320,7 +316,7 @@ function tripToRow(t: TripListDto): TripRow {
     driver: t.driver_name?.trim() ? t.driver_name : 'Unassigned',
     vehicle: t.vehicle_registration?.trim() ? t.vehicle_registration : '—',
     distance: dist,
-    income: formatMoney(parseDecimal(t.revenue_amount)),
+    income: formatMoneyAmount(t.revenue_amount, currency),
     paymentMode: driverPaymentModeLabel(t.driver_payment_mode),
     flagReason: t.flag_reason ?? undefined,
   }
@@ -348,6 +344,7 @@ export default function Trips() {
 
   const tripsQuery = useTripsListQuery()
   const userQuery = useCurrentUser()
+  const currency = normalizeCurrency(userQuery.data?.preferred_currency)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'All' | TripStatusUi>('All')
   const [isLogTripOpen, setIsLogTripOpen] = useState(false)
@@ -355,8 +352,8 @@ export default function Trips() {
 
   const rows = useMemo(() => {
     const list = tripsQuery.data?.trips ?? []
-    return list.map(tripToRow)
-  }, [tripsQuery.data?.trips])
+    return list.map((t) => tripToRow(t, currency))
+  }, [tripsQuery.data?.trips, currency])
 
   const summaryCards: TripSummary[] = useMemo(() => {
     const list = tripsQuery.data?.trips ?? []
@@ -370,9 +367,9 @@ export default function Trips() {
       { label: 'Active Trips', value: String(active), statusColor: 'green' },
       { label: 'Completed Today', value: String(completedToday), statusColor: 'green' },
       { label: 'Flagged Issues', value: String(flagged), statusColor: 'yellow' },
-      { label: 'Open-trip revenue', value: formatMoney(openRevenue), statusColor: 'neutral' },
+      { label: 'Open-trip revenue', value: formatMoneyAmount(openRevenue, currency), statusColor: 'neutral' },
     ]
-  }, [tripsQuery.data?.trips])
+  }, [tripsQuery.data?.trips, currency])
 
   const filteredTrips = useMemo(() => {
     return rows.filter((trip) => {

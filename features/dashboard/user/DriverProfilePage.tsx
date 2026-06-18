@@ -20,16 +20,12 @@ import { formatDriverEmailForDisplay } from '@/lib/userDisplay'
 import { toast } from 'react-toastify'
 import type { TripListDto } from '@/types/trip'
 import type { User } from '@/types/user'
+import { normalizeCurrency } from '@/lib/currencies'
+import { formatMoneyAmount, parseAmount } from './finance/financeFormat'
 import { LoadingCard } from "@/components/ui/LoadingSpinner"
 
 function parseDecimal(value: string | null | undefined): number {
-  if (value === null || value === undefined || value === '') return 0
-  const n = Number.parseFloat(String(value))
-  return Number.isFinite(n) ? n : 0
-}
-
-function formatMoney(n: number): string {
-  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+  return parseAmount(value)
 }
 
 function tripWhenLabel(t: TripListDto): string {
@@ -104,6 +100,7 @@ export default function DriverProfilePage() {
 
   const userQuery = useCompanyUserQuery(driverId, !!driverId)
   const currentUserQuery = useCurrentUser()
+  const currency = normalizeCurrency(currentUserQuery.data?.preferred_currency)
   const deactivateMutation = useDeactivateDriverMutation()
   const vehiclesQuery = useVehiclesQuery(undefined)
   const cachedUser = useMemo(
@@ -200,11 +197,11 @@ export default function DriverProfilePage() {
             value={String(overview.tripCount)}
             subtitle="Filtered by planned departure"
           />
-          <OverviewCard title="Revenue" value={formatMoney(overview.totalRevenue)} />
-          <OverviewCard title="Expenses" value={formatMoney(overview.totalExpenses)} />
+          <OverviewCard title="Revenue" value={formatMoneyAmount(overview.totalRevenue, currency)} />
+          <OverviewCard title="Expenses" value={formatMoneyAmount(overview.totalExpenses, currency)} />
           <OverviewCard
             title="Profit"
-            value={formatMoney(overview.totalProfit)}
+            value={formatMoneyAmount(overview.totalProfit, currency)}
             subtitle={overview.totalProfit >= 0 ? 'For selected period' : 'Below break-even'}
           />
         </div>
@@ -231,7 +228,7 @@ export default function DriverProfilePage() {
       ) : (
         <ul className="space-y-3">
           {trips.map((trip) => (
-            <TripListItem key={trip.id} trip={trip} />
+            <TripListItem key={trip.id} trip={trip} currency={currency} />
           ))}
         </ul>
       )}
@@ -316,7 +313,7 @@ function DriverSummaryGrid({ assignedVehicleLabel }: { assignedVehicleLabel: str
   )
 }
 
-function TripListItem({ trip }: { trip: TripListDto }) {
+function TripListItem({ trip, currency }: { trip: TripListDto; currency: string }) {
   const profit = parseDecimal(trip.profit)
   return (
     <li className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
@@ -348,15 +345,15 @@ function TripListItem({ trip }: { trip: TripListDto }) {
         ) : null}
         <p>
           <span className="text-slate-500 dark:text-slate-400">Revenue:</span>{' '}
-          <span className="font-medium text-emerald-700 dark:text-emerald-300">{formatMoney(parseDecimal(trip.revenue_amount))}</span>
+          <span className="font-medium text-emerald-700 dark:text-emerald-300">{formatMoneyAmount(trip.revenue_amount, currency)}</span>
         </p>
         <p>
-          <span className="text-slate-500 dark:text-slate-400">Expenses:</span> {formatMoney(parseDecimal(trip.total_expenses))}
+          <span className="text-slate-500 dark:text-slate-400">Expenses:</span> {formatMoneyAmount(trip.total_expenses, currency)}
         </p>
         <p>
           <span className="text-slate-500 dark:text-slate-400">Profit:</span>{' '}
           <span className={profit >= 0 ? 'font-medium text-emerald-700 dark:text-emerald-300' : 'font-medium text-rose-700 dark:text-rose-300'}>
-            {formatMoney(profit)}
+            {formatMoneyAmount(profit, currency)}
           </span>
         </p>
       </div>

@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useCompanyDriversQuery } from '@/hooks/queries/useCompanyDrivers'
 import { useCreateCustomerMutation, useCustomersQuery } from '@/hooks/queries/useCustomers'
+import { useCurrentUser } from '@/hooks/queries/useUsers'
 import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
 import { flattenFieldErrors, getErrorDetail, getResponseErrorData } from '@/lib/apiErrors'
+import { normalizeCurrency } from '@/lib/currencies'
 import { fleetConfirm } from '@/lib/fleetAlert'
 import { DRIVER_PAYMENT_MODES, type DriverPaymentMode } from '@/lib/driverPaymentModes'
 import { formatOdometerKm } from '@/lib/vehicleDisplay'
@@ -212,6 +214,9 @@ export default function TripProfileEditForm({
   onSubmit,
   onCancel,
 }: TripProfileEditFormProps) {
+  const userQuery = useCurrentUser()
+  const currency = normalizeCurrency(userQuery.data?.preferred_currency)
+
   const [form, setForm] = useState<TripEditFormState>(() => tripToEditForm(trip))
   const [errors, setErrors] = useState<Partial<Record<keyof TripEditFormState, string>>>({})
   const [newCustomerName, setNewCustomerName] = useState('')
@@ -426,7 +431,7 @@ export default function TripProfileEditForm({
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Expected revenue</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Expected revenue ({currency})</label>
           <input
             type="number"
             step="0.01"
@@ -448,7 +453,7 @@ export default function TripProfileEditForm({
           onCreateCustomer={handleCreateCustomer}
         />
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Fuel cost</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Fuel cost ({currency})</label>
           <input
             type="number"
             step="0.01"
@@ -459,7 +464,7 @@ export default function TripProfileEditForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Driver payment</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Driver payment ({currency})</label>
           <input
             type="number"
             step="0.01"
@@ -488,7 +493,7 @@ export default function TripProfileEditForm({
           </p>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Payment rate</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Payment rate ({currency})</label>
           <input
             type="number"
             step="0.01"
@@ -500,7 +505,7 @@ export default function TripProfileEditForm({
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Secure your earnings with a clear rate.</p>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Toll expenses</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Toll expenses ({currency})</label>
           <input
             type="number"
             step="0.01"
@@ -511,7 +516,7 @@ export default function TripProfileEditForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Other expenses</label>
+          <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Other expenses ({currency})</label>
           <input
             type="number"
             step="0.01"

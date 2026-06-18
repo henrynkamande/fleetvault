@@ -13,6 +13,7 @@ import { useVehiclesQuery } from '@/hooks/queries/useVehicles'
 import { flattenFieldErrors, getErrorDetail, getResponseErrorData } from '@/lib/apiErrors'
 import { DRIVER_PAYMENT_MODES, type DriverPaymentMode } from '@/lib/driverPaymentModes'
 import { formatOdometerKm } from '@/lib/vehicleDisplay'
+import { normalizeCurrency } from '@/lib/currencies'
 import { getDriverSelectLabel } from '@/lib/userDisplay'
 import type { TripRevenueModel } from '@/types/trip'
 import type { CustomerDto } from '@/types/customer'
@@ -76,6 +77,7 @@ type ScheduleFinancialFormProps = RouteInfoFormProps
     onNewCustomerNameChange: (value: string) => void
     onCreateCustomer: () => void
     creatingCustomer: boolean
+    currency: string
   }
 
 type ModalActionsProps = {
@@ -234,6 +236,7 @@ function ScheduleFinancialForm({
   onNewCustomerNameChange,
   onCreateCustomer,
   creatingCustomer,
+  currency,
 }: ScheduleFinancialFormProps) {
   const selectedCustomer = customers.find((customer) => customer.id === form.customerId)
   return (
@@ -318,7 +321,7 @@ function ScheduleFinancialForm({
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium ff-muted">Expected revenue</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Expected revenue ({currency})</label>
           <input
             type="number"
             step="0.01"
@@ -331,7 +334,7 @@ function ScheduleFinancialForm({
           {errors.expectedRevenue ? <p className="mt-1 text-xs text-rose-600">{errors.expectedRevenue}</p> : null}
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium ff-muted">Fuel cost</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Fuel cost ({currency})</label>
           <input
             type="number"
             step="0.01"
@@ -342,7 +345,7 @@ function ScheduleFinancialForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium ff-muted">Driver payout estimate</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Driver payout estimate ({currency})</label>
           <input
             type="number"
             step="0.01"
@@ -371,7 +374,7 @@ function ScheduleFinancialForm({
           </p>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium ff-muted">Payment rate</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Payment rate ({currency})</label>
           <input
             type="number"
             step="0.01"
@@ -384,7 +387,7 @@ function ScheduleFinancialForm({
           <p className="mt-1 text-xs ff-muted">Your effort, your reward — used for automatic payout calculation.</p>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium ff-muted">Toll expenses</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Toll expenses ({currency})</label>
           <input
             type="number"
             step="0.01"
@@ -395,7 +398,7 @@ function ScheduleFinancialForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium ff-muted">Other expenses</label>
+          <label className="mb-1 block text-xs font-medium ff-muted">Other expenses ({currency})</label>
           <input
             type="number"
             step="0.01"
@@ -468,6 +471,7 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
   const createCustomerMutation = useCreateCustomerMutation()
 
   const isFleetOwner = userQuery.data?.role === 'FLEET_OWNER'
+  const currency = normalizeCurrency(userQuery.data?.preferred_currency)
 
   const vehicleOptions = useMemo(() => {
     const list = vehiclesQuery.data?.vehicles ?? []
@@ -730,6 +734,7 @@ export default function LogTripModal({ isOpen, onClose }: LogTripModalProps) {
               onNewCustomerNameChange={setNewCustomerName}
               onCreateCustomer={handleCreateCustomer}
               creatingCustomer={createCustomerMutation.isPending}
+              currency={currency}
             />
             <ModalActions onClose={onClose} isPending={createMutation.isPending} />
           </form>

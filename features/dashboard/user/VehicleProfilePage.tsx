@@ -21,6 +21,8 @@ import {
   vehicleTypeLabel,
 } from '@/lib/vehicleDisplay'
 import type { ListVehiclesResponse, VehicleApiStatus, VehicleDto, VehicleListDto } from '@/types/vehicle'
+import { normalizeCurrency } from '@/lib/currencies'
+import { formatMoneyAmount, parseAmount } from './finance/financeFormat'
 import { LoadingCard } from "@/components/ui/LoadingSpinner"
 
 type TripFilterStatus = 'All' | TripListDto['status']
@@ -34,13 +36,7 @@ function statusClasses(status: VehicleApiStatus): string {
 }
 
 function parseDecimal(value: string | null | undefined): number {
-  if (value === null || value === undefined || value === '') return 0
-  const n = Number.parseFloat(String(value))
-  return Number.isFinite(n) ? n : 0
-}
-
-function formatMoney(n: number): string {
-  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+  return parseAmount(value)
 }
 
 function tripStatusLabel(status: string): string {
@@ -125,6 +121,7 @@ export default function VehicleProfilePage() {
   const queryClient = useQueryClient()
   const vehicleQuery = useVehicleQuery(vehicleId)
   const userQuery = useCurrentUser()
+  const currency = normalizeCurrency(userQuery.data?.preferred_currency)
   const deleteVehicleMutation = useDeleteVehicleMutation()
   const tripsQuery = useVehicleTripsQuery(vehicleId)
   const isFleetOwner = userQuery.data?.role === 'FLEET_OWNER'
@@ -323,11 +320,11 @@ export default function VehicleProfilePage() {
           <h3 className="mb-3 text-lg font-semibold ff-heading">Overview</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <OverviewCard title="Trips (recorded)" value={String(overview.tripsCount)} subtitle="Trips for this vehicle" />
-            <OverviewCard title="Total revenue" value={formatMoney(overview.totalIncome)} subtitle="Sum of trip revenue" />
-            <OverviewCard title="Total expenses" value={formatMoney(overview.totalExpenses)} subtitle="Fuel, tolls, other" />
+            <OverviewCard title="Total revenue" value={formatMoneyAmount(overview.totalIncome, currency)} subtitle="Sum of trip revenue" />
+            <OverviewCard title="Total expenses" value={formatMoneyAmount(overview.totalExpenses, currency)} subtitle="Fuel, tolls, other" />
             <OverviewCard
               title="Profit (this month)"
-              value={formatMoney(overview.monthlyProfit)}
+              value={formatMoneyAmount(overview.monthlyProfit, currency)}
               subtitle={overview.monthlyProfit >= 0 ? 'Based on trip dates this month' : 'Below break-even'}
             />
           </div>
@@ -413,10 +410,10 @@ export default function VehicleProfilePage() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right font-medium text-emerald-700 dark:text-emerald-300">
-                            {formatMoney(parseDecimal(row.revenue_amount))}
+                            {formatMoneyAmount(row.revenue_amount, currency)}
                           </td>
                           <td className="px-4 py-3 text-right font-medium text-rose-700 dark:text-rose-300">
-                            {formatMoney(parseDecimal(row.total_expenses))}
+                            {formatMoneyAmount(row.total_expenses, currency)}
                           </td>
                         </tr>
                       ))

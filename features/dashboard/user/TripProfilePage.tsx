@@ -14,8 +14,10 @@ import {
 } from '@/hooks/queries/useTripMutations'
 import { useCurrentUser } from '@/hooks/queries/useUsers'
 import { getErrorDetail } from '@/lib/apiErrors'
+import { normalizeCurrency } from '@/lib/currencies'
 import { driverPaymentModeLabel } from '@/lib/driverPaymentModes'
 import { formatActualTripTime, formatTripDistanceKm } from '@/lib/tripDisplay'
+import { formatMoneyAmount } from './finance/financeFormat'
 import TripProfileEditForm from './TripProfileEditForm'
 import { LoadingCard } from "@/components/ui/LoadingSpinner"
 
@@ -24,13 +26,6 @@ function formatWhen(iso: string | null | undefined): string {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso
   return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
-}
-
-function formatMoney(value: string | null | undefined): string {
-  if (value === null || value === undefined || value === '') return '—'
-  const n = Number.parseFloat(String(value))
-  if (!Number.isFinite(n)) return String(value)
-  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 }
 
 function statusLabel(status: string): string {
@@ -117,6 +112,7 @@ export default function TripProfilePage() {
   }
 
   const trip = tripQuery.data
+  const currency = normalizeCurrency(userQuery.data?.preferred_currency)
   const canEdit =
     isFleetOwner && (trip.status === 'PLANNED' || trip.status === 'DELAYED') && !isEditing
   const canCancel =
@@ -275,11 +271,11 @@ export default function TripProfilePage() {
                 value={formatActualTripTime(trip.actual_arrival_time, trip.status, 'arrival')}
               />
               <DetailRow label="Distance" value={formatTripDistanceKm(trip)} />
-              <DetailRow label="Revenue" value={formatMoney(trip.revenue_amount)} />
+              <DetailRow label="Revenue" value={formatMoneyAmount(trip.revenue_amount, currency)} />
               <DetailRow label="Driver pay mode" value={driverPaymentModeLabel(trip.driver_payment_mode)} />
-              <DetailRow label="Driver payout" value={formatMoney(trip.driver_payment)} />
-              <DetailRow label="Total expenses" value={formatMoney(trip.total_expenses)} />
-              <DetailRow label="Profit" value={formatMoney(trip.profit)} />
+              <DetailRow label="Driver payout" value={formatMoneyAmount(trip.driver_payment, currency)} />
+              <DetailRow label="Total expenses" value={formatMoneyAmount(trip.total_expenses, currency)} />
+              <DetailRow label="Profit" value={formatMoneyAmount(trip.profit, currency)} />
               {trip.customer_name ? <DetailRow label="Customer" value={trip.customer_name} /> : null}
               {trip.cargo_description ? <DetailRow label="Cargo" value={trip.cargo_description} /> : null}
               {trip.manager_notes ? <DetailRow label="Manager notes" value={trip.manager_notes} /> : null}
